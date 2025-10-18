@@ -1,6 +1,13 @@
 """Werewolf camp roles."""
 
+import random
+from typing import TYPE_CHECKING
+
+from llm_werewolf.core.actions import Action, WerewolfKillAction
 from llm_werewolf.core.roles.base import Camp, Role, RoleConfig, ActionPriority
+
+if TYPE_CHECKING:
+    from llm_werewolf.core.game_state import GameState
 
 
 class Werewolf(Role):
@@ -25,6 +32,36 @@ class Werewolf(Role):
             can_act_day=False,
         )
 
+    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+        """Get the night actions for the Werewolf role."""
+        # In a real game, werewolves would need to coordinate.
+        # For now, we'll have one werewolf act.
+        # Let's find the first alive werewolf to act.
+        werewolves = game_state.get_players_by_camp(Camp.WEREWOLF)
+        acting_werewolf = None
+        for werewolf in werewolves:
+            if werewolf.is_alive():
+                acting_werewolf = werewolf
+                break
+
+        if not acting_werewolf:
+            return []
+
+        # Only the first werewolf in the list will propose a kill
+        if self.player.player_id != acting_werewolf.player_id:
+            return []
+
+        possible_targets = [
+            p for p in game_state.get_alive_players() if p.get_camp() != Camp.WEREWOLF
+        ]
+        if not possible_targets:
+            return []
+
+        # In a real implementation, the agent would choose the target.
+        # For now, we'll randomly choose one.
+        target = random.choice(possible_targets)  # noqa: S311
+        return [WerewolfKillAction(self.player, target, game_state)]
+
 
 class AlphaWolf(Role):
     """Alpha Wolf (Wolf King) role.
@@ -32,6 +69,10 @@ class AlphaWolf(Role):
     Similar to a standard werewolf, but when eliminated (by vote or hunter),
     can take another player down with them.
     """
+
+    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+        """Alpha Wolf has no special night actions beyond the standard werewolf kill."""
+        return []
 
     def get_config(self) -> RoleConfig:
         """Get configuration for the Alpha Wolf role."""
@@ -56,6 +97,11 @@ class WhiteWolf(Role):
     This makes the white wolf a lone wolf trying to be the last werewolf standing.
     """
 
+    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+        """Get the night actions for the White Wolf role."""
+        # TODO: Implement White Wolf logic
+        return []
+
     def get_config(self) -> RoleConfig:
         """Get configuration for the White Wolf role."""
         return RoleConfig(
@@ -79,6 +125,11 @@ class WolfBeauty(Role):
     the charmed player dies too.
     """
 
+    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+        """Get the night actions for the Wolf Beauty role."""
+        # TODO: Implement Wolf Beauty logic
+        return []
+
     def get_config(self) -> RoleConfig:
         """Get configuration for the Wolf Beauty role."""
         return RoleConfig(
@@ -101,6 +152,11 @@ class GuardianWolf(Role):
     A werewolf who can protect one werewolf from elimination each night.
     """
 
+    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+        """Get the night actions for the Guardian Wolf role."""
+        # TODO: Implement Guardian Wolf logic
+        return []
+
     def get_config(self) -> RoleConfig:
         """Get configuration for the Guardian Wolf role."""
         return RoleConfig(
@@ -122,6 +178,10 @@ class HiddenWolf(Role):
 
     A werewolf who appears as a villager when checked by the Seer.
     """
+
+    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+        """Hidden Wolf has no special night actions beyond the standard werewolf kill."""
+        return []
 
     def get_config(self) -> RoleConfig:
         """Get configuration for the Hidden Wolf role."""
@@ -146,6 +206,11 @@ class BloodMoonApostle(Role):
     Once per game, can turn into a real werewolf.
     """
 
+    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+        """Get the night actions for the Blood Moon Apostle role."""
+        # TODO: Implement Blood Moon Apostle logic
+        return []
+
     def get_config(self) -> RoleConfig:
         """Get configuration for the Blood Moon Apostle role."""
         return RoleConfig(
@@ -169,6 +234,11 @@ class NightmareWolf(Role):
 
     A werewolf who can block a player from using their ability for one night.
     """
+
+    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+        """Get the night actions for the Nightmare Wolf role."""
+        # TODO: Implement Nightmare Wolf logic
+        return []
 
     def get_config(self) -> RoleConfig:
         """Get configuration for the Nightmare Wolf role."""

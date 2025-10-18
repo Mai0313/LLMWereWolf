@@ -6,8 +6,7 @@ from llm_werewolf.core.player import Player, PlayerStatus
 
 def test_player_creation():
     """Test creating a player."""
-    role = Villager()
-    player = Player("p1", "Alice", role)
+    player = Player("p1", "Alice", Villager)
 
     assert player.player_id == "p1"
     assert player.name == "Alice"
@@ -17,8 +16,7 @@ def test_player_creation():
 
 def test_player_death():
     """Test player death."""
-    role = Villager()
-    player = Player("p1", "Alice", role)
+    player = Player("p1", "Alice", Villager)
 
     player.kill()
     assert not player.is_alive()
@@ -27,8 +25,7 @@ def test_player_death():
 
 def test_player_revive():
     """Test player revival."""
-    role = Villager()
-    player = Player("p1", "Alice", role)
+    player = Player("p1", "Alice", Villager)
 
     player.kill()
     assert not player.is_alive()
@@ -40,8 +37,7 @@ def test_player_revive():
 
 def test_player_status():
     """Test player status management."""
-    role = Villager()
-    player = Player("p1", "Alice", role)
+    player = Player("p1", "Alice", Villager)
 
     player.add_status(PlayerStatus.PROTECTED)
     assert player.has_status(PlayerStatus.PROTECTED)
@@ -52,8 +48,7 @@ def test_player_status():
 
 def test_player_voting_rights():
     """Test player voting rights."""
-    role = Villager()
-    player = Player("p1", "Alice", role)
+    player = Player("p1", "Alice", Villager)
 
     assert player.can_vote()
 
@@ -64,8 +59,7 @@ def test_player_voting_rights():
 
 def test_player_lover_status():
     """Test player lover status."""
-    role = Villager()
-    player = Player("p1", "Alice", role)
+    player = Player("p1", "Alice", Villager)
 
     assert not player.is_lover()
 
@@ -76,8 +70,7 @@ def test_player_lover_status():
 
 def test_player_public_info():
     """Test getting public player info."""
-    role = Werewolf()
-    player = Player("p1", "Bob", role, ai_model="gpt-4")
+    player = Player("p1", "Bob", Werewolf, ai_model="gpt-4")
 
     info = player.get_public_info()
     assert info.player_id == "p1"

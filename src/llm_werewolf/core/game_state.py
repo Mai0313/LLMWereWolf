@@ -66,6 +66,11 @@ class GameState:
 
         self.winner: str | None = None
 
+    def reset_deaths(self) -> None:
+        """Reset the death sets for a new round."""
+        self.night_deaths.clear()
+        self.day_deaths.clear()
+
     def get_phase(self) -> GamePhase:
         """Get the current game phase.
 
@@ -125,6 +130,10 @@ class GameState:
             list[Player]: List of dead players.
         """
         return [p for p in self.players if not p.is_alive()]
+
+    def get_players_with_night_actions(self) -> list["Player"]:
+        """Get all alive players that have night actions."""
+        return [p for p in self.get_alive_players() if p.role.has_night_action(self)]
 
     def get_player(self, player_id: str) -> "Player | None":
         """Get a player by ID.

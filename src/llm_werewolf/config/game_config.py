@@ -151,7 +151,7 @@ class GameConfig(BaseModel):
             if role_name not in role_map:
                 msg = f"Unknown role: {role_name}"
                 raise ValueError(msg)
-            roles.append(role_map[role_name]())
+            roles.append(role_map[role_name])
 
         return roles
 

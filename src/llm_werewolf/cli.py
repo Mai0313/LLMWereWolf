@@ -94,14 +94,12 @@ def run_tui_mode(engine: GameEngine, show_debug: bool = True) -> None:
         show_debug: Whether to show debug panel.
     """
     try:
-        import asyncio
-
         from llm_werewolf.ui import run_tui
 
         console.print("\n[cyan]Starting TUI mode...[/cyan]")
-        console.print("[dim]Press 'q' to quit, 'd' to toggle debug panel[/dim]")
+        console.print("[dim]Press 'q' to quit, 'd' to toggle debug panel, 'n' for next step[/dim]")
 
-        asyncio.run(run_tui(engine, show_debug))
+        run_tui(engine, show_debug)
 
     except ImportError as e:
         console.print(f"[red]Error: TUI dependencies not available: {e}[/red]")

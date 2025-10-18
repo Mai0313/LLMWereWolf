@@ -56,7 +56,7 @@ class Player:
         """
         self.player_id = player_id
         self.name = name
-        self.role = role
+        self.role = role(self)
         self.agent = agent
         self.ai_model = ai_model
 

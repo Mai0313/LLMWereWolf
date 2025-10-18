@@ -59,7 +59,11 @@ class WerewolfTUI(App):
     }
     """
 
-    BINDINGS: ClassVar = [("q", "quit", "Quit"), ("d", "toggle_debug", "Toggle Debug")]
+    BINDINGS: ClassVar = [
+        ("q", "quit", "Quit"),
+        ("d", "toggle_debug", "Toggle Debug"),
+        ("n", "next_step", "Next Step"),
+    ]
 
     def __init__(self, game_engine: GameEngine | None = None, show_debug: bool = True) -> None:
         """Initialize the TUI application.
@@ -149,6 +153,14 @@ class WerewolfTUI(App):
         if self.debug_panel:
             self.debug_panel.visible = not self.debug_panel.visible
 
+    def action_next_step(self) -> None:
+        """Advance the game by one step."""
+        if self.game_engine:
+            messages = self.game_engine.step()
+            for msg in messages:
+                self.add_system_message(msg)
+            self.update_game_state()
+
     def add_system_message(self, message: str) -> None:
         """Add a system message to the chat.
 
@@ -170,7 +182,7 @@ class WerewolfTUI(App):
             self.chat_panel.add_system_message(f"ERROR: {error}")
 
 
-async def run_tui(game_engine: GameEngine, show_debug: bool = True) -> None:
+def run_tui(game_engine: GameEngine, show_debug: bool = True) -> None:
     """Run the TUI application.
 
     Args:
@@ -178,4 +190,4 @@ async def run_tui(game_engine: GameEngine, show_debug: bool = True) -> None:
         show_debug: Whether to show the debug panel.
     """
     app = WerewolfTUI(game_engine=game_engine, show_debug=show_debug)
-    await app.run_async()
+    app.run()

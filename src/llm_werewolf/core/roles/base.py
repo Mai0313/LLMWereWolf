@@ -8,6 +8,8 @@ from pydantic import Field, BaseModel
 
 if TYPE_CHECKING:
     from llm_werewolf.core.player import Player
+    from llm_werewolf.core.actions import Action
+    from llm_werewolf.core.game_state import GameState
 
 
 class Camp(str, Enum):
@@ -48,8 +50,9 @@ class RoleConfig(BaseModel):
 class Role(ABC):
     """Abstract base class for all roles in the Werewolf game."""
 
-    def __init__(self) -> None:
+    def __init__(self, player: "Player") -> None:
         """Initialize the role."""
+        self.player = player
         self.ability_uses = 0
         self.config = self.get_config()
 
@@ -141,6 +144,28 @@ class Role(ABC):
             str: The prompt string for the AI agent.
         """
         return f"You are {player.name}, a {self.name}. {self.description}"
+
+    @abstractmethod
+    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+        """Get the night actions for this role.
+
+        Args:
+            game_state: The current game state.
+
+        Returns:
+            list[Action]: A list of actions to perform.
+        """
+
+    def has_night_action(self, game_state: "GameState") -> bool:
+        """Check if the role has a night action.
+
+        Args:
+            game_state: The current game state.
+
+        Returns:
+            bool: True if the role has a night action.
+        """
+        return self.config.can_act_night
 
     def validate_action(self, actor: "Player", target: "Player | None", action_data: dict) -> bool:
         """Validate if an action is legal.

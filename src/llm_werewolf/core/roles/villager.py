@@ -1,6 +1,22 @@
 """Villager camp roles."""
 
+import random
+from typing import TYPE_CHECKING
+
+from llm_werewolf.core.actions import (
+    Action,
+    CupidLinkAction,
+    RavenMarkAction,
+    SeerCheckAction,
+    WitchSaveAction,
+    WitchPoisonAction,
+    GuardProtectAction,
+)
 from llm_werewolf.core.roles.base import Camp, Role, RoleConfig, ActionPriority
+
+if TYPE_CHECKING:
+    from llm_werewolf.core.player import Player
+    from llm_werewolf.core.game_state import GameState
 
 
 class Villager(Role):
@@ -25,6 +41,10 @@ class Villager(Role):
             can_act_day=False,
         )
 
+    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+        """Villager has no night actions."""
+        return []
+
 
 class Seer(Role):
     """Seer role.
@@ -47,6 +67,22 @@ class Seer(Role):
             can_act_day=False,
         )
 
+    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+        """Get the night actions for the Seer role."""
+        if not self.player.is_alive():
+            return []
+
+        possible_targets = [
+            p for p in game_state.get_alive_players() if p.player_id != self.player.player_id
+        ]
+        if not possible_targets:
+            return []
+
+        # In a real implementation, the agent would choose the target.
+        # For now, we'll randomly choose one.
+        target = random.choice(possible_targets)  # noqa: S311
+        return [SeerCheckAction(self.player, target, game_state)]
+
 
 class Witch(Role):
     """Witch role.
@@ -55,9 +91,9 @@ class Witch(Role):
     Each potion can only be used once per game.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, player: "Player") -> None:
         """Initialize the Witch role."""
-        super().__init__()
+        super().__init__(player)
         self.has_save_potion = True
         self.has_poison_potion = True
 
@@ -75,6 +111,32 @@ class Witch(Role):
             can_act_night=True,
             can_act_day=False,
         )
+
+    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+        """Get the night actions for the Witch role."""
+        if not self.player.is_alive():
+            return []
+
+        actions = []
+        # Decide whether to use save potion
+        if self.has_save_potion and game_state.werewolf_target:
+            target = game_state.get_player(game_state.werewolf_target)
+            if target and random.random() < 0.5:  # noqa: S311
+                actions.append(WitchSaveAction(self.player, target, game_state))
+                self.has_save_potion = False
+                return actions
+
+        # Decide whether to use poison potion
+        if self.has_poison_potion:
+            possible_targets = [
+                p for p in game_state.get_alive_players() if p.player_id != self.player.player_id
+            ]
+            if possible_targets and random.random() < 0.5:  # noqa: S311
+                target = random.choice(possible_targets)  # noqa: S311
+                actions.append(WitchPoisonAction(self.player, target, game_state))
+                self.has_poison_potion = False
+
+        return actions
 
 
 class Hunter(Role):
@@ -107,9 +169,9 @@ class Guard(Role):
     Cannot protect the same player two nights in a row.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, player: "Player") -> None:
         """Initialize the Guard role."""
-        super().__init__()
+        super().__init__(player)
         self.last_protected: str | None = None
 
     def get_config(self) -> RoleConfig:
@@ -127,6 +189,23 @@ class Guard(Role):
             can_act_day=False,
         )
 
+    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+        """Get the night actions for the Guard role."""
+        if not self.player.is_alive():
+            return []
+
+        possible_targets = [
+            p for p in game_state.get_alive_players() if p.player_id != self.last_protected
+        ]
+        if not possible_targets:
+            return []
+
+        # In a real implementation, the agent would choose the target.
+        # For now, we'll randomly choose one.
+        target = random.choice(possible_targets)  # noqa: S311
+        self.last_protected = target.player_id
+        return [GuardProtectAction(self.player, target, game_state)]
+
 
 class Idiot(Role):
     """Idiot role.
@@ -134,9 +213,9 @@ class Idiot(Role):
     When voted out, reveals identity and survives but loses voting rights.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, player: "Player") -> None:
         """Initialize the Idiot role."""
-        super().__init__()
+        super().__init__(player)
         self.revealed = False
 
     def get_config(self) -> RoleConfig:
@@ -162,9 +241,9 @@ class Elder(Role):
     with special abilities lose their powers.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, player: "Player") -> None:
         """Initialize the Elder role."""
-        super().__init__()
+        super().__init__(player)
         self.lives = 2
 
     def get_config(self) -> RoleConfig:
@@ -190,6 +269,10 @@ class Knight(Role):
     they die. If not, the Knight dies.
     """
 
+    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+        """Knight has no night actions."""
+        return []
+
     def get_config(self) -> RoleConfig:
         """Get configuration for the Knight role."""
         return RoleConfig(
@@ -212,6 +295,11 @@ class Magician(Role):
 
     Once per game, can swap two players' roles at night.
     """
+
+    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+        """Get the night actions for the Magician role."""
+        # TODO: Implement magician logic
+        return []
 
     def get_config(self) -> RoleConfig:
         """Get configuration for the Magician role."""
@@ -237,6 +325,15 @@ class Cupid(Role):
     Lovers win together or die together.
     """
 
+    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+        """Get the night actions for the Cupid role."""
+        if game_state.round_number == 1:
+            possible_targets = game_state.get_alive_players()
+            if len(possible_targets) >= 2:
+                target1, target2 = random.sample(possible_targets, 2)
+                return [CupidLinkAction(self.player, target1, target2, game_state)]
+        return []
+
     def get_config(self) -> RoleConfig:
         """Get configuration for the Cupid role."""
         return RoleConfig(
@@ -261,6 +358,18 @@ class Raven(Role):
     during the next day's voting.
     """
 
+    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+        """Get the night actions for the Raven role."""
+        if not self.player.is_alive():
+            return []
+
+        possible_targets = game_state.get_alive_players()
+        if not possible_targets:
+            return []
+
+        target = random.choice(possible_targets)  # noqa: S311
+        return [RavenMarkAction(self.player, target, game_state)]
+
     def get_config(self) -> RoleConfig:
         """Get configuration for the Raven role."""
         return RoleConfig(
@@ -282,6 +391,11 @@ class GraveyardKeeper(Role):
 
     Each night, can check if a dead player was a werewolf or villager.
     """
+
+    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+        """Get the night actions for the GraveyardKeeper role."""
+        # TODO: Implement GraveyardKeeper logic
+        return []
 
     def get_config(self) -> RoleConfig:
         """Get configuration for the Graveyard Keeper role."""

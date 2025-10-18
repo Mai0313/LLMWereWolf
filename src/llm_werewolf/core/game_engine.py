@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from llm_werewolf.core.events import Event, EventType, EventLogger
 from llm_werewolf.core.player import Player
+from llm_werewolf.core.actions import Action, VoteAction
 from llm_werewolf.core.victory import VictoryChecker
 from llm_werewolf.core.game_state import GamePhase, GameState
 from llm_werewolf.config.game_config import GameConfig
@@ -50,10 +51,10 @@ class GameEngine:
 
         # Create player objects
         player_objects = []
-        for (player_id, name, agent), role in zip(players, shuffled_roles, strict=False):
+        for (player_id, name, agent), role_class in zip(players, shuffled_roles, strict=False):
             ai_model = getattr(agent, "model_name", "unknown") if agent else "human"
             player = Player(
-                player_id=player_id, name=name, role=role, agent=agent, ai_model=ai_model
+                player_id=player_id, name=name, role=role_class, agent=agent, ai_model=ai_model
             )
             player_objects.append(player)
 
@@ -101,9 +102,21 @@ class GameEngine:
 
         messages.append(f"\n=== Night {self.game_state.round_number} ===")
 
-        # Execute night actions in priority order
-        # This is simplified - in a full implementation, each role would
-        # interact with their AI agent to get their action
+        # Get all players with night actions
+        players_with_night_actions = self.game_state.get_players_with_night_actions()
+
+        # Get night actions from each player
+        night_actions: list[Action] = []
+        for player in players_with_night_actions:
+            # Here you would get the action from the player's agent
+            # For now, we'll use a placeholder
+            action = player.role.get_night_actions(self.game_state)
+            if action:
+                night_actions.extend(action)
+
+        # Process actions
+        action_messages = self.process_actions(night_actions)
+        messages.extend(action_messages)
 
         # Resolve night deaths
         death_messages = self.resolve_deaths()
@@ -156,8 +169,26 @@ class GameEngine:
         messages = []
         self.game_state.set_phase(GamePhase.DAY_VOTING)
 
-        # Simplified voting - in full implementation, players would vote via AI
         messages.append("\n=== Voting Phase ===")
+
+        # Get votes from players
+        vote_actions: list[Action] = []
+        for player in self.game_state.get_alive_players():
+            if not player.can_vote():
+                continue
+
+            # Get vote from agent
+            # This is a simplified version, in a real implementation, the agent
+            # would be prompted with the current game state and asked for a vote
+            if player.agent:
+                possible_targets = self.game_state.get_alive_players(except_ids=[player.player_id])
+                if possible_targets:
+                    target_player = random.choice(possible_targets)  # noqa: S311
+                    vote_actions.append(VoteAction(player, target_player, self.game_state))
+
+        # Process votes
+        vote_messages = self.process_actions(vote_actions)
+        messages.extend(vote_messages)
 
         # Get vote counts
         vote_counts = self.game_state.get_vote_counts()
@@ -321,8 +352,22 @@ class GameEngine:
         messages = []
 
         # Sort actions by priority (if they have priority)
+        # For now, we can assume a predefined order or add priority to actions
+        # This is a simplified sorting, a more robust solution would be needed
+        def get_action_priority(action: Action) -> int:
+            priority_map = {
+                "GuardProtectAction": 0,
+                "WerewolfKillAction": 1,
+                "WitchSaveAction": 2,
+                "WitchPoisonAction": 3,
+                "SeerCheckAction": 4,
+            }
+            return priority_map.get(action.__class__.__name__, 100)
+
+        sorted_actions = sorted(actions, key=get_action_priority)
+
         # Execute each action
-        for action in actions:
+        for action in sorted_actions:
             if action.validate():
                 result_messages = action.execute()
                 messages.extend(result_messages)
@@ -339,6 +384,9 @@ class GameEngine:
             return "Game not initialized"
 
         while not self.check_victory():
+            # Reset deaths for the new round
+            self.game_state.reset_deaths()
+
             # Night phase
             self.run_night_phase()
 
@@ -411,3 +459,28 @@ class GameEngine:
             list[Event]: List of events.
         """
         return self.event_logger.events
+
+    def step(self) -> list[str]:
+        """Execute one step of the game (one phase)."""
+        if not self.game_state:
+            return ["Game not initialized"]
+
+        if self.check_victory():
+            return [f"Game Over! {self.game_state.winner} camp wins!"]
+
+        phase_messages = []
+        current_phase = self.game_state.get_phase()
+
+        if current_phase == GamePhase.NIGHT:
+            phase_messages = self.run_night_phase()
+            if not self.check_victory():
+                self.game_state.next_phase()
+        elif current_phase == GamePhase.DAY_DISCUSSION:
+            phase_messages = self.run_day_phase()
+            self.game_state.next_phase()
+        elif current_phase == GamePhase.DAY_VOTING:
+            phase_messages = self.run_voting_phase()
+            if not self.check_victory():
+                self.game_state.next_phase()
+
+        return phase_messages

@@ -12,3 +12,4 @@
 有一點要注意的是, 這個 function 不一定是 OpenAI ChatCompletion, 所以未來這個 function 會稍微有點抽象
 input 是 message (string), output 則是 result (string), 這樣未來會比較好完成
 另外 目前的專案代碼是一個 python 專案模板, 所以請幫我將全部修改
+目前這個任務已經完成一部份, 我不確定是否有完整改完 如果有遺漏 請幫我補上

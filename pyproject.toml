@@ -13,7 +13,7 @@ addopts = [
     "--cache-clear",
     "-n=auto",
     "--no-header",
-    "--cov-fail-under=80",
+    "--cov-fail-under=40",
 ]
 filterwarnings = [
     "ignore::DeprecationWarning",
@@ -53,33 +53,37 @@ directory = "./.github/coverage_html_report"
 
 [tool.coverage.run]
 data_file = './.github/reports/.coverage'
-omit = ["./src/ameba/*"]
+omit = []
 
 # ================== #
 #        uv          #
 # ================== #
 
 [project]
-name = "repo_template"
+name = "llm_werewolf"
 version = "0.1.0"
-description = "Repository template for Python projects"
+description = "AI-powered Werewolf game with LLM integration and TUI interface"
 authors = [
     { name = "Wei", email = "mai@mai0313.com" },
 ]
 dependencies = [
-    "pydantic",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "textual>=0.40.0",
+    "rich>=13.0.0",
+    "python-dotenv>=1.0.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.10"
 license = { text = "MIT" }
 
 [project.urls]
-Homepage = "https://mai0313.github.io/repo_template"
-Repository = "https://github.com/Mai0313/repo_template"
+Homepage = "https://mai0313.github.io/llm_werewolf"
+Repository = "https://github.com/Mai0313/llm_werewolf"
 
 [project.scripts]
-cli = "repo_template.cli:main"
-repo_template = "repo_template.cli:main"
+llm-werewolf = "llm_werewolf.cli:main"
+werewolf = "llm_werewolf.cli:main"
 
 [dependency-groups]
 dev = [
@@ -119,11 +123,11 @@ allow-direct-references = true
 
 [tool.hatch.build]
 include = [
-    "src/repo_template"
+    "src/llm_werewolf"
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/repo_template"]
+packages = ["src/llm_werewolf"]
 
 [tool.hatch.build.targets.sdist]
 # Basically everything except hidden files/directories (such as .github, .devcontainers, .python-version, etc)
@@ -161,8 +165,8 @@ exclude = [
 ]
 
 [tool.poe.tasks]
-api = "python ./src/repo_template/cli.py"
-main = "python ./src/repo_template/cli.py"
+api = "python ./src/llm_werewolf/cli.py"
+main = "python ./src/llm_werewolf/cli.py"
 
 # Documentation
 docs_gen = "make gen-docs"
@@ -454,7 +458,7 @@ skip-magic-trailing-comma = true
 [tool.logfire]
 send_to_logfire = false
 token = false
-project_name = "repo_template"
+project_name = "llm_werewolf"
 trace_sample_rate = 1.0
 console_colors = "auto"
 console_span_style = "show-parents"

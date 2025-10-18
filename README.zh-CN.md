@@ -1,286 +1,251 @@
 <center>
 
-# Python 项目模板
+# LLM 狼人杀 🐺
 
-[![PyPI version](https://img.shields.io/pypi/v/swebenchv2.svg)](https://pypi.org/project/swebenchv2/)
 [![python](https://img.shields.io/badge/-Python_%7C_3.10%7C_3.11%7C_3.12%7C_3.13-blue?logo=python&logoColor=white)](https://www.python.org/downloads/source/)
 [![uv](https://img.shields.io/badge/-uv_dependency_management-2C5F2D?logo=python&logoColor=white)](https://docs.astral.sh/uv/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Pydantic v2](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/pydantic/pydantic/main/docs/badge/v2.json)](https://docs.pydantic.dev/latest/contributing/#badges)
-[![tests](https://github.com/Mai0313/repo_template/actions/workflows/test.yml/badge.svg)](https://github.com/Mai0313/repo_template/actions/workflows/test.yml)
-[![code-quality](https://github.com/Mai0313/repo_template/actions/workflows/code-quality-check.yml/badge.svg)](https://github.com/Mai0313/repo_template/actions/workflows/code-quality-check.yml)
-[![license](https://img.shields.io/badge/License-MIT-green.svg?labelColor=gray)](https://github.com/Mai0313/repo_template/tree/main?tab=License-1-ov-file)
-[![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Mai0313/repo_template/pulls)
-[![contributors](https://img.shields.io/github/contributors/Mai0313/repo_template.svg)](https://github.com/Mai0313/repo_template/graphs/contributors)
+[![license](https://img.shields.io/badge/License-MIT-green.svg?labelColor=gray)](https://github.com/Mai0313/llm_werewolf/tree/main?tab=License-1-ov-file)
+[![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Mai0313/llm_werewolf/pulls)
 
 </center>
 
-🚀 帮助 Python 开发者「快速建立新项目」的模板。内置现代化包管理、工具链、Docker 与完整 CI/CD 工作流程。
+一个支持多种 LLM 模型的 AI 狼人杀游戏，具有精美的终端界面。
 
-点击 [使用此模板](https://github.com/Mai0313/repo_template/generate) 后即可开始。
+## 特色功能
 
-其他语言: [English](README.md) | [繁體中文](README.zh-TW.md) | [简体中文](README.zh-CN.md)
+- 🎮 **完整游戏逻辑**：包含 20+ 种角色的完整狼人杀规则实作
+- 🤖 **LLM 整合**：抽象接口可轻松整合任何 LLM（OpenAI、Anthropic、本地模型等）
+- 🖥️ **精美 TUI**：使用 Textual 框架的实时游戏可视化
+- ⚙️ **可配置**：多种预设配置适用不同玩家数量
+- 📊 **事件系统**：完整的事件记录和游戏状态追踪
+- 🧪 **充分测试**：高代码覆盖率与完整测试套件
 
-## ✨ 重点特色
+## 快速开始
 
-- 现代 `src/` 布局 + 全面类型注解
-- `uv` 超快依赖管理
-- pre-commit 包链：ruff、mdformat（含多插件）、codespell、nbstripout、mypy、uv hooks
-- 类型严谨：mypy + Pydantic 插件设置
-- pytest + coverage + xdist；PR 覆盖率摘要留言
-  - 覆盖率门槛 80%，HTML/XML 报告输出至 `.github/`
-- MkDocs Material + mkdocstrings（继承图）、markdown-exec、MathJax
-  - 开发服务器 `0.0.0.0:9987`；双语文档脚手架
-- 文档生成脚本：支持 class/文件两种模式、可选执行 notebook、可并发、保留目录结构
-  - 使用 anyio 异步处理与 rich 进度条
-- 打包：`uv build`、git-cliff 产 changelog
-- CI 自动版本：以 `dunamai` 从 git 产 PEP 440 版本
-- Dockerfile 多阶段（内含 uv/uvx 与 Node.js）；Compose 服务（Redis/Postgres/Mongo/MySQL）含 healthcheck 与 volume
-- GitHub Actions：测试、质量、文档部署、包打包、Docker 推送（GHCR + buildx cache）、Release Drafter、自动标签、秘密扫描、语义化 PR、pre-commit 自动更新
-  - pre-commit 同时挂载多个 git 阶段（pre-commit、post-checkout、post-merge、post-rewrite）
-  - i18n 友善检查（允许中文标点等 confusables）
-  - 文档列出可替代的环境管理（Rye、Conda）
-  - 兼容旧式流程：可用 `uv pip` 导出 `requirements.txt`
-
-## 🚀 快速开始
-
-需求：
-
-- Python 3.10–3.13
-- `uv`（可用 `make uv-install` 安装）
-- pre-commit hooks：`uv tool install pre-commit` 或 `uv sync --group dev`
-
-本机安装：
+### 安装
 
 ```bash
-make uv-install
-uv sync                     # 安装基础依赖
-uv tool install pre-commit  # 或：uv sync --group dev
-make format
-make test
+# 复制仓库
+git clone <repository-url>
+cd Werewolf
+
+# 安装依赖
+uv sync
+
+# 使用 TUI 执行（默认）
+uv run llm-werewolf
+
+# 使用命令行模式执行
+uv run llm-werewolf --no-tui
 ```
 
-执行示例 CLI：
+### 基本使用
 
 ```bash
-uv run repo_template
+# 启动 9 人局 TUI 模式
+uv run llm-werewolf --preset 9-players
+
+# 启动 6 人局命令行模式
+uv run llm-werewolf --preset 6-players --no-tui
+
+# 启用调试面板
+uv run llm-werewolf --debug
+
+# 查看说明
+uv run llm-werewolf --help
 ```
 
-作为模板使用（推荐）：
+## 支持的角色
 
-1. 点击「使用此模板」建立新仓库
-2. 全局替换名称：
+### 狼人阵营 🐺
+
+- **普通狼人**：在夜晚杀人的标准狼人
+- **狼王**：被淘汰时可以开枪带走一人
+- **白狼王**：每隔一晚可以杀死另一个狼人
+- **狼美人**：魅惑一名玩家，狼美人死亡时该玩家同死
+- **守卫狼**：每晚可以保护一名狼人
+- **隐狼**：预言家查验显示为村民
+- **血月使徒**：可以转化为狼人
+- **梦魇**：可以封锁玩家的能力
+
+### 村民阵营 👥
+
+- **平民**：没有特殊能力的普通村民
+- **预言家**：每晚可以查验一名玩家的身份
+- **女巫**：拥有解药和毒药（各一次性使用）
+- **猎人**：被淘汰时可以开枪带走一人
+- **守卫**：每晚可以保护一名玩家
+- **白痴**：被投票淘汰时存活但失去投票权
+- **长老**：需要两次攻击才会死亡
+- **骑士**：每局可以与一名玩家决斗一次
+- **魔术师**：可以交换两名玩家的角色一次
+- **丘比特**：第一晚将两名玩家连结为恋人
+- **乌鸦**：标记一名玩家获得额外投票
+- **守墓人**：可以查验死亡玩家的身份
+
+## 配置
+
+### 使用预设配置
 
 ```bash
-# 包/模块名称
-find . -type f -name "*.py" -o -name "*.md" -o -name "*.toml" | xargs sed -i 's/repo_template/your_package_name/g'
-
-# 项目显示标题
-find . -type f -name "*.py" -o -name "*.md" -o -name "*.toml" | xargs sed -i 's/RepoTemplate/YourProjectTitle/g'
+# 可用的预设配置
+uv run llm-werewolf --preset 6-players   # 新手局（6 人）
+uv run llm-werewolf --preset 9-players   # 标准局（9 人）
+uv run llm-werewolf --preset 12-players  # 进阶局（12 人）
+uv run llm-werewolf --preset 15-players  # 完整局（15 人）
+uv run llm-werewolf --preset expert      # 专家配置
+uv run llm-werewolf --preset chaos       # 混乱角色组合
 ```
 
-1. 更新 `pyproject.toml` 中的作者/描述等元数据
+### 自定义配置
 
-## 🧰 指令一览
+在 Python 中创建自定义配置：
+
+```python
+from llm_werewolf import GameConfig
+
+config = GameConfig(
+    num_players=9,
+    role_names=[
+        "Werewolf",
+        "Werewolf",
+        "Seer",
+        "Witch",
+        "Hunter",
+        "Villager",
+        "Villager",
+        "Villager",
+        "Villager",
+    ],
+    night_timeout=60,
+    day_timeout=300,
+)
+```
+
+## 整合您自己的 LLM
+
+套件提供抽象的 `BaseAgent` 类，您可以为任何 LLM 实作：
+
+```python
+from llm_werewolf.ai import BaseAgent
+
+
+class MyLLMAgent(BaseAgent):
+    def __init__(self, model_name: str = "my-model"):
+        super().__init__(model_name)
+        # 在这里初始化您的 LLM 客户端
+
+    def get_response(self, message: str) -> str:
+        # 在这里调用您的 LLM API
+        # message 包含游戏提示
+        # 返回 LLM 的响应
+        response = your_llm_api_call(message)
+        return response
+
+
+# 在游戏中使用
+from llm_werewolf import GameEngine
+from llm_werewolf.config import get_preset
+
+config = get_preset(9)
+engine = GameEngine(config)
+
+players = [(f"player_{i}", f"AI Player {i}", MyLLMAgent()) for i in range(config.num_players)]
+
+roles = config.to_role_list()
+engine.setup_game(players, roles)
+```
+
+## TUI 界面
+
+TUI 提供实时可视化：
+
+- **玩家面板**（左侧）：显示所有玩家、AI 模型和状态
+- **游戏面板**（中央上方）：显示当前回合、阶段和统计数据
+- **对话面板**（中央下方）：显示游戏事件和消息
+- **调试面板**（右侧）：显示会话信息、配置和错误（按 'd' 切换）
+
+### TUI 控制
+
+- `q`：退出应用程序
+- `d`：切换调试面板
+- 鼠标：滚动对话历史
+
+## 游戏流程
+
+1. **准备阶段**：玩家被随机分配角色
+2. **夜晚阶段**：具有夜晚能力的角色按优先顺序行动
+3. **白天讨论**：玩家讨论并分享信息
+4. **白天投票**：玩家投票淘汰嫌疑人
+5. **检查胜利**：游戏检查是否有阵营获胜
+6. 重复步骤 2-5 直到满足胜利条件
+
+## 胜利条件
+
+- **村民获胜**：所有狼人被淘汰
+- **狼人获胜**：狼人数量等于或超过村民
+- **恋人获胜**：只剩下两个恋人存活
+
+## 开发
+
+### 执行测试
 
 ```bash
-# 开发
-make help               # 显示 Makefile 命令列表
-make clean              # 清理缓存、产物与产生的文档
-make format             # 执行所有 pre-commit hooks
-make test               # 执行 pytest
-make gen-docs           # 从 src/ 与 scripts/ 生成文档
+# 安装测试依赖
+uv sync --group test
 
-# Git 子模块（如有使用）
-make submodule-init     # 初始化与更新所有子模块
-make submodule-update   # 更新所有子模块至远端
+# 执行所有测试
+uv run pytest
 
-# 依赖管理（uv）
-make uv-install         # 安装 uv
-uv add <pkg>            # 加入正式依赖
-uv add <pkg> --dev      # 加入开发依赖
-# 同步选用依赖群组
-uv sync --group dev     # 安装开发用依赖（pre-commit、poe、notebook）
-uv sync --group test    # 安装测试用依赖
-uv sync --group docs    # 安装文档用依赖
+# 执行并显示覆盖率
+uv run pytest --cov=src
+
+# 执行特定测试文件
+uv run pytest tests/core/test_roles.py -v
 ```
 
-## 📚 文档系统
-
-- 使用 MkDocs Material
-- 生成与预览：
+### 代码质量
 
 ```bash
-uv sync --group docs
-make gen-docs
-uv run mkdocs serve    # http://localhost:9987
+# 安装开发依赖
+uv sync --group dev
+
+# 执行 linter
+uv run ruff check src/
+
+# 格式化代码
+uv run ruff format src/
 ```
 
-- 自动生成脚本：`scripts/gen_docs.py`（支持 .py 与 .ipynb）
+## 架构
 
-```bash
-# 以 class 为单位（默认）
-uv run python ./scripts/gen_docs.py --source ./src --output ./docs/Reference gen_docs
+项目采用模块化架构：
 
-# 以文件为单位
-uv run python ./scripts/gen_docs.py --source ./src --output ./docs/Reference --mode file gen_docs
-```
+- **Core**：游戏逻辑（角色、玩家、状态、引擎、胜利）
+- **Config**：游戏配置和预设
+- **AI**：LLM 整合的抽象 agent 接口
+- **UI**：TUI 组件（基于 Textual）
+- **Utils**：辅助函数（logger、validator）
 
-## 🐳 Docker 与本机服务
+## 需求
 
-`docker-compose.yaml` 内提供本机开发常见服务：`redis`、`postgresql`、`mongodb`、`mysql`，以及演示 `app` 服务（执行 CLI）。
+- Python 3.10+
+- 依赖：pydantic、textual、rich
 
-建立 `.env` 设置连接参数（默认如下）：
+## 授权
 
-```bash
-REDIS_PORT=6379
-POSTGRES_DB=postgres
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_PORT=5432
-MONGO_PORT=27017
-MYSQL_ROOT_PASSWORD=root
-MYSQL_DATABASE=mysql
-MYSQL_USER=mysql
-MYSQL_PASSWORD=mysql
-MYSQL_PORT=3306
-```
+MIT License
 
-启动服务：
+## 贡献
 
-```bash
-docker compose up -d redis postgresql mongodb mysql
+欢迎贡献！请随时提交 pull request 或开 issue。
 
-# 或启动演示 app
-docker compose up -d app
-```
+## 致谢
 
-## 📦 打包与发布
+使用以下工具构建：
 
-以 uv 产出包（wheel/sdist 会放在 `dist/`）：
-
-```bash
-uv build
-```
-
-发布到 PyPI（需设置 `UV_PUBLISH_TOKEN`）：
-
-```bash
-UV_PUBLISH_TOKEN=... uv publish
-```
-
-CI 亦会在建立 `v*` 标签时自动打包多平台可执行文件与 Python 包，并上传到 GitHub Release。若要自动发布到 PyPI，请在 repository 设置中新增 `UV_PUBLISH_TOKEN` secret（`build_release.yml` 已设置自动发布）。
-
-### 在本机与 PyPI 执行你的 CLI
-
-- 本机（源码仓）：
-
-```bash
-uv run repo_template
-uv run cli
-```
-
-- 发布到 PyPI 后，通过 `uvx`（临时安装后执行）：
-
-```bash
-# 若 console script 名称为 "repo_template"
-uvx repo_template
-
-# 或指定包/版本与入口名称
-uvx --from your-package-name==0.1.0 your-entrypoint
-```
-
-## 🧭 选用任务管理（Poe the Poet）
-
-`pyproject.toml` 中的 `[tool.poe.tasks]` 定义了便捷任务，安装 dev 群组（`uv sync --group dev`）或使用 `uvx` 后可用：
-
-```bash
-uv run poe docs        # 生成 + 启动文档预览（需 dev 群组）
-uv run poe gen         # 生成 + 发布文档（gh-deploy）（需 dev 群组）
-uv run poe main        # 执行 CLI（等同 uv run repo_template）
-
-# 或使用 uvx（临时环境，无需本地安装）
-uvx poe docs
-```
-
-## 🔁 CI/CD 工作流程总览
-
-所有流程位于 `.github/workflows/`，以下为触发时机与用途：
-
-- Tests（`test.yml`）
-
-  - 触发：对 `main`、`release/*` 的 PR
-  - 执行 pytest（3.10/3.11/3.12/3.13）并留下覆盖率摘要
-
-- Code Quality（`code-quality-check.yml`）
-
-  - 触发：PR
-  - 执行 ruff 与其它 pre-commit hooks
-
-- Docs Deploy（`deploy.yml`）
-
-  - 触发：推送到 `main` 与 `v*` 标签
-  - 构建并发布 MkDocs 网站到 GitHub Pages
-  - 需在 GitHub 启用 Pages（Actions → Pages）
-
-- Build and Release（`build_release.yml`）
-
-  - 触发：`v*` 标签推送或手动触发
-  - 构建多平台可执行文件（通过 PyInstaller）：
-    - macOS（ARM64、x64）
-    - Linux（x64 GNU、ARM64 GNU）
-    - Windows（x64、ARM64）
-  - 构建 Python 包（wheel & sdist）
-  - 自动发布到 PyPI（需设置 `UV_PUBLISH_TOKEN` secret）
-  - 上传所有产物至 GitHub Release
-  - 注意：此为 template 示范流程，请依实际项目需求调整
-
-- Publish Docker Image（`build_image.yml`）
-
-  - 触发：推送到 `main` 与 `v*` 标签
-  - 发布至 GHCR：`ghcr.io/<owner>/<repo>`（需 `docker/Dockerfile` 内有 `prod` target）
-
-- Release Drafter（`release_drafter.yml`）
-
-  - 触发：推送到 `main` 与 PR 事件
-  - 基于 Conventional Commits 维护草稿发布
-
-- PR Labeler（`auto_labeler.yml`）
-
-  - 触发：PR 与 Push
-  - 依 `.github/labeler.yml` 自动加标签
-
-- Secret Scanning（`secret_scan.yml`）
-
-  - 触发：Push 与 PR
-  - 使用 gitleaks 扫描机密
-
-- Semantic Pull Request（`semantic-pull-request.yml`）
-
-  - 触发：PR 开启/更新
-  - 强制 PR 标题符合 Conventional Commits
-
-### CI/CD 设置清单
-
-- PR 标题遵循 Conventional Commits
-- （选用）发布到 PyPI：在 repository 设置中新增 `UV_PUBLISH_TOKEN` secret（Settings → Secrets and variables → Actions）
-- （选用）启用 GitHub Pages 以发布文档（Settings → Pages → Source: GitHub Actions）
-- （选用）发布 Docker 镜像：确认 GHCR 权限已启用（Settings → Actions → General → Workflow permissions: Read and write）
-
-## 🧩 示例 CLI
-
-`pyproject.toml` 内提供 `repo_template` 与 `cli` 两个入口点。目前演示返回简单 `Response` 模型，可依需求替换。
-
-```bash
-uv run repo_template
-```
-
-## 🤝 贡献
-
-- 欢迎 Issue/PR
-- 请遵循程序风格（ruff、类型）
-- PR 标题遵循 Conventional Commits
-
-## 📄 授权
-
-MIT — 详见 `LICENSE`。
+- [Pydantic](https://pydantic.dev/) 用于数据验证
+- [Textual](https://textual.textualize.io/) 用于 TUI
+- [Rich](https://rich.readthedocs.io/) 用于终端格式化

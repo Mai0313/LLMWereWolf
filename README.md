@@ -1,292 +1,251 @@
 <center>
 
-# Python Project Template
+# LLM Werewolf 🐺
 
-[![PyPI version](https://img.shields.io/pypi/v/swebenchv2.svg)](https://pypi.org/project/swebenchv2/)
 [![python](https://img.shields.io/badge/-Python_%7C_3.10%7C_3.11%7C_3.12%7C_3.13-blue?logo=python&logoColor=white)](https://www.python.org/downloads/source/)
 [![uv](https://img.shields.io/badge/-uv_dependency_management-2C5F2D?logo=python&logoColor=white)](https://docs.astral.sh/uv/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Pydantic v2](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/pydantic/pydantic/main/docs/badge/v2.json)](https://docs.pydantic.dev/latest/contributing/#badges)
-[![tests](https://github.com/Mai0313/repo_template/actions/workflows/test.yml/badge.svg)](https://github.com/Mai0313/repo_template/actions/workflows/test.yml)
-[![code-quality](https://github.com/Mai0313/repo_template/actions/workflows/code-quality-check.yml/badge.svg)](https://github.com/Mai0313/repo_template/actions/workflows/code-quality-check.yml)
-[![license](https://img.shields.io/badge/License-MIT-green.svg?labelColor=gray)](https://github.com/Mai0313/repo_template/tree/main?tab=License-1-ov-file)
-[![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Mai0313/repo_template/pulls)
-[![contributors](https://img.shields.io/github/contributors/Mai0313/repo_template.svg)](https://github.com/Mai0313/repo_template/graphs/contributors)
+[![license](https://img.shields.io/badge/License-MIT-green.svg?labelColor=gray)](https://github.com/Mai0313/llm_werewolf/tree/main?tab=License-1-ov-file)
+[![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Mai0313/llm_werewolf/pulls)
 
 </center>
 
-🚀 A production‑ready Python project template to help developers bootstrap new Python projects fast. It includes modern packaging, local tooling, Docker, and a complete CI/CD suite.
+An AI-powered Werewolf (Mafia) game with support for multiple LLM models and a beautiful Terminal User Interface (TUI).
 
-Click [Use this template](https://github.com/Mai0313/repo_template/generate) to start a new repository from this scaffold.
+## Features
 
-Other Languages: [English](README.md) | [繁體中文](README.zh-TW.md) | [简体中文](README.zh-CN.md)
+- 🎮 **Complete Game Logic**: Full implementation of Werewolf game rules with 20+ roles
+- 🤖 **LLM Integration**: Abstract interface for easy integration with any LLM (OpenAI, Anthropic, local models, etc.)
+- 🖥️ **Beautiful TUI**: Real-time game visualization using Textual framework
+- ⚙️ **Configurable**: Multiple preset configurations for different player counts
+- 📊 **Event System**: Comprehensive event logging and game state tracking
+- 🧪 **Well-Tested**: High code coverage with comprehensive test suite
 
-## ✨ Highlights
+## Quick Start
 
-- Modern `src/` layout and type‑hinted code
-- Fast dependency management via `uv`
-- Pre‑commit suite: ruff, mdformat(+plugins), codespell, nbstripout, mypy, uv hooks
-- Strong typing: mypy with Pydantic plugin configuration
-- Pytest with coverage and xdist; PR coverage summary comment
-- Coverage gate at 80% with HTML/XML reports committed under `.github/`
-- MkDocs Material with mkdocstrings (inheritance diagrams), markdown‑exec, MathJax
-- Dev server at `0.0.0.0:9987`; bilingual docs scaffolded
-- Docs generator script: by class/file, optional notebook execution, concurrency, preserves folder structure
-- Async file processing via anyio and rich progress bars
-- Packaging with `uv build` and changelog via `git-cliff`
-- Automatic PEP 440 versioning from git via `dunamai` in CI
-- Dockerfile multi‑stage with uv/uvx and Node.js; Compose services (Redis/Postgres/Mongo/MySQL) with healthchecks and volumes
-- GitHub Actions: tests, quality, docs deploy, package build, docker image publish (GHCR with buildx cache), release drafter, auto labeler, secret scan, semantic PR, pre‑commit auto‑update
-- Pre‑commit runs on multiple git stages (pre‑commit, post‑checkout, post‑merge, post‑rewrite)
-- i18n‑friendly linting (Chinese punctuation allowed confusables)
-- Alternative env managers documented (Rye, Conda)
-- Legacy compatibility: export `requirements.txt` via `uv pip` if needed
-
-## 🚀 Quick Start
-
-Prerequisites:
-
-- Python 3.10–3.13
-- `uv` (install with `make uv-install`)
-- Pre-commit hooks: either `uv tool install pre-commit` or `uv sync --group dev`
-
-Local setup:
+### Installation
 
 ```bash
-make uv-install               # once
-uv sync                       # install base deps
-uv tool install pre-commit    # or: uv sync --group dev
-make format                   # run pre-commit hooks
-make test                     # run tests
+# Clone the repository
+git clone <repository-url>
+cd Werewolf
+
+# Install dependencies
+uv sync
+
+# Run with TUI (default)
+uv run llm-werewolf
+
+# Run in console mode
+uv run llm-werewolf --no-tui
 ```
 
-Run the example CLI:
+### Basic Usage
 
 ```bash
-uv run repo_template
+# Start a 9-player game with TUI
+uv run llm-werewolf --preset 9-players
+
+# Start a 6-player game without TUI
+uv run llm-werewolf --preset 6-players --no-tui
+
+# Enable debug panel
+uv run llm-werewolf --debug
+
+# View help
+uv run llm-werewolf --help
 ```
 
-Use as a template (recommended for new projects):
+## Supported Roles
 
-1. Click Use this template to create your repository
-2. Replace names everywhere:
+### Werewolf Camp 🐺
+
+- **Werewolf**: Standard werewolf who kills at night
+- **Alpha Wolf**: Wolf King who can shoot when eliminated
+- **White Wolf**: Can kill another werewolf every other night
+- **Wolf Beauty**: Charms a player who dies if Beauty dies
+- **Guardian Wolf**: Can protect one werewolf each night
+- **Hidden Wolf**: Appears as villager to Seer
+- **Blood Moon Apostle**: Can transform into werewolf
+- **Nightmare Wolf**: Can block a player's ability
+
+### Villager Camp 👥
+
+- **Villager**: Ordinary villager with no special abilities
+- **Seer**: Can check one player's identity each night
+- **Witch**: Has save and poison potions (one-time use each)
+- **Hunter**: Can shoot someone when eliminated
+- **Guard**: Can protect one player each night
+- **Idiot**: Survives voting but loses voting rights
+- **Elder**: Takes two attacks to kill
+- **Knight**: Can duel a player once per game
+- **Magician**: Can swap two players' roles once
+- **Cupid**: Links two players as lovers on night 1
+- **Raven**: Marks a player for extra vote
+- **Graveyard Keeper**: Can check dead players' identities
+
+## Configuration
+
+### Using Presets
 
 ```bash
-# Replace package/module name
-find . -type f -name "*.py" -o -name "*.md" -o -name "*.toml" | xargs sed -i 's/repo_template/your_package_name/g'
-
-# Replace display title
-find . -type f -name "*.py" -o -name "*.md" -o -name "*.toml" | xargs sed -i 's/RepoTemplate/YourProjectTitle/g'
+# Available presets
+uv run llm-werewolf --preset 6-players   # Beginner (6 players)
+uv run llm-werewolf --preset 9-players   # Standard (9 players)
+uv run llm-werewolf --preset 12-players  # Advanced (12 players)
+uv run llm-werewolf --preset 15-players  # Full game (15 players)
+uv run llm-werewolf --preset expert      # Expert configuration
+uv run llm-werewolf --preset chaos       # Chaotic role mix
 ```
 
-1. Update metadata in `pyproject.toml`
+### Custom Configuration
 
-## 🧰 Commands Reference
+Create a custom configuration in Python:
+
+```python
+from llm_werewolf import GameConfig
+
+config = GameConfig(
+    num_players=9,
+    role_names=[
+        "Werewolf",
+        "Werewolf",
+        "Seer",
+        "Witch",
+        "Hunter",
+        "Villager",
+        "Villager",
+        "Villager",
+        "Villager",
+    ],
+    night_timeout=60,
+    day_timeout=300,
+)
+```
+
+## Integrating Your Own LLM
+
+The package provides an abstract `BaseAgent` class that you can implement for any LLM:
+
+```python
+from llm_werewolf.ai import BaseAgent
+
+
+class MyLLMAgent(BaseAgent):
+    def __init__(self, model_name: str = "my-model"):
+        super().__init__(model_name)
+        # Initialize your LLM client here
+
+    def get_response(self, message: str) -> str:
+        # Call your LLM API here
+        # message contains the game prompt
+        # return the LLM's response
+        response = your_llm_api_call(message)
+        return response
+
+
+# Use in game
+from llm_werewolf import GameEngine
+from llm_werewolf.config import get_preset
+
+config = get_preset(9)
+engine = GameEngine(config)
+
+players = [(f"player_{i}", f"AI Player {i}", MyLLMAgent()) for i in range(config.num_players)]
+
+roles = config.to_role_list()
+engine.setup_game(players, roles)
+```
+
+## TUI Interface
+
+The TUI provides real-time visualization of:
+
+- **Player Panel** (Left): Shows all players, their AI models, and status
+- **Game Panel** (Top Center): Displays current round, phase, and statistics
+- **Chat Panel** (Bottom Center): Shows game events and messages
+- **Debug Panel** (Right): Shows session info, config, and errors (toggle with 'd')
+
+### TUI Controls
+
+- `q`: Quit the application
+- `d`: Toggle debug panel
+- Mouse: Scroll through chat history
+
+## Game Flow
+
+1. **Setup**: Players are assigned random roles
+2. **Night Phase**: Roles with night abilities act in priority order
+3. **Day Discussion**: Players discuss and share information
+4. **Day Voting**: Players vote to eliminate a suspect
+5. **Check Victory**: Game checks if any camp has won
+6. Repeat steps 2-5 until victory condition is met
+
+## Victory Conditions
+
+- **Villagers Win**: When all werewolves are eliminated
+- **Werewolves Win**: When werewolves equal or outnumber villagers
+- **Lovers Win**: When only the two lovers remain alive
+
+## Development
+
+### Running Tests
 
 ```bash
-# Development
-make help               # List available make targets
-make clean              # Clean caches, artifacts and generated docs
-make format             # Run all pre-commit hooks
-make test               # Run pytest across the repository
-make gen-docs           # Generate docs from src/ and scripts/
+# Install test dependencies
+uv sync --group test
 
-# Git submodules (if you use them)
-make submodule-init     # Init and update all submodules
-make submodule-update   # Update all submodules to remote
+# Run all tests
+uv run pytest
 
-# Dependencies (via uv)
-make uv-install         # Install uv on your system
-uv add <pkg>            # Add production dependency
-uv add <pkg> --dev      # Add development dependency
-# Sync optional groups
-uv sync --group dev     # Install dev-only deps (pre-commit, poe, notebook)
-uv sync --group test    # Install test-only deps
-uv sync --group docs    # Install docs-only deps
+# Run with coverage
+uv run pytest --cov=src
+
+# Run specific test file
+uv run pytest tests/core/test_roles.py -v
 ```
 
-## 📚 Documentation
-
-- Live docs are built with MkDocs Material.
-- Generate API docs locally and serve:
+### Code Quality
 
 ```bash
-uv sync --group docs
-make gen-docs
-uv run mkdocs serve    # http://localhost:9987
+# Install dev dependencies
+uv sync --group dev
+
+# Run linters
+uv run ruff check src/
+
+# Format code
+uv run ruff format src/
 ```
 
-- Auto generation script: `scripts/gen_docs.py` (supports .py and .ipynb)
+## Architecture
 
-```bash
-# Generate docs by class (default)
-uv run python ./scripts/gen_docs.py --source ./src --output ./docs/Reference gen_docs
+The project follows a modular architecture:
 
-# Generate docs by file
-uv run python ./scripts/gen_docs.py --source ./src --output ./docs/Reference --mode file gen_docs
-```
+- **Core**: Game logic (roles, players, state, engine, victory)
+- **Config**: Game configurations and presets
+- **AI**: Abstract agent interface for LLM integration
+- **UI**: TUI components (Textual-based)
+- **Utils**: Helper functions (logger, validator)
 
-## 🐳 Docker and Local Services
+## Requirements
 
-`docker-compose.yaml` includes optional services for local development: `redis`, `postgresql`, `mongodb`, `mysql`, and an example `app` service that runs the CLI.
+- Python 3.10+
+- Dependencies: pydantic, textual, rich
 
-Create a `.env` file to configure ports and credentials (defaults shown):
+## License
 
-```bash
-REDIS_PORT=6379
-POSTGRES_DB=postgres
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_PORT=5432
-MONGO_PORT=27017
-MYSQL_ROOT_PASSWORD=root
-MYSQL_DATABASE=mysql
-MYSQL_USER=mysql
-MYSQL_PASSWORD=mysql
-MYSQL_PORT=3306
-```
+MIT License
 
-Run services:
+## Contributing
 
-```bash
-docker compose up -d redis postgresql mongodb mysql
+Contributions are welcome! Please feel free to submit pull requests or open issues.
 
-# Or run the example app container
-docker compose up -d app
-```
+## Credits
 
-## 📦 Packaging and Distribution
+Built with:
 
-Build artifacts with uv (wheel and sdist go to `dist/`):
-
-```bash
-uv build
-```
-
-Publish to PyPI (requires `UV_PUBLISH_TOKEN`):
-
-```bash
-UV_PUBLISH_TOKEN=... uv publish
-```
-
-CI builds automatically run on tags matching `v*`, building multi-platform executables and Python packages, then uploading them to GitHub Release. To automate releases to PyPI, add the `UV_PUBLISH_TOKEN` secret in your repository settings (`build_release.yml` is already configured for automatic publishing).
-
-### Run your CLI locally and from PyPI
-
-- Local (from this repo):
-
-```bash
-uv run repo_template
-uv run cli
-```
-
-- From PyPI with `uvx` after publishing (ephemeral install):
-
-```bash
-# If your console script is named "repo_template"
-uvx repo_template
-
-# Disambiguate or pin a package/version
-uvx --from your-package-name==0.1.0 your-entrypoint
-```
-
-## 🧭 Optional task runner (Poe the Poet)
-
-Convenience tasks are defined under `[tool.poe.tasks]` in `pyproject.toml` and available after installing the dev group (`uv sync --group dev`) or via `uvx`:
-
-```bash
-uv run poe docs        # generate + serve docs (requires dev group)
-uv run poe gen         # generate + deploy docs (gh-deploy) (requires dev group)
-uv run poe main        # run CLI entry (same as uv run repo_template)
-
-# or ephemeral via uvx (no local install)
-uvx poe docs
-```
-
-## 🔁 CI/CD Actions Overview
-
-All workflows live in `.github/workflows/`. This section explains what each action does, when it runs, and what to configure.
-
-- Tests (`test.yml`)
-
-  - Trigger: Pull requests to `main` or `release/*` (ignores md files)
-  - Runs pytest on Python 3.10/3.11/3.12/3.13 with coverage and comments a summary
-  - Setup needed: none
-
-- Code Quality Check (`code-quality-check.yml`)
-
-  - Trigger: Pull requests
-  - Runs ruff and other pre-commit hooks
-  - Setup needed: none
-
-- Docs Deploy (`deploy.yml`)
-
-  - Trigger: Push to `main` and tags `v*`
-  - Builds `mkdocs` site and publishes to GitHub Pages
-  - Setup needed:
-    - Enable GitHub Pages for the repo (Actions → Pages)
-    - The workflow configures and uploads the site automatically
-
-- Build and Release (`build_release.yml`)
-
-  - Trigger: Tags `v*` push or manual workflow dispatch
-  - Builds multi-platform executables (via PyInstaller):
-    - macOS (ARM64, x64)
-    - Linux (x64 GNU, ARM64 GNU)
-    - Windows (x64, ARM64)
-  - Builds Python package (wheel & sdist)
-  - Automatically publishes to PyPI (requires `UV_PUBLISH_TOKEN` secret)
-  - Uploads all artifacts to GitHub Release
-  - Note: This is a template demonstration workflow. Adjust to your project needs.
-
-- Publish Docker Image (`build_image.yml`)
-
-  - Trigger: Push to `main` and tags `v*`
-  - Builds and pushes a Docker image to GHCR: `ghcr.io/<owner>/<repo>`
-  - Setup needed: none (uses `GITHUB_TOKEN`); ensure `docker/Dockerfile` defines `prod` target
-
-- Release Drafter (`release_drafter.yml`)
-
-  - Trigger: Push to `main` and PR events
-  - Maintains a draft release based on Conventional Commits
-
-- Pull Request Labeler (`auto_labeler.yml`)
-
-  - Trigger: PRs and pushes
-  - Auto-applies labels defined in `.github/labeler.yml`
-
-- Secret Scanning (`secret_scan.yml`)
-
-  - Trigger: Push and PR
-  - Runs gitleaks to detect leaked secrets
-
-- Semantic Pull Request (`semantic-pull-request.yml`)
-
-  - Trigger: PR open/edit/sync
-  - Enforces Conventional Commit style PR titles
-
-### CI/CD Configuration Checklist
-
-- Conventional commits for PR titles (enforced by the workflow)
-- Optional: set `UV_PUBLISH_TOKEN` secret to publish to PyPI (Settings → Secrets and variables → Actions)
-- Optional: enable GitHub Pages for docs deployment (Settings → Pages → Source: GitHub Actions)
-- Optional: ensure GHCR permissions for Docker image publishing (Settings → Actions → General → Workflow permissions: Read and write)
-- Container Registry permissions are handled automatically via `GITHUB_TOKEN`
-
-## 🧩 Example CLI
-
-Console entry points are defined in `pyproject.toml` as `repo_template` and `cli`. The example returns a simple `Response` model; replace with your own CLI logic.
-
-```bash
-uv run repo_template
-```
-
-## 🤝 Contributing
-
-- Open issues/PRs
-- Follow the coding style (ruff, type hints)
-- Use Conventional Commit messages and descriptive PR titles
-
-## 📄 License
-
-MIT — see `LICENSE`.
+- [Pydantic](https://pydantic.dev/) for data validation
+- [Textual](https://textual.textualize.io/) for TUI
+- [Rich](https://rich.readthedocs.io/) for terminal formatting

@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Python project template designed to bootstrap production-ready projects quickly. The codebase follows a modern `src/` layout with comprehensive tooling for development, testing, documentation, and deployment.
+LLM Werewolf is an AI-powered Werewolf (Mafia) game with support for multiple LLM models and a Terminal User Interface (TUI). The project enables AI agents from different LLM providers to play the classic social deduction game.
 
-**Package name**: `repo_template`
+**Package name**: `llm_werewolf`
 **Python support**: 3.10, 3.11, 3.12, 3.13
 **Dependency manager**: `uv`
 **Documentation**: MkDocs Material with mkdocstrings
@@ -21,186 +21,300 @@ uv sync                   # Install base dependencies
 uv sync --group test      # Include test dependencies
 uv sync --group docs      # Include docs dependencies
 uv sync --group dev       # Include dev tools (pre-commit, poe, notebook)
+
+# Optional LLM provider dependencies
+uv sync --group llm-openai      # For OpenAI models
+uv sync --group llm-anthropic   # For Claude models
+uv sync --group llm-all         # For all supported LLM providers
 ```
 
-### Running Tests
+### Running the Game
 
 ```bash
-make test                 # Run pytest with coverage
-pytest                    # Direct pytest invocation
-pytest -vv                # Verbose output
-pytest tests/test_*.py    # Run specific test file
-uv run pytest -n auto     # Run with parallel execution (xdist)
+# Run with TUI (default, uses demo agents)
+uv run llm-werewolf
+uv run werewolf          # Alternative command
+
+# Run with specific preset
+uv run llm-werewolf --preset 9-players
+uv run llm-werewolf --preset 12-players
+
+# Run in console mode (no TUI)
+uv run llm-werewolf --no-tui
+
+# Enable debug panel
+uv run llm-werewolf --debug
+
+# View help
+uv run llm-werewolf --help
+```
+
+### Testing
+
+```bash
+make test                    # Run pytest with coverage
+pytest                       # Direct pytest invocation
+pytest -vv                   # Verbose output
+pytest tests/core/test_roles.py -v  # Run specific test file
+uv run pytest -n auto        # Run with parallel execution
 ```
 
 ### Code Quality
 
 ```bash
-make format               # Run all pre-commit hooks (ruff, mypy, etc.)
-pre-commit run -a         # Same as make format
+make format                  # Run all pre-commit hooks (ruff, mypy, etc.)
+pre-commit run -a            # Same as make format
+uv run ruff check src/       # Run linter
+uv run ruff format src/      # Format code
 ```
 
 ### Documentation
 
 ```bash
-make gen-docs             # Generate API docs from src/ and scripts/
-uv run mkdocs serve       # Serve docs at http://localhost:9987
-uv run poe docs           # Generate and serve (requires dev group)
-```
-
-### CLI Entry Points
-
-The project defines two CLI entry points (both execute the same function):
-
-```bash
-uv run repo_template      # Primary CLI entrypoint
-uv run cli                # Alternative entrypoint
-```
-
-### Building and Publishing
-
-```bash
-uv build                  # Build wheel and sdist to dist/
-UV_PUBLISH_TOKEN=... uv publish   # Publish to PyPI
-```
-
-### Running from PyPI
-
-After publishing, the CLI can be run without installation:
-
-```bash
-uvx repo_template                              # Run latest from PyPI
-uvx --from repo_template==0.1.0 repo_template  # Run specific version
+make gen-docs                # Generate API docs from src/ and scripts/
+uv run mkdocs serve          # Serve docs at http://localhost:9987
+uv run poe docs              # Generate and serve (requires dev group)
 ```
 
 ### Maintenance
 
 ```bash
-make clean                # Remove caches, artifacts, generated docs
+make clean                   # Remove caches, artifacts, generated docs
 ```
 
 ## Project Architecture
 
+The codebase follows a modular architecture centered around the Werewolf game simulation:
+
+### Core Game Architecture
+
+The game engine operates through several interconnected components:
+
+1. **GameEngine** (`core/game_engine.py`): Central orchestrator that manages game flow
+
+   - Controls phase transitions (Night → Day → Voting)
+   - Executes night actions in priority order
+   - Handles victory condition checks
+   - Emits events for UI updates via callback system
+
+2. **GameState** (`core/game_state.py`): Maintains current game state
+
+   - Tracks phase (Night/Day/Voting), round number
+   - Manages player status (alive/dead)
+   - Stores votes, night actions, and game history
+
+3. **Player** (`core/player.py`): Represents individual game participants
+
+   - Links to an AI agent via composition
+   - Tracks role assignment, status, and action history
+   - Provides interface for agent decision-making
+
+4. **Role System** (`core/roles/`): Implements 20+ unique roles
+
+   - Base class defines action priority and ability constraints
+   - Three camps: Werewolf, Villager, Neutral
+   - Each role has configurable `can_act_night`, `can_act_day`, `max_uses`
+   - Priority system ensures correct execution order (Cupid → Guard → Werewolf → Witch → Seer)
+
+5. **Event System** (`core/events.py`): Observable pattern for game events
+
+   - EventType enum: NIGHT_START, DAY_START, PLAYER_DIED, VOTE_CAST, etc.
+   - EventLogger maintains chronological game history
+   - UI components subscribe to events for real-time updates
+
+6. **Victory Conditions** (`core/victory.py`): Evaluates win conditions
+
+   - Villagers win when all werewolves eliminated
+   - Werewolves win when they equal/outnumber villagers
+   - Lovers win when only two lovers remain
+
+### AI Agent Interface
+
+**Abstract Agent Pattern** (`ai/base_agent.py`):
+
+- `BaseAgent`: Abstract base class with single required method: `get_response(message: str) -> str`
+- Input: String containing role info, game state, and action request
+- Output: String with agent's decision
+- Optional: `initialize()`, `reset()`, conversation history management
+
+**Implementations** (`ai/llm_agents.py`):
+
+- `DemoAgent`: Simple random choice agent (no LLM)
+- `HumanAgent`: Console input for human players
+- `OpenAIAgent`: OpenAI GPT models
+- `AnthropicAgent`: Anthropic Claude models
+- `GenericLLMAgent`: Any OpenAI-compatible API
+- Factory function: `create_agent_from_config()` auto-loads from `.env`
+
+**Key Design Principle**: The agent interface is intentionally minimal to support any LLM provider. Future instances should maintain this abstraction when adding new agent types.
+
+### Configuration System
+
+**GameConfig** (`config/game_config.py`):
+
+- Pydantic model with validation
+- Fields: `num_players`, `role_names`, `night_timeout`, `day_timeout`, `vote_timeout`
+- Validators ensure: role count matches player count, at least one werewolf present
+
+**Presets** (`config/role_presets.py`):
+
+- Pre-configured game setups: `6-players`, `9-players`, `12-players`, `15-players`, `expert`, `chaos`
+- Access via: `get_preset_by_name("9-players")` or `list_preset_names()`
+
+### TUI System
+
+**Textual Framework** (`ui/tui_app.py`):
+
+- Real-time game visualization with four panels:
+  - Player Panel (left): Lists players, AI models, status
+  - Game Panel (top center): Round, phase, statistics
+  - Chat Panel (bottom center): Scrollable event log
+  - Debug Panel (right): Toggle with 'd' key
+- Keyboard controls: 'q' to quit, 'd' to toggle debug panel
+
+**Components** (`ui/components/`):
+
+- Each panel is a reusable Textual widget
+- Updates driven by event callbacks from GameEngine
+- Styled with Rich formatting for terminal output
+
 ### Source Layout
 
-- **`src/repo_template/`**: Main package code
-  - `cli.py`: CLI entry point with example `Response` Pydantic model and `main()` function
-  - Uses Pydantic models with `Field()` descriptors and Google-style docstrings
+```
+src/llm_werewolf/
+├── ai/                  # AI agent implementations
+│   ├── base_agent.py    # Abstract interface
+│   ├── llm_agents.py    # LLM provider implementations
+│   └── message.py       # Message formatting utilities
+├── config/              # Game configurations
+│   ├── game_config.py   # GameConfig Pydantic model
+│   ├── llm_config.py    # LLM provider settings
+│   └── role_presets.py  # Preset configurations
+├── core/                # Core game logic
+│   ├── game_engine.py   # Main game orchestrator
+│   ├── game_state.py    # State management
+│   ├── player.py        # Player representation
+│   ├── actions.py       # Action validation
+│   ├── events.py        # Event system
+│   ├── victory.py       # Win condition checker
+│   └── roles/           # Role implementations
+│       ├── base.py      # Role base class, Camp/Priority enums
+│       ├── werewolf.py  # Werewolf camp roles
+│       ├── villager.py  # Villager camp roles
+│       └── neutral.py   # Neutral roles (Lovers, etc.)
+├── ui/                  # TUI components
+│   ├── tui_app.py       # Main Textual app
+│   ├── styles.py        # CSS styling
+│   └── components/      # Reusable widgets
+├── utils/               # Utilities
+│   ├── logger.py        # Logging setup
+│   └── validator.py     # Input validation
+└── cli.py               # CLI entry point
+```
 
-### Testing Infrastructure
+## Testing Infrastructure
 
-- **Test directory**: `tests/`
-- **Test discovery**: Files matching `test_*.py`
-- **Coverage**: Minimum 80% required (`--cov-fail-under=80`)
+- **Directory**: `tests/` (mirrors `src/` structure)
+- **Coverage**: Minimum 40% required (`--cov-fail-under=40`)
 - **Parallel execution**: Enabled via pytest-xdist (`-n=auto`)
 - **Reports**: Generated in `.github/reports/` (coverage.xml, pytest_logs.log)
 - **Async support**: `asyncio_mode = "auto"` for async test functions
+- **Markers**:
+  - `@pytest.mark.slow`: For slow tests
+  - `@pytest.mark.skip_when_ci`: Skip in CI/CD
 
-### Documentation Generation
+## Environment Configuration
 
-- **Script**: `scripts/gen_docs.py` (async, supports concurrency)
-- **Modes**:
-  - `--mode class`: Generate docs per class (default)
-  - `--mode file`: Generate docs per file
-- **File types**: Supports `.py` and `.ipynb` (notebooks)
-- **Execution**: `--execute` flag to run notebooks before conversion
-- **Output**: Preserves source folder structure in docs
-- **Usage**:
-  ```bash
-  python scripts/gen_docs.py --source ./src --output ./docs/Reference gen_docs
-  ```
+Create `.env` file for LLM API keys (see `.env.example`):
 
-### Docker and Services
+```bash
+# OpenAI
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4
 
-- **Dockerfile**: Multi-stage build with uv/uvx and Node.js
-- **docker-compose.yaml**: Includes optional services:
-  - `redis` (port 6379)
-  - `postgresql` (port 5432)
-  - `mongodb` (port 27017)
-  - `mysql` (port 3306)
-  - `app`: Example service running the CLI
-- **Configuration**: Via `.env` file (see README.md for keys)
+# Anthropic
+ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_MODEL=claude-3-5-sonnet-20241022
 
-### CI/CD Workflows
+# xAI (Grok)
+XAI_API_KEY=xai-...
+XAI_MODEL=grok-beta
 
-All workflows are in `.github/workflows/`:
+# Local models (Ollama, etc.)
+LOCAL_BASE_URL=http://localhost:11434/v1
+LOCAL_MODEL=llama2
+```
 
-- **test.yml**: Runs pytest on Python 3.10-3.13 for PRs to main/release/\* (ignores markdown files)
+## CI/CD Workflows
+
+All workflows in `.github/workflows/`:
+
+- **test.yml**: Runs pytest on Python 3.10-3.13 for PRs
 - **code-quality-check.yml**: Runs pre-commit hooks on PRs
-- **deploy.yml**: Builds and deploys MkDocs to GitHub Pages on push to main and tags `v*`
-- **build_package.yml**: Builds wheel/sdist on tags `v*`, generates changelog via git-cliff
-- **build_image.yml**: Builds and pushes Docker image to GHCR on main and tags `v*`
+- **deploy.yml**: Deploys MkDocs to GitHub Pages
+- **build_release.yml**: Builds package on tags, generates changelog
+- **build_image.yml**: Builds Docker image to GHCR
 - **release_drafter.yml**: Maintains draft releases from Conventional Commits
-- **auto_labeler.yml**: Auto-applies PR labels based on `.github/labeler.yml`
-- **code_scan.yml**: Runs gitleaks for secret detection
 - **semantic-pull-request.yml**: Enforces Conventional Commit PR titles
 
-### Code Style and Linting
+## Code Style and Linting
 
-- **Linter**: ruff with extensive rule sets (see pyproject.toml)
+- **Linter**: ruff with extensive rule sets
 - **Line length**: 99 characters (Google Python Style Guide)
 - **Naming**: snake_case (functions/vars), PascalCase (classes), UPPER_CASE (constants)
 - **Type hints**: Required on public functions; mypy with Pydantic plugin enabled
-- **Docstrings**: Google-style (configured in mkdocstrings)
-- **Allowed confusables**: Chinese punctuation marks are allowed
+- **Docstrings**: Google-style format
 - **Per-file ignores**:
   - `tests/*`: Ignore S101 (assert), ANN (annotations), SLF001 (private access)
   - `*.ipynb`: Ignore T201 (print), F401 (unused imports), S105, F811, ANN, PERF, SLF
+  - `examples/*.py`: Ignore UP, DOC, RUF, D, C, F401, T201
 
-### Dependency Management
+## Dependency Management
 
 ```bash
-uv add <package>              # Add production dependency
-uv add <package> --dev        # Add development dependency
-uv remove <package>           # Remove dependency
+uv add <package>                    # Add production dependency
+uv add <package> --group llm-openai # Add to optional group
+uv remove <package>                 # Remove dependency
 ```
 
-### Conventions
+## Important Design Considerations
 
-- **Commit style**: Conventional Commits enforced for PR titles
-- **Versioning**: PEP 440 via `dunamai` in CI from git tags
-- **Changelog**: Generated via `git-cliff` from conventional commits
-- **Pre-commit stages**: Runs on pre-commit, post-checkout, post-merge, post-rewrite
+### When Adding New LLM Providers
 
-## Testing Notes
+1. Inherit from `BaseAgent` in `ai/llm_agents.py`
+2. Implement only `get_response(message: str) -> str`
+3. Add provider configuration to `config/llm_config.py`
+4. Update `.env.example` with required environment variables
+5. Create optional dependency group in `pyproject.toml` under `[dependency-groups]`
 
-- Tests run in parallel by default (`-n=auto`)
-- Coverage reports committed to `.github/reports/`
-- PR comments show coverage summary automatically
-- Use markers for special cases:
-  - `@pytest.mark.slow`: For slow tests
-  - `@pytest.mark.skip_when_ci`: Skip in CI/CD
-- Async tests are automatically detected and run
+### When Adding New Roles
 
-## Publishing Workflow
+1. Determine camp (Werewolf/Villager/Neutral)
+2. Add role class to appropriate file in `core/roles/`
+3. Define `get_config()` with correct `ActionPriority`
+4. Implement `night_action()` and/or `day_action()` methods
+5. Register in `core/roles/__init__.py`
+6. Add to available roles in `config/role_presets.py`
+7. Update role list in README.md
 
-1. Tag with version: `git tag v0.1.0`
-2. Push tag: `git push origin v0.1.0`
-3. CI builds package and Docker image
-4. Optional: Auto-publish to PyPI (requires UV_PUBLISH_TOKEN secret)
-5. Changelog auto-generated via git-cliff
-6. Draft release created via release_drafter
+### Game Flow Order
 
-## Documentation System
+Each round follows this sequence:
 
-- **Serve locally**: `uv run mkdocs serve` (http://localhost:9987)
-- **Deploy**: `mkdocs gh-deploy` or push to main (auto-deploys)
-- **API docs**: Auto-generated from docstrings via mkdocstrings
-- **Features**: Inheritance diagrams, markdown-exec, MathJax support
-- **Bilingual**: Scaffolded for multiple languages (en, zh-TW, zh-CN)
-
-## Package Configuration
-
-- **Build backend**: hatchling
-- **Entry points**: Defined in `[project.scripts]` in pyproject.toml
-- **Include in wheel**: `src/repo_template`
-- **Sdist excludes**: Hidden files/dirs (.github, .devcontainers, .venv, etc.)
+1. Night phase starts (NIGHT_START event)
+2. Night actions executed in priority order (see `ActionPriority` enum)
+3. Day discussion phase (DAY_START event)
+4. Voting phase (players vote to eliminate)
+5. Process votes and eliminate player
+6. Check victory conditions
+7. Repeat or end game
 
 ## Important Paths
 
-- Source code: `src/repo_template/`
+- Source code: `src/llm_werewolf/`
 - Tests: `tests/`
 - Documentation: `docs/`
 - Scripts: `scripts/`
+- Examples: `examples/`
 - CI reports: `.github/reports/`
 - Cache directories: `.cache/` (pytest, ruff, mypy, logfire)

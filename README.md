@@ -31,14 +31,41 @@ An AI-powered Werewolf (Mafia) game with support for multiple LLM models and a b
 git clone <repository-url>
 cd Werewolf
 
-# Install dependencies
+# Install base dependencies
 uv sync
 
-# Run with TUI (default)
+# Optional: Install LLM provider dependencies
+uv sync --group llm-openai      # For OpenAI models
+uv sync --group llm-anthropic   # For Claude models
+uv sync --group llm-all         # For all supported LLM providers
+
+# Run with TUI (default, uses demo agents)
 uv run llm-werewolf
 
 # Run in console mode
 uv run llm-werewolf --no-tui
+```
+
+### Environment Setup
+
+Create a `.env` file for your LLM API keys:
+
+```bash
+# OpenAI
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4
+
+# Anthropic
+ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_MODEL=claude-3-5-sonnet-20241022
+
+# xAI (Grok)
+XAI_API_KEY=xai-...
+XAI_MODEL=grok-beta
+
+# Local models (Ollama, etc.)
+LOCAL_BASE_URL=http://localhost:11434/v1
+LOCAL_MODEL=llama2
 ```
 
 ### Basic Usage
@@ -124,9 +151,57 @@ config = GameConfig(
 )
 ```
 
-## Integrating Your Own LLM
+## LLM Integration
 
-The package provides an abstract `BaseAgent` class that you can implement for any LLM:
+### Using Built-in LLM Agents
+
+The package provides ready-to-use agents for popular LLM providers:
+
+```python
+from llm_werewolf.ai import OpenAIAgent, AnthropicAgent, GenericLLMAgent, create_agent_from_config
+from llm_werewolf import GameEngine
+from llm_werewolf.config import get_preset
+
+# Method 1: Create agents directly
+openai_agent = OpenAIAgent(model_name="gpt-4")
+claude_agent = AnthropicAgent(model_name="claude-3-5-sonnet-20241022")
+ollama_agent = GenericLLMAgent(model_name="llama2", base_url="http://localhost:11434/v1")
+
+# Method 2: Create from configuration (auto-loads from .env)
+agent = create_agent_from_config(
+    provider="openai",  # or "anthropic", "local", "xai", etc.
+    model_name="gpt-4",
+    temperature=0.7,
+    max_tokens=500,
+)
+
+# Setup game with LLM agents
+config = get_preset("9-players")
+engine = GameEngine(config)
+
+players = [
+    ("p1", "GPT-4 Player", OpenAIAgent("gpt-4")),
+    ("p2", "Claude Player", AnthropicAgent("claude-3-5-sonnet-20241022")),
+    ("p3", "Llama Player", GenericLLMAgent("llama2")),
+    # ... more players
+]
+
+roles = config.to_role_list()
+engine.setup_game(players, roles)
+```
+
+### Supported LLM Providers
+
+- **OpenAI**: GPT-4, GPT-3.5-turbo, etc.
+- **Anthropic**: Claude 3.5 Sonnet, Claude 3 Opus, etc.
+- **xAI**: Grok models
+- **Local**: Ollama, LM Studio, or any OpenAI-compatible endpoint
+- **Azure OpenAI**: Azure-hosted OpenAI models
+- **Custom**: Any OpenAI-compatible API
+
+### Implementing Your Own Agent
+
+For custom LLM integrations, implement the `BaseAgent` class:
 
 ```python
 from llm_werewolf.ai import BaseAgent
@@ -136,27 +211,39 @@ class MyLLMAgent(BaseAgent):
     def __init__(self, model_name: str = "my-model"):
         super().__init__(model_name)
         # Initialize your LLM client here
+        self.client = YourLLMClient()
 
     def get_response(self, message: str) -> str:
-        # Call your LLM API here
-        # message contains the game prompt
-        # return the LLM's response
-        response = your_llm_api_call(message)
+        """
+        Get response from your LLM.
+
+        Args:
+            message: The game prompt (role info, game state, action request, etc.)
+
+        Returns:
+            str: The LLM's response
+        """
+        # Add to conversation history (optional)
+        self.add_to_history("user", message)
+
+        # Call your LLM API
+        response = self.client.generate(message)
+
+        # Add response to history (optional)
+        self.add_to_history("assistant", response)
+
         return response
-
-
-# Use in game
-from llm_werewolf import GameEngine
-from llm_werewolf.config import get_preset
-
-config = get_preset(9)
-engine = GameEngine(config)
-
-players = [(f"player_{i}", f"AI Player {i}", MyLLMAgent()) for i in range(config.num_players)]
-
-roles = config.to_role_list()
-engine.setup_game(players, roles)
 ```
+
+### Agent Interface Details
+
+The `BaseAgent` provides:
+
+- `get_response(message: str) -> str`: Main method to implement (required)
+- `initialize()`: Setup method called before game starts (optional)
+- `reset()`: Clear conversation history for new game (optional)
+- `add_to_history(role: str, content: str)`: Track conversation (optional)
+- `get_history() -> list[dict]`: Get conversation history (optional)
 
 ## TUI Interface
 

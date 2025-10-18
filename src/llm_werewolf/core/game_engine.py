@@ -1,0 +1,413 @@
+"""Game engine for the Werewolf game."""
+
+import random
+from typing import TYPE_CHECKING
+
+from llm_werewolf.core.events import Event, EventType, EventLogger
+from llm_werewolf.core.player import Player
+from llm_werewolf.core.victory import VictoryChecker
+from llm_werewolf.core.game_state import GamePhase, GameState
+from llm_werewolf.config.game_config import GameConfig
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from llm_werewolf.ai.base_agent import BaseAgent
+    from llm_werewolf.core.roles.base import Role
+
+
+class GameEngine:
+    """Core game engine that controls the flow of the Werewolf game."""
+
+    def __init__(self, config: GameConfig | None = None) -> None:
+        """Initialize the game engine.
+
+        Args:
+            config: Game configuration.
+        """
+        self.config = config
+        self.game_state: GameState | None = None
+        self.event_logger = EventLogger()
+        self.victory_checker: VictoryChecker | None = None
+
+        # Callback for UI updates
+        self.on_event: Callable[[Event], None] | None = None
+
+    def setup_game(self, players: list[tuple[str, str, "BaseAgent"]], roles: list["Role"]) -> None:
+        """Initialize the game with players and roles.
+
+        Args:
+            players: List of tuples (player_id, name, agent).
+            roles: List of role instances to assign.
+        """
+        if len(players) != len(roles):
+            msg = f"Number of players ({len(players)}) must match number of roles ({len(roles)})"
+            raise ValueError(msg)
+
+        # Shuffle roles for random assignment
+        shuffled_roles = roles.copy()
+        random.shuffle(shuffled_roles)
+
+        # Create player objects
+        player_objects = []
+        for (player_id, name, agent), role in zip(players, shuffled_roles, strict=False):
+            ai_model = getattr(agent, "model_name", "unknown") if agent else "human"
+            player = Player(
+                player_id=player_id, name=name, role=role, agent=agent, ai_model=ai_model
+            )
+            player_objects.append(player)
+
+        # Initialize game state
+        self.game_state = GameState(player_objects)
+        self.victory_checker = VictoryChecker(self.game_state)
+
+        # Log game start event
+        self._log_event(
+            EventType.GAME_STARTED,
+            f"Game started with {len(player_objects)} players",
+            data={"player_count": len(player_objects)},
+        )
+
+    def assign_roles(self) -> dict[str, str]:
+        """Assign roles to players (already done in setup_game).
+
+        Returns:
+            dict[str, str]: Mapping of player_id to role_name.
+        """
+        if not self.game_state:
+            msg = "Game not initialized"
+            raise RuntimeError(msg)
+
+        return {p.player_id: p.get_role_name() for p in self.game_state.players}
+
+    def run_night_phase(self) -> list[str]:
+        """Execute the night phase where roles perform actions.
+
+        Returns:
+            list[str]: Messages describing night actions.
+        """
+        if not self.game_state:
+            msg = "Game not initialized"
+            raise RuntimeError(msg)
+
+        messages = []
+        self.game_state.set_phase(GamePhase.NIGHT)
+
+        self._log_event(
+            EventType.PHASE_CHANGED,
+            f"Night {self.game_state.round_number} begins",
+            data={"phase": "night", "round": self.game_state.round_number},
+        )
+
+        messages.append(f"\n=== Night {self.game_state.round_number} ===")
+
+        # Execute night actions in priority order
+        # This is simplified - in a full implementation, each role would
+        # interact with their AI agent to get their action
+
+        # Resolve night deaths
+        death_messages = self.resolve_deaths()
+        messages.extend(death_messages)
+
+        return messages
+
+    def run_day_phase(self) -> list[str]:
+        """Execute the day discussion phase.
+
+        Returns:
+            list[str]: Messages from the day phase.
+        """
+        if not self.game_state:
+            msg = "Game not initialized"
+            raise RuntimeError(msg)
+
+        messages = []
+        self.game_state.set_phase(GamePhase.DAY_DISCUSSION)
+
+        self._log_event(
+            EventType.PHASE_CHANGED,
+            f"Day {self.game_state.round_number} begins",
+            data={"phase": "day", "round": self.game_state.round_number},
+        )
+
+        messages.append(f"\n=== Day {self.game_state.round_number} ===")
+
+        # Announce who died last night
+        if self.game_state.night_deaths:
+            for player_id in self.game_state.night_deaths:
+                player = self.game_state.get_player(player_id)
+                if player:
+                    messages.append(f"{player.name} was killed last night.")
+        else:
+            messages.append("No one died last night.")
+
+        return messages
+
+    def run_voting_phase(self) -> list[str]:
+        """Execute the voting phase.
+
+        Returns:
+            list[str]: Messages from the voting phase.
+        """
+        if not self.game_state:
+            msg = "Game not initialized"
+            raise RuntimeError(msg)
+
+        messages = []
+        self.game_state.set_phase(GamePhase.DAY_VOTING)
+
+        # Simplified voting - in full implementation, players would vote via AI
+        messages.append("\n=== Voting Phase ===")
+
+        # Get vote counts
+        vote_counts = self.game_state.get_vote_counts()
+
+        if vote_counts:
+            # Find player with most votes
+            max_votes = max(vote_counts.values())
+            candidates = [pid for pid, count in vote_counts.items() if count == max_votes]
+
+            if len(candidates) == 1:
+                eliminated_id = candidates[0]
+                eliminated = self.game_state.get_player(eliminated_id)
+                if eliminated:
+                    # Check if Idiot
+                    from llm_werewolf.core.roles.villager import Idiot
+
+                    if isinstance(eliminated.role, Idiot) and not eliminated.role.revealed:
+                        eliminated.role.revealed = True
+                        eliminated.disable_voting()
+                        messages.append(
+                            f"{eliminated.name} reveals they are the Idiot and survives!"
+                        )
+                    else:
+                        eliminated.kill()
+                        self.game_state.day_deaths.add(eliminated_id)
+                        messages.append(
+                            f"{eliminated.name} was eliminated by vote. "
+                            f"They were a {eliminated.get_role_name()}."
+                        )
+
+                        self._log_event(
+                            EventType.PLAYER_ELIMINATED,
+                            f"{eliminated.name} was voted out",
+                            data={"player_id": eliminated_id, "role": eliminated.get_role_name()},
+                        )
+            else:
+                messages.append("Vote tied. No one is eliminated.")
+        else:
+            messages.append("No votes cast.")
+
+        return messages
+
+    def _handle_werewolf_kill(self, target: "Player") -> list[str]:
+        """Handle werewolf kill and its consequences.
+
+        Args:
+            target: The target player.
+
+        Returns:
+            list[str]: Messages describing the kill.
+        """
+        if not self.game_state:
+            return []
+
+        messages = []
+
+        # Check if saved by witch
+        if self.game_state.witch_saved_target == target.player_id:
+            messages.append(f"{target.name} was saved by the witch!")
+        # Check if protected by guard
+        elif self.game_state.guard_protected == target.player_id:
+            messages.append(f"{target.name} was protected by the guard!")
+        else:
+            # Check if Elder with 2 lives
+            from llm_werewolf.core.roles.villager import Elder
+
+            if isinstance(target.role, Elder) and target.role.lives > 1:
+                target.role.lives -= 1
+                messages.append(f"{target.name} was attacked but survived (Elder)!")
+            else:
+                target.kill()
+                self.game_state.night_deaths.add(target.player_id)
+
+                self._log_event(
+                    EventType.WEREWOLF_KILLED,
+                    f"{target.name} was killed by werewolves",
+                    data={"player_id": target.player_id},
+                )
+
+                # Check if lover dies
+                if target.is_lover() and target.lover_partner_id:
+                    partner = self.game_state.get_player(target.lover_partner_id)
+                    if partner and partner.is_alive():
+                        partner.kill()
+                        self.game_state.night_deaths.add(partner.player_id)
+                        messages.append(f"{partner.name} died of heartbreak (lover)!")
+
+        return messages
+
+    def resolve_deaths(self) -> list[str]:
+        """Resolve all deaths based on night actions.
+
+        Returns:
+            list[str]: Messages describing deaths.
+        """
+        if not self.game_state:
+            return []
+
+        messages = []
+
+        # Werewolf kill
+        if self.game_state.werewolf_target:
+            target = self.game_state.get_player(self.game_state.werewolf_target)
+            if target:
+                messages.extend(self._handle_werewolf_kill(target))
+
+        # Witch poison
+        if self.game_state.witch_poison_target:
+            target = self.game_state.get_player(self.game_state.witch_poison_target)
+            if target and target.is_alive():
+                target.kill()
+                self.game_state.night_deaths.add(target.player_id)
+
+                self._log_event(
+                    EventType.WITCH_POISONED,
+                    f"{target.name} was poisoned by witch",
+                    data={"player_id": target.player_id},
+                )
+
+        return messages
+
+    def check_victory(self) -> bool:
+        """Check if any victory condition is met.
+
+        Returns:
+            bool: True if the game has ended.
+        """
+        if not self.victory_checker:
+            return False
+
+        result = self.victory_checker.check_victory()
+
+        if result.has_winner:
+            if self.game_state:
+                self.game_state.set_phase(GamePhase.ENDED)
+                self.game_state.winner = result.winner_camp
+
+            self._log_event(
+                EventType.GAME_ENDED,
+                f"Game ended. {result.winner_camp} wins! {result.reason}",
+                data={
+                    "winner_camp": result.winner_camp,
+                    "winner_ids": result.winner_ids,
+                    "reason": result.reason,
+                },
+            )
+
+            return True
+
+        return False
+
+    def process_actions(self, actions: list) -> list[str]:
+        """Process a list of actions.
+
+        Args:
+            actions: List of Action objects to process.
+
+        Returns:
+            list[str]: Messages from processing actions.
+        """
+        messages = []
+
+        # Sort actions by priority (if they have priority)
+        # Execute each action
+        for action in actions:
+            if action.validate():
+                result_messages = action.execute()
+                messages.extend(result_messages)
+
+        return messages
+
+    def play_game(self) -> str:
+        """Run the main game loop.
+
+        Returns:
+            str: The final game result.
+        """
+        if not self.game_state:
+            return "Game not initialized"
+
+        while not self.check_victory():
+            # Night phase
+            self.run_night_phase()
+
+            # Check victory after night
+            if self.check_victory():
+                break
+
+            # Day phase
+            self.run_day_phase()
+
+            # Voting phase
+            self.run_voting_phase()
+
+            # Check victory after voting
+            if self.check_victory():
+                break
+
+            # Move to next round
+            self.game_state.next_phase()
+
+        # Game ended
+        if self.game_state.winner:
+            return f"Game Over! {self.game_state.winner} camp wins!"
+
+        return "Game ended"
+
+    def _log_event(
+        self,
+        event_type: EventType,
+        message: str,
+        data: dict | None = None,
+        visible_to: list[str] | None = None,
+    ) -> None:
+        """Log an event and notify listeners.
+
+        Args:
+            event_type: Type of the event.
+            message: Event message.
+            data: Additional event data.
+            visible_to: List of player IDs who can see this event.
+        """
+        if not self.game_state:
+            return
+
+        event = self.event_logger.create_event(
+            event_type=event_type,
+            round_number=self.game_state.round_number,
+            phase=self.game_state.phase.value,
+            message=message,
+            data=data,
+            visible_to=visible_to,
+        )
+
+        # Notify UI or other listeners
+        if self.on_event:
+            self.on_event(event)
+
+    def get_game_state(self) -> GameState | None:
+        """Get the current game state.
+
+        Returns:
+            GameState | None: The game state.
+        """
+        return self.game_state
+
+    def get_events(self) -> list[Event]:
+        """Get all game events.
+
+        Returns:
+            list[Event]: List of events.
+        """
+        return self.event_logger.events

@@ -31,14 +31,41 @@
 git clone <repository-url>
 cd Werewolf
 
-# 安装依赖
+# 安装基础依赖
 uv sync
 
-# 使用 TUI 执行（默认）
+# 可选：安装 LLM 提供商依赖
+uv sync --group llm-openai      # 用于 OpenAI 模型
+uv sync --group llm-anthropic   # 用于 Claude 模型
+uv sync --group llm-all         # 用于所有支持的 LLM 提供商
+
+# 使用 TUI 执行（默认，使用演示代理）
 uv run llm-werewolf
 
 # 使用命令行模式执行
 uv run llm-werewolf --no-tui
+```
+
+### 环境配置
+
+创建 `.env` 文件配置 LLM API 密钥：
+
+```bash
+# OpenAI
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4
+
+# Anthropic
+ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_MODEL=claude-3-5-sonnet-20241022
+
+# xAI (Grok)
+XAI_API_KEY=xai-...
+XAI_MODEL=grok-beta
+
+# 本地模型（Ollama 等）
+LOCAL_BASE_URL=http://localhost:11434/v1
+LOCAL_MODEL=llama2
 ```
 
 ### 基本使用
@@ -124,9 +151,57 @@ config = GameConfig(
 )
 ```
 
-## 整合您自己的 LLM
+## LLM 整合
 
-套件提供抽象的 `BaseAgent` 类，您可以为任何 LLM 实作：
+### 使用内置 LLM 代理
+
+套件提供多种主流 LLM 提供商的即用型代理：
+
+```python
+from llm_werewolf.ai import OpenAIAgent, AnthropicAgent, GenericLLMAgent, create_agent_from_config
+from llm_werewolf import GameEngine
+from llm_werewolf.config import get_preset
+
+# 方法 1：直接创建代理
+openai_agent = OpenAIAgent(model_name="gpt-4")
+claude_agent = AnthropicAgent(model_name="claude-3-5-sonnet-20241022")
+ollama_agent = GenericLLMAgent(model_name="llama2", base_url="http://localhost:11434/v1")
+
+# 方法 2：从配置创建（自动从 .env 加载）
+agent = create_agent_from_config(
+    provider="openai",  # 或 "anthropic", "local", "xai" 等
+    model_name="gpt-4",
+    temperature=0.7,
+    max_tokens=500,
+)
+
+# 使用 LLM 代理设置游戏
+config = get_preset("9-players")
+engine = GameEngine(config)
+
+players = [
+    ("p1", "GPT-4 玩家", OpenAIAgent("gpt-4")),
+    ("p2", "Claude 玩家", AnthropicAgent("claude-3-5-sonnet-20241022")),
+    ("p3", "Llama 玩家", GenericLLMAgent("llama2")),
+    # ... 更多玩家
+]
+
+roles = config.to_role_list()
+engine.setup_game(players, roles)
+```
+
+### 支持的 LLM 提供商
+
+- **OpenAI**: GPT-4, GPT-3.5-turbo 等
+- **Anthropic**: Claude 3.5 Sonnet, Claude 3 Opus 等
+- **xAI**: Grok 模型
+- **Local**: Ollama, LM Studio 或任何 OpenAI 兼容端点
+- **Azure OpenAI**: Azure 托管的 OpenAI 模型
+- **Custom**: 任何 OpenAI 兼容的 API
+
+### 实现您自己的代理
+
+对于自定义 LLM 整合，实现 `BaseAgent` 类：
 
 ```python
 from llm_werewolf.ai import BaseAgent
@@ -135,28 +210,40 @@ from llm_werewolf.ai import BaseAgent
 class MyLLMAgent(BaseAgent):
     def __init__(self, model_name: str = "my-model"):
         super().__init__(model_name)
-        # 在这里初始化您的 LLM 客户端
+        # 初始化您的 LLM 客户端
+        self.client = YourLLMClient()
 
     def get_response(self, message: str) -> str:
-        # 在这里调用您的 LLM API
-        # message 包含游戏提示
-        # 返回 LLM 的响应
-        response = your_llm_api_call(message)
+        """
+        从您的 LLM 获取响应。
+
+        Args:
+            message: 游戏提示（角色信息、游戏状态、行动请求等）
+
+        Returns:
+            str: LLM 的响应
+        """
+        # 添加到对话历史（可选）
+        self.add_to_history("user", message)
+
+        # 调用您的 LLM API
+        response = self.client.generate(message)
+
+        # 添加响应到历史（可选）
+        self.add_to_history("assistant", response)
+
         return response
-
-
-# 在游戏中使用
-from llm_werewolf import GameEngine
-from llm_werewolf.config import get_preset
-
-config = get_preset(9)
-engine = GameEngine(config)
-
-players = [(f"player_{i}", f"AI Player {i}", MyLLMAgent()) for i in range(config.num_players)]
-
-roles = config.to_role_list()
-engine.setup_game(players, roles)
 ```
+
+### 代理接口详情
+
+`BaseAgent` 提供：
+
+- `get_response(message: str) -> str`：需要实现的主要方法（必需）
+- `initialize()`：游戏开始前调用的设置方法（可选）
+- `reset()`：为新游戏清除对话历史（可选）
+- `add_to_history(role: str, content: str)`：追踪对话（可选）
+- `get_history() -> list[dict]`：获取对话历史（可选）
 
 ## TUI 界面
 

@@ -1,0 +1,53 @@
+name: Publish GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - v*
+
+permissions: write-all
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    # container: catthehacker/ubuntu:act-20.04  # Uncomment it if you use it on Gitea
+
+    steps:
+      - name: Disable SSL Verify
+        run: git config --global http.sslVerify false
+
+      # - name: Setup MTK Certification
+      #   uses: https://gitea.mediatek.inc/actions/mtk-cert-action@v1.2.0
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy docs
+        run: |
+          uv sync --group docs
+          uv run make gen-docs
+          uv run mkdocs build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site
+
+      - name: Publish to GitHub Pages
+        uses: actions/deploy-pages@v4

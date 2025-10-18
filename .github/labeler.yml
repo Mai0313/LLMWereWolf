@@ -1,0 +1,186 @@
+# 🏷️ Auto Labeler Configuration
+# 這個檔案會自動為 PR 添加標籤，基於分支名稱和檔案變更路徑
+# 設計來支援 Python 和 TypeScript 專案，與 release-drafter.yml 完全對應
+
+# 主要標籤會被 release-drafter.yml 用於：
+# 1. 自動分類到對應的 changelog 區段
+# 2. 決定版本號 (Major/Minor/Patch)
+# 3. 生成 release notes
+
+# ===============================
+# 🎯 Main Labels (對應 release-drafter categories)
+# ===============================
+
+# 💥 Breaking Changes
+breaking:
+  - head-branch:
+      - "^breaking/.*"
+      - "^major/.*"
+      - "^BREAKING/.*"
+
+# ✨ Features
+feature:
+  - head-branch:
+      - "^feat/.*"
+      - "^feature/.*"
+      - "^add/.*"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/**/*.py"
+          - "src/**/*.ts"
+          - "src/**/*.js"
+          - "lib/**/*.py"
+          - "lib/**/*.ts"
+          - "lib/**/*.js"
+
+# 🐛 Bug Fixes
+bugfix:
+  - head-branch:
+      - "^fix/.*"
+      - "^bug/.*"
+      - "^bugfix/.*"
+      - "^hotfix/.*"
+
+# 🧰 Maintenance
+chore:
+  - head-branch:
+      - "^chore/.*"
+      - "^maintenance/.*"
+      - "^config/.*"
+      - "^update/.*"
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/**"
+          - ".pre-commit-config.yaml"
+          - "pyproject.toml"
+          - "setup.py"
+          - "Makefile"
+
+# 📦 Dependencies
+dependencies:
+  - head-branch:
+      - "^dep/.*"
+      - "^deps/.*"
+      - "^dependencies/.*"
+      - "^dependabot/.*"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "requirements*.txt"
+          - "pyproject.toml"
+          - "setup.py"
+          - "setup.cfg"
+          - "Pipfile*"
+          - "poetry.lock"
+          - "uv.lock"
+          - "package.json"
+          - "package-lock.json"
+          - "yarn.lock"
+          - "pnpm-lock.yaml"
+
+# 📝 Documentation
+documentation:
+  - head-branch:
+      - "^docs/.*"
+      - "^doc/.*"
+      - "^documentation/.*"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "docs/**/*"
+          - "**/*.md"
+          - "**/*.rst"
+          - "**/*.ipynb"
+          - "notebooks/**/*"
+          - "notebook/**/*"
+          - "mkdocs.yml"
+          - "README*"
+          - "CHANGELOG*"
+
+# 🧪 Tests
+unit-test:
+  - head-branch:
+      - "^test/.*"
+      - "^tests/.*"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "tests/**/*.py"
+          - "test/**/*.py"
+          - "**/test_*.py"
+          - "**/*_test.py"
+          - "**/*test*.py"
+          - "**/*spec*.py"
+          - "tests/**/*.ts"
+          - "test/**/*.ts"
+          - "**/*.test.ts"
+          - "**/*.spec.ts"
+          - "**/*.test.js"
+          - "**/*.spec.js"
+          - "jest.config.*"
+          - "vitest.config.*"
+          - "pytest.ini"
+          - "conftest.py"
+
+# ⚡️ Performance Improvements
+perf:
+  - head-branch:
+      - "^perf/.*"
+      - "^performance/.*"
+      - "^optimize/.*"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*perf*.py"
+          - "**/*benchmark*.py"
+          - "**/*performance*.py"
+          - "**/*perf*.ts"
+          - "**/*benchmark*.ts"
+          - "**/*performance*.ts"
+
+# 🔒️ Security Fixes
+security:
+  - head-branch:
+      - "^security/.*"
+      - "^sec/.*"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*security*.py"
+          - "**/*auth*.py"
+          - "**/*credential*.py"
+          - "**/*security*.ts"
+          - "**/*auth*.ts"
+          - "**/*credential*.ts"
+
+# ♻️ Code Refactoring
+refactor:
+  - head-branch:
+      - "^refactor/.*"
+      - "^cleanup/.*"
+      - "^restructure/.*"
+
+# 🎨 Code Style & Formatting
+style:
+  - head-branch:
+      - "^style/.*"
+      - "^format/.*"
+      - "^lint/.*"
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".pre-commit-config.yaml"
+          - ".ruff.toml"
+          - "ruff.toml"
+          - ".black"
+          - ".flake8"
+          - ".isort.cfg"
+          - ".mypy.ini"
+          - "mypy.ini"
+          - ".pylintrc"
+          - ".eslintrc*"
+          - ".prettier*"
+          - "stylelint*"
+          - "**/*.css"
+          - "**/*.scss"
+          - "**/*.sass"
+
+# 🔙 Reverts
+revert:
+  - head-branch:
+      - "^revert/.*"
+      - "^rollback/.*"

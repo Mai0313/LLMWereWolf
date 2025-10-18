@@ -1,0 +1,154 @@
+default_language_version:
+  python: python3
+
+default_install_hook_types:
+  - pre-commit
+  - post-checkout
+  - post-merge
+  - post-rewrite
+
+default_stages:
+  - pre-commit
+  - post-checkout
+  - post-merge
+  - post-rewrite
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.0
+    hooks:
+      - id: ruff-check
+        types_or: [ python, pyi, jupyter ]
+      - id: ruff-format
+        types_or: [ python, pyi, jupyter ]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      # list of supported hooks: https://pre-commit.com/hooks.html
+      - id: check-added-large-files
+        exclude: poetry.lock|uv.lock
+      - id: check-ast
+      - id: check-yaml
+        exclude: mkdocs.yml
+        args:
+          - --allow-multiple-documents
+      - id: check-toml
+      - id: check-json
+        exclude: .vscode/launch.json
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: destroyed-symlinks
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      # - id: no-commit-to-branch
+      - id: trailing-whitespace
+      - id: fix-byte-order-marker
+        exclude: docs/CNAME
+      - id: mixed-line-ending
+        args:
+          - --fix=lf
+      - id: check-docstring-first
+      - id: debug-statements
+      - id: check-symlinks
+
+  # shell script linter
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.11.0
+    hooks:
+      - id: shellcheck
+
+  # md formatting
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.22
+    hooks:
+      - id: mdformat
+        args:
+          - --number
+          - --no-validate
+        additional_dependencies:
+          - mdformat-gfm
+          - mdformat-web
+          - mdformat-ruff
+          - mdformat-config
+          - mdformat-tables
+          - mdformat-footnote
+          - mdformat-wikilink
+          - mdformat-beautysh
+          - mdformat-pyproject
+          - mdformat_frontmatter
+          - mdformat-simple-breaks
+          - setuptools<80
+
+  # jupyter notebook cell output clearing
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.8.1
+    hooks:
+      - id: nbstripout
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+      - id: codespell
+        additional_dependencies:
+          - tomli
+
+  # - repo: local
+  #   hooks:
+  #     - id: code2flow
+  #       name: Code2Flow
+  #       language: system
+  #       entry: bash -c 'if command -v code2flow >/dev/null 2>&1; then code2flow **/**/*.py -o ./.github/code2flow/flow.png; else echo "code2flow not installed, skipping"; fi'
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.18.2
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - "Pydantic"
+          - "Types-PyYAML"
+          - "Types-requests"
+          - "Types-urllib3"
+          - "Types-redis"
+          - "Types-attrs"
+
+  # - repo: local
+  #   hooks:
+  #     - id: update-version
+  #       name: Update project version in pyproject.toml
+  #       entry: bash -c 'VERSION=$(uvx dunamai from git --bump --no-metadata --style pep440) && uv version $VERSION'
+  #       language: system
+  #       pass_filenames: false
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.28.0
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.9.3
+    hooks:
+      - id: uv-sync
+      - id: uv-lock
+      # - id: uv-export
+      #   args: ["--no-dev", "--no-hashes", "--frozen", "--output-file", "./requirements.txt"]
+      # - id: pip-compile
+      #   args: [pyproject.toml]
+      #   files: ^pyproject\.(toml|ini)$
+
+  # - repo: https://github.com/RobertCraigie/pyright-python
+  #   rev: v1.1.374
+  #   hooks:
+  #   - id: pyright
+
+  # # Pytest
+  # - repo: local
+  #   hooks:
+  #     - id: pytest
+  #       name: Run pytest
+  #       entry: bash -c 'if command -v pytest >/dev/null 2>&1; then pytest -vv; else echo "pytest not installed, skipping tests"; fi'
+  #       language: system
+  #       types:
+  #         - python
+  #       pass_filenames: false
+  #       always_run: true

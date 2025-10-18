@@ -1,0 +1,87 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - release/*
+    paths-ignore:
+      - "**/*.md"
+  pull_request:
+    branches:
+      - main
+      - master
+      - release/*
+    paths-ignore:
+      - "**/*.md"
+
+permissions: write-all
+
+jobs:
+  run_tests:
+    if: ${{ !(startsWith(github.head_ref, 'chore/') || startsWith(github.head_ref, 'ci/') || startsWith(github.head_ref, 'docs/')) }}
+    runs-on: ubuntu-latest
+    # container: catthehacker/ubuntu:act-20.04  # Uncomment it if you use it on Gitea
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+        python-version:
+          - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13"
+
+    timeout-minutes: 20
+
+    steps:
+      - name: Disable SSL Verify
+        run: git config --global http.sslVerify false
+
+      # - name: Setup MTK Certification
+      #   uses: https://gitea.mediatek.inc/actions/mtk-cert-action@v1.2.0
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+          python-version: ${{ matrix.python-version }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: |
+          uv python pin ${{ matrix.python-version }}
+          uv sync --group test
+
+      - name: Check for tests
+        id: check_tests
+        run: |
+          if [ -f tests/test_*.py ] || [ -d tests ]; then
+              echo "Tests exist, proceeding to run them."
+              echo "has_tests=true" >> $GITHUB_OUTPUT
+          else
+              echo "No tests to run."
+              echo "has_tests=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run pytest
+        if: ${{ steps.check_tests.outputs.has_tests == 'true' }}
+        run: |
+          uv run pytest -vv | tee .coverage.txt
+
+      - name: Pytest coverage comment
+        if: ${{ steps.check_tests.outputs.has_tests == 'true' }}
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          pytest-coverage-path: ./.coverage.txt
+          junitxml-path: ./.github/reports/.coverage.pytest.xml
+          pytest-xml-coverage-path: ./.github/reports/coverage.xml

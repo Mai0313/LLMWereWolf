@@ -57,6 +57,7 @@ pytest                       # Direct pytest invocation
 pytest -vv                   # Verbose output
 pytest tests/core/test_roles.py -v  # Run specific test file
 uv run pytest -n auto        # Run with parallel execution
+pytest -k test_name          # Run specific test by name
 ```
 
 ### Code Quality
@@ -66,6 +67,7 @@ make format                  # Run all pre-commit hooks (ruff, mypy, etc.)
 pre-commit run -a            # Same as make format
 uv run ruff check src/       # Run linter
 uv run ruff format src/      # Format code
+uv run mypy src/             # Run type checker
 ```
 
 ### Documentation
@@ -168,9 +170,9 @@ The game engine operates through several interconnected components:
 - Real-time game visualization with four panels:
   - Player Panel (left): Lists players, AI models, status
   - Game Panel (top center): Round, phase, statistics
-  - Chat Panel (bottom center): Scrollable event log
+  - Chat Panel (bottom center): Scrollable event log with player discussions
   - Debug Panel (right): Toggle with 'd' key
-- Keyboard controls: 'q' to quit, 'd' to toggle debug panel
+- Keyboard controls: 'q' to quit, 'd' to toggle debug panel, 'n' to advance to next step
 
 **Components** (`ui/components/`):
 
@@ -290,24 +292,53 @@ uv remove <package>                 # Remove dependency
 ### When Adding New Roles
 
 1. Determine camp (Werewolf/Villager/Neutral)
-2. Add role class to appropriate file in `core/roles/`
-3. Define `get_config()` with correct `ActionPriority`
-4. Implement `night_action()` and/or `day_action()` methods
-5. Register in `core/roles/__init__.py`
-6. Add to available roles in `config/role_presets.py`
-7. Update role list in README.md
+2. Add role class to appropriate file in `core/roles/` (`werewolf.py`, `villager.py`, or `neutral.py`)
+3. Inherit from `Role` base class and define `get_config()` method with:
+   - Role name, camp, description
+   - Correct `ActionPriority` (determines execution order during night phase)
+   - Flags: `can_act_night`, `can_act_day`, `max_uses` (if ability has limited uses)
+4. Implement `get_night_actions(game_state)` method (returns list of Action objects)
+5. Register in `core/roles/__init__.py` (add to `__all__` and import statement)
+6. Add to `role_map` dictionary in `config/game_config.py` (line ~145)
+7. Add role name to validator in `config/game_config.py:validate_minimum_werewolves` if werewolf role
+8. Optionally add to presets in `config/role_presets.py`
+9. Update role list in README.md
 
 ### Game Flow Order
 
 Each round follows this sequence:
 
-1. Night phase starts (NIGHT_START event)
-2. Night actions executed in priority order (see `ActionPriority` enum)
-3. Day discussion phase (DAY_START event)
-4. Voting phase (players vote to eliminate)
-5. Process votes and eliminate player
-6. Check victory conditions
-7. Repeat or end game
+1. **Night phase** (`GamePhase.NIGHT`):
+   - PHASE_CHANGED event emitted
+   - Players with night actions execute in priority order (see `ActionPriority` enum in `core/roles/base.py`)
+   - Actions sorted and executed via `process_actions()` in game_engine.py
+   - Deaths resolved via `resolve_deaths()` method
+   - Victory check
+2. **Day discussion phase** (`GamePhase.DAY_DISCUSSION`):
+   - PHASE_CHANGED event emitted
+   - Announce night deaths
+   - Each alive player's agent generates speech via `get_response()` using `_build_discussion_context()`
+   - PLAYER_SPEECH events logged
+3. **Voting phase** (`GamePhase.DAY_VOTING`):
+   - Players vote to eliminate a suspect
+   - Process votes via `VoteAction`
+   - Handle special cases (Idiot survives but loses voting rights)
+   - Eliminate player with most votes
+   - Victory check
+4. **Phase advancement**: Call `game_state.next_phase()` to increment round and reset temporary state
+5. Repeat until victory condition met or game manually ended
+
+### Event Callback System
+
+The GameEngine uses a callback pattern to notify the UI of game events:
+
+- **Setting callback**: `engine.on_event = callback_function` (see `ui/tui_app.py`)
+- **Event creation**: GameEngine calls `_log_event()` which creates an Event and calls the callback
+- **Event types**: Defined in `EventType` enum (GAME_STARTED, PLAYER_DIED, VOTE_CAST, PLAYER_SPEECH, etc.)
+- **Event visibility**: Events can be restricted to specific players via `visible_to` parameter
+- **UI updates**: TUI components subscribe to events and update displays in real-time
+
+This decouples game logic from UI, allowing console mode, TUI, or future web interfaces.
 
 ## Important Paths
 

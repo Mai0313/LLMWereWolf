@@ -74,6 +74,7 @@ dependencies = [
     "pyyaml>=6.0.2",
     "rich>=14.1.0",
     "textual>=6.2.1",
+    "fire>=0.6.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.10"

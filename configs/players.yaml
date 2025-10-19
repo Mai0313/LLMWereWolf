@@ -1,46 +1,52 @@
-# Simple 9-player configuration for LLM Werewolf
-# Copy this file and customize it to your needs
-
-preset: 9-players
+preset: "9-players"
 
 players:
-  - name: gpt-4o
-    provider: openai
-    model: gpt-4o
+  - name: "GPT-4 Detective"
+    model: gpt-4
+    base_url: https://api.openai.com/v1
     api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: 500
 
-  - name: gpt-4.1
-    provider: openai
-    model: gpt-4.1
-    api_key_env: OPENAI_API_KEY
-
-  - name: gpt-5
-    provider: openai
-    model: gpt-5
-    api_key_env: OPENAI_API_KEY
-
-  - name: gpt-5-chat
-    provider: openai
-    model: gpt-5-chat
-    api_key_env: OPENAI_API_KEY
-
-  - name: claude-sonnet-4-5-20250929
-    provider: anthropic
-    model: claude-sonnet-4-5-20250929
+  - name: "Claude Analyst"
+    model: claude-3-5-sonnet-20241022
+    base_url: https://api.anthropic.com/v1
     api_key_env: ANTHROPIC_API_KEY
+    temperature: 0.8
+    max_tokens: 600
 
-  - name: deepseek-reasoner
-    provider: openai
-    model: deepseek-reasoner
+  - name: "GPT-3.5 Scout"
+    model: gpt-3.5-turbo
+    base_url: https://api.openai.com/v1
     api_key_env: OPENAI_API_KEY
+    temperature: 0.6
+    max_tokens: 400
 
-  - name: claude-haiku-4-5-20251001
-    provider: anthropic
-    model: claude-haiku-4-5-20251001
+  - name: "Llama Local"
+    model: llama3
+    base_url: http://localhost:11434/v1
+    temperature: 0.7
+    max_tokens: 500
+
+  - name: "Grok Thinker"
+    model: grok-beta
+    base_url: https://api.x.ai/v1
+    api_key_env: XAI_API_KEY
+    temperature: 0.7
+    max_tokens: 500
+
+  - name: "Claude Guardian"
+    model: claude-3-5-sonnet-20241022
+    base_url: https://api.anthropic.com/v1
     api_key_env: ANTHROPIC_API_KEY
+    temperature: 0.5
+    max_tokens: 400
 
-  - name: human
-    provider: human
+  - name: "Human Player 1"
+    model: human
 
-  - name: human
-    provider: human
+  - name: "Random Bot"
+    model: demo
+
+  - name: "Human Player 2"
+    model: human

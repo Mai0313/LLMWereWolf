@@ -1,11 +1,9 @@
-"""Player configuration for YAML-based game setup."""
-
 import os
-from typing import TYPE_CHECKING
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import yaml
-from pydantic import Field, BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 from pydantic_core.core_schema import ValidationInfo
 
 if TYPE_CHECKING:
@@ -15,16 +13,21 @@ if TYPE_CHECKING:
 class PlayerConfig(BaseModel):
     """Configuration for a single player in the game.
 
-    This model defines how each player should be configured, including
-    which AI model/provider to use, or if it's a human player.
+    Agent type is determined by the model field:
+    - model="human": Human player via console input
+    - model="demo": Random response bot for testing
+    - model=<model_name> + base_url: LLM agent with ChatCompletion API
     """
 
     name: str = Field(..., description="Display name for the player")
-    provider: str = Field(
-        ..., description="Provider type: openai, anthropic, local, human, demo, or custom"
+    model: str = Field(
+        ...,
+        description="Model name: 'human', 'demo', or LLM model name (e.g., 'gpt-4', 'claude-3-5-sonnet-20241022')",
     )
-    model: str | None = Field(default=None, description="Model name (e.g., gpt-4, claude-3)")
-    base_url: str | None = Field(default=None, description="API base URL")
+    base_url: str | None = Field(
+        default=None,
+        description="API base URL (required for LLM models, e.g., https://api.openai.com/v1)",
+    )
     api_key_env: str | None = Field(
         default=None,
         description="Environment variable name containing the API key (e.g., OPENAI_API_KEY)",
@@ -32,45 +35,24 @@ class PlayerConfig(BaseModel):
     temperature: float = Field(default=0.7, ge=0.0, le=2.0, description="LLM temperature")
     max_tokens: int = Field(default=500, gt=0, description="Maximum response tokens")
 
-    @field_validator("provider")
+    @field_validator("base_url")
     @classmethod
-    def validate_provider(cls, v: str) -> str:
-        """Validate that provider is supported.
+    def validate_base_url(cls, v: str | None, info: ValidationInfo) -> str | None:
+        """Validate that base_url is provided for LLM models.
 
         Args:
-            v: Provider name.
-
-        Returns:
-            str: Validated provider name in lowercase.
-
-        Raises:
-            ValueError: If provider is not supported.
-        """
-        allowed = {"openai", "anthropic", "local", "human", "demo", "custom"}
-        v_lower = v.lower()
-        if v_lower not in allowed:
-            msg = f"Provider must be one of {allowed}, got '{v}'"
-            raise ValueError(msg)
-        return v_lower
-
-    @field_validator("model")
-    @classmethod
-    def validate_model(cls, v: str | None, info: ValidationInfo) -> str | None:
-        """Validate that model is provided for LLM providers.
-
-        Args:
-            v: Model name.
+            v: Base URL.
             info: Validation context.
 
         Returns:
-            str | None: Validated model name.
+            str | None: Validated base URL.
 
         Raises:
-            ValueError: If model is required but not provided.
+            ValueError: If base_url is required but not provided.
         """
-        provider = info.data.get("provider", "").lower()
-        if provider in {"openai", "anthropic", "local", "custom"} and not v:
-            msg = f"Model name is required for provider '{provider}'"
+        model = info.data.get("model", "")
+        if model not in {"human", "demo"} and not v:
+            msg = f"base_url is required for LLM model '{model}'"
             raise ValueError(msg)
         return v
 
@@ -117,60 +99,34 @@ def create_agent_from_player_config(config: PlayerConfig) -> "BaseAgent":
     Raises:
         ValueError: If configuration is invalid or API key is missing.
     """
-    # Import here to avoid circular imports
-    from llm_werewolf.ai import DemoAgent, HumanAgent, OpenAIAgent, AnthropicAgent, GenericLLMAgent
+    from llm_werewolf.ai import DemoAgent, HumanAgent, LLMAgent
 
-    provider = config.provider.lower()
+    model = config.model.lower()
 
-    # Handle special providers
-    if provider == "demo":
-        return DemoAgent()
-
-    if provider == "human":
+    if model == "human":
         return HumanAgent()
 
-    # For LLM providers, get API key from environment if specified
+    if model == "demo":
+        return DemoAgent()
+
+    # For LLM models
     api_key = None
     if config.api_key_env:
         api_key = os.getenv(config.api_key_env)
-        if not api_key and provider != "local":
+        if not api_key:
             msg = (
                 f"API key not found in environment variable '{config.api_key_env}' "
                 f"for player '{config.name}'"
             )
             raise ValueError(msg)
 
-    # Create appropriate agent type
-    if provider == "openai":
-        return OpenAIAgent(
-            model_name=config.model or "gpt-4",
-            api_key=api_key,
-            base_url=config.base_url,
-            temperature=config.temperature,
-            max_tokens=config.max_tokens,
-        )
-
-    if provider == "anthropic":
-        return AnthropicAgent(
-            model_name=config.model or "claude-3-5-sonnet-20241022",
-            api_key=api_key,
-            base_url=config.base_url,
-            temperature=config.temperature,
-            max_tokens=config.max_tokens,
-        )
-
-    # For local and custom providers, use GenericLLMAgent
-    if provider in {"local", "custom"}:
-        return GenericLLMAgent(
-            model_name=config.model or "unknown",
-            api_key=api_key,
-            base_url=config.base_url or "http://localhost:11434/v1",
-            temperature=config.temperature,
-            max_tokens=config.max_tokens,
-        )
-
-    msg = f"Unsupported provider: {provider}"
-    raise ValueError(msg)
+    return LLMAgent(
+        model_name=config.model,
+        api_key=api_key,
+        base_url=config.base_url,
+        temperature=config.temperature,
+        max_tokens=config.max_tokens,
+    )
 
 
 def load_players_config(yaml_path: str | Path) -> PlayersConfig:

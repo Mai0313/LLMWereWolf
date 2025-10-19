@@ -1,5 +1,3 @@
-"""Base AI agent interface for the Werewolf game."""
-
 from abc import ABC, abstractmethod
 
 

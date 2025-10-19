@@ -13,6 +13,8 @@
 
 An AI-powered Werewolf (Mafia) game with support for multiple LLM models and a beautiful Terminal User Interface (TUI).
 
+Other Languages: [English](README.md) | [繁體中文](README.zh-TW.md) | [简体中文](README.zh-CN.md)
+
 ## Features
 
 - 🎮 **Complete Game Logic**: Full implementation of Werewolf game rules with 20+ roles

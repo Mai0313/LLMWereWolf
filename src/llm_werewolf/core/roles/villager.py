@@ -1,4 +1,3 @@
-import random
 from typing import TYPE_CHECKING
 
 from llm_werewolf.core.actions import (
@@ -67,6 +66,8 @@ class Seer(Role):
 
     def get_night_actions(self, game_state: "GameState") -> list["Action"]:
         """Get the night actions for the Seer role."""
+        from llm_werewolf.ai.action_selector import ActionSelector
+
         if not self.player.is_alive():
             return []
 
@@ -76,10 +77,32 @@ class Seer(Role):
         if not possible_targets:
             return []
 
-        # In a real implementation, the agent would choose the target.
-        # For now, we'll randomly choose one.
-        target = random.choice(possible_targets)  # noqa: S311
-        return [SeerCheckAction(self.player, target, game_state)]
+        # Get target from AI agent
+        if self.player.agent:
+            # Build context with previously checked players
+            checked_info = []
+            for round_num, player_id in game_state.seer_checked.items():
+                player = game_state.get_player(player_id)
+                if player:
+                    checked_info.append(f"Round {round_num}: {player.name}")
+
+            context = "Choose a player to check their identity (werewolf or villager)."
+            if checked_info:
+                context += f"\n\nPreviously checked: {', '.join(checked_info)}"
+
+            target = ActionSelector.get_target_from_agent(
+                agent=self.player.agent,
+                role_name="Seer",
+                action_description="Choose a player to check tonight",
+                possible_targets=possible_targets,
+                allow_skip=False,
+                additional_context=context,
+            )
+
+            if target:
+                return [SeerCheckAction(self.player, target, game_state)]
+
+        return []
 
 
 class Witch(Role):
@@ -112,26 +135,53 @@ class Witch(Role):
 
     def get_night_actions(self, game_state: "GameState") -> list["Action"]:
         """Get the night actions for the Witch role."""
+        from llm_werewolf.ai.action_selector import ActionSelector
+
         if not self.player.is_alive():
             return []
 
         actions = []
-        # Decide whether to use save potion
-        # Note: Actual potion state is updated in Action.execute(), not here
+
+        # Ask about save potion first
         if self.has_save_potion and game_state.werewolf_target:
             target = game_state.get_player(game_state.werewolf_target)
-            if target and random.random() < 0.5:  # noqa: S311
-                actions.append(WitchSaveAction(self.player, target, game_state))
-                return actions
+            if target and self.player.agent:
+                prompt = ActionSelector.build_yes_no_prompt(
+                    role_name="Witch",
+                    question=f"Do you want to use your save potion to save {target.name}?",
+                    context=f"{target.name} will be killed by werewolves tonight. You can only use this potion once in the entire game.",
+                )
 
-        # Decide whether to use poison potion
-        if self.has_poison_potion:
+                try:
+                    response = self.player.agent.get_response(prompt)
+                    use_save = ActionSelector.parse_yes_no(response)
+
+                    if use_save:
+                        actions.append(WitchSaveAction(self.player, target, game_state))
+                        return actions  # Can't use both potions same night
+                except Exception:
+                    # Silently skip if AI fails to respond
+                    pass
+
+        # Ask about poison potion
+        if self.has_poison_potion and self.player.agent:
             possible_targets = [
                 p for p in game_state.get_alive_players() if p.player_id != self.player.player_id
             ]
-            if possible_targets and random.random() < 0.5:  # noqa: S311
-                target = random.choice(possible_targets)  # noqa: S311
-                actions.append(WitchPoisonAction(self.player, target, game_state))
+
+            if possible_targets:
+                target = ActionSelector.get_target_from_agent(
+                    agent=self.player.agent,
+                    role_name="Witch",
+                    action_description="Choose a player to poison (or skip)",
+                    possible_targets=possible_targets,
+                    allow_skip=True,
+                    additional_context="You can poison any player tonight. You can only use this potion once in the entire game.",
+                    fallback_random=False,
+                )
+
+                if target:
+                    actions.append(WitchPoisonAction(self.player, target, game_state))
 
         return actions
 
@@ -192,6 +242,8 @@ class Guard(Role):
 
     def get_night_actions(self, game_state: "GameState") -> list["Action"]:
         """Get the night actions for the Guard role."""
+        from llm_werewolf.ai.action_selector import ActionSelector
+
         if not self.player.is_alive():
             return []
 
@@ -201,11 +253,30 @@ class Guard(Role):
         if not possible_targets:
             return []
 
-        # In a real implementation, the agent would choose the target.
-        # For now, we'll randomly choose one.
-        target = random.choice(possible_targets)  # noqa: S311
-        # Note: last_protected is updated in GuardProtectAction.execute()
-        return [GuardProtectAction(self.player, target, game_state)]
+        # Get target from AI agent
+        if self.player.agent:
+            context = "Choose a player to protect from werewolf attacks tonight."
+            if self.last_protected:
+                last_player = game_state.get_player(self.last_protected)
+                if last_player:
+                    context += (
+                        f"\n\nYou cannot protect {last_player.name} again (protected last night)."
+                    )
+
+            target = ActionSelector.get_target_from_agent(
+                agent=self.player.agent,
+                role_name="Guard",
+                action_description="Choose a player to protect tonight",
+                possible_targets=possible_targets,
+                allow_skip=False,
+                additional_context=context,
+            )
+
+            if target:
+                # Note: last_protected is updated in GuardProtectAction.execute()
+                return [GuardProtectAction(self.player, target, game_state)]
+
+        return []
 
 
 class Idiot(Role):
@@ -338,11 +409,41 @@ class Cupid(Role):
 
     def get_night_actions(self, game_state: "GameState") -> list["Action"]:
         """Get the night actions for the Cupid role."""
-        if game_state.round_number == 1:
-            possible_targets = game_state.get_alive_players()
-            if len(possible_targets) >= 2:
-                target1, target2 = random.sample(possible_targets, 2)
-                return [CupidLinkAction(self.player, target1, target2, game_state)]
+        from llm_werewolf.ai.action_selector import ActionSelector
+
+        if game_state.round_number != 1:
+            return []
+
+        possible_targets = game_state.get_alive_players()
+        if len(possible_targets) < 2:
+            return []
+
+        # Get two targets from AI agent
+        if self.player.agent:
+            # Use a multi-target approach - select 2 different players
+            prompt = ActionSelector.build_multi_target_prompt(
+                role_name="Cupid",
+                action_description="Choose 2 players to become lovers",
+                possible_targets=possible_targets,
+                num_targets=2,
+                additional_context=(
+                    "The two lovers will know each other's identities. "
+                    "If one dies, the other dies immediately from heartbreak."
+                ),
+            )
+
+            try:
+                response = self.player.agent.get_response(prompt)
+                selected = ActionSelector.parse_multi_target_selection(
+                    response, possible_targets, num_targets=2
+                )
+
+                if selected and len(selected) == 2:
+                    return [CupidLinkAction(self.player, selected[0], selected[1], game_state)]
+            except Exception:
+                # Silently skip if AI fails to respond
+                pass
+
         return []
 
     def get_config(self) -> RoleConfig:
@@ -371,6 +472,8 @@ class Raven(Role):
 
     def get_night_actions(self, game_state: "GameState") -> list["Action"]:
         """Get the night actions for the Raven role."""
+        from llm_werewolf.ai.action_selector import ActionSelector
+
         if not self.player.is_alive():
             return []
 
@@ -378,8 +481,21 @@ class Raven(Role):
         if not possible_targets:
             return []
 
-        target = random.choice(possible_targets)  # noqa: S311
-        return [RavenMarkAction(self.player, target, game_state)]
+        # Get target from AI agent
+        if self.player.agent:
+            target = ActionSelector.get_target_from_agent(
+                agent=self.player.agent,
+                role_name="Raven",
+                action_description="Choose a player to mark with a curse",
+                possible_targets=possible_targets,
+                allow_skip=False,
+                additional_context="The marked player will have one extra vote against them in tomorrow's voting.",
+            )
+
+            if target:
+                return [RavenMarkAction(self.player, target, game_state)]
+
+        return []
 
     def get_config(self) -> RoleConfig:
         """Get configuration for the Raven role."""

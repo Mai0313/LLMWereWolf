@@ -53,6 +53,7 @@ class Role(ABC):
         self.player = player
         self.ability_uses = 0
         self.config = self.get_config()
+        self.disabled = False  # If True, role abilities are disabled
 
     @abstractmethod
     def get_config(self) -> RoleConfig:
@@ -109,6 +110,9 @@ class Role(ABC):
         Returns:
             bool: True if the role can act tonight.
         """
+        if self.disabled:
+            return False
+
         if not self.config.can_act_night:
             return False
 
@@ -163,6 +167,8 @@ class Role(ABC):
         Returns:
             bool: True if the role has a night action.
         """
+        if self.disabled:
+            return False
         return self.config.can_act_night
 
     def validate_action(self, actor: "Player", target: "Player | None", action_data: dict) -> bool:

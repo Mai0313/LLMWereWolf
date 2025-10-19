@@ -1,4 +1,3 @@
-import random
 from typing import TYPE_CHECKING
 
 from llm_werewolf.core.actions import Action, WerewolfKillAction
@@ -33,6 +32,8 @@ class Werewolf(Role):
 
     def get_night_actions(self, game_state: "GameState") -> list["Action"]:
         """Get the night actions for the Werewolf role."""
+        from llm_werewolf.ai.action_selector import ActionSelector
+
         # In a real game, werewolves would need to coordinate.
         # For now, we'll have one werewolf act.
         # Let's find the first alive werewolf to act.
@@ -56,10 +57,25 @@ class Werewolf(Role):
         if not possible_targets:
             return []
 
-        # In a real implementation, the agent would choose the target.
-        # For now, we'll randomly choose one.
-        target = random.choice(possible_targets)  # noqa: S311
-        return [WerewolfKillAction(self.player, target, game_state)]
+        # Get target from AI agent
+        if self.player.agent:
+            # Build context for werewolves
+            werewolf_names = [w.name for w in werewolves if w.is_alive()]
+            context = f"You are working with these werewolves: {', '.join(werewolf_names)}. Choose a villager to eliminate tonight."
+
+            target = ActionSelector.get_target_from_agent(
+                agent=self.player.agent,
+                role_name="Werewolf",
+                action_description="Choose a player to kill tonight",
+                possible_targets=possible_targets,
+                allow_skip=False,
+                additional_context=context,
+            )
+
+            if target:
+                return [WerewolfKillAction(self.player, target, game_state)]
+
+        return []
 
 
 class AlphaWolf(Role):
@@ -98,7 +114,44 @@ class WhiteWolf(Role):
 
     def get_night_actions(self, game_state: "GameState") -> list["Action"]:
         """Get the night actions for the White Wolf role."""
-        # TODO: Implement White Wolf logic
+        from llm_werewolf.core.actions import WhiteWolfKillAction
+        from llm_werewolf.ai.action_selector import ActionSelector
+
+        # Can only kill every other night (odd rounds)
+        if game_state.round_number % 2 == 0:
+            return []
+
+        if not self.player.is_alive():
+            return []
+
+        # Get other werewolves as possible targets
+        possible_targets = [
+            p
+            for p in game_state.get_players_by_camp("werewolf")
+            if p.is_alive() and p.player_id != self.player.player_id
+        ]
+
+        if not possible_targets:
+            return []
+
+        # Get target from AI agent or skip
+        if self.player.agent:
+            target = ActionSelector.get_target_from_agent(
+                agent=self.player.agent,
+                role_name="White Wolf",
+                action_description="Choose a werewolf to kill (or skip)",
+                possible_targets=possible_targets,
+                allow_skip=True,
+                additional_context=(
+                    f"It is round {game_state.round_number}. You can kill another werewolf tonight. "
+                    "This is optional - you may skip if you prefer."
+                ),
+                fallback_random=False,  # White Wolf can skip
+            )
+
+            if target:
+                return [WhiteWolfKillAction(self.player, target, game_state)]
+
         return []
 
     def get_config(self) -> RoleConfig:
@@ -131,7 +184,39 @@ class WolfBeauty(Role):
 
     def get_night_actions(self, game_state: "GameState") -> list["Action"]:
         """Get the night actions for the Wolf Beauty role."""
-        # TODO: Implement Wolf Beauty logic
+        from llm_werewolf.core.actions import WolfBeautyCharmAction
+        from llm_werewolf.ai.action_selector import ActionSelector
+
+        if not self.player.is_alive():
+            return []
+
+        # Can only charm if not already charmed someone
+        if self.charmed_player:
+            return []
+
+        # Get possible targets (all alive players)
+        possible_targets = game_state.get_alive_players()
+
+        if not possible_targets:
+            return []
+
+        # Get target from AI agent
+        if self.player.agent:
+            target = ActionSelector.get_target_from_agent(
+                agent=self.player.agent,
+                role_name="Wolf Beauty",
+                action_description="Choose a player to charm",
+                possible_targets=possible_targets,
+                allow_skip=False,
+                additional_context=(
+                    "If you die, the charmed player will die with you immediately. "
+                    "Choose wisely - you can only charm one player for the entire game."
+                ),
+            )
+
+            if target:
+                return [WolfBeautyCharmAction(self.player, target, game_state)]
+
         return []
 
     def get_config(self) -> RoleConfig:

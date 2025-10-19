@@ -48,6 +48,7 @@ class GameState:
         self.event_history: list[Event] = []
         self.night_deaths: set[str] = set()  # Player IDs who died this night
         self.day_deaths: set[str] = set()  # Player IDs who died this day
+        self.death_abilities_used: set[str] = set()  # Player IDs who already used death ability
 
         # Night action tracking
         self.werewolf_target: str | None = None
@@ -68,6 +69,7 @@ class GameState:
         """Reset the death sets for a new round."""
         self.night_deaths.clear()
         self.day_deaths.clear()
+        self.death_abilities_used.clear()
 
     def get_phase(self) -> GamePhase:
         """Get the current game phase.

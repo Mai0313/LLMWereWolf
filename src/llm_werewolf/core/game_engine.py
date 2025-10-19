@@ -182,6 +182,47 @@ class GameEngine:
 
         return messages
 
+    def _build_voting_context(self, player: "Player") -> str:
+        """Build context for voting phase.
+
+        Args:
+            player: The player who will vote.
+
+        Returns:
+            str: Context message for the player's agent.
+        """
+        if not self.game_state:
+            return ""
+
+        context_parts = [
+            f"You are {player.name}, a {player.get_role_name()}.",
+            f"It is Day {self.game_state.round_number}, voting phase.",
+            "",
+        ]
+
+        # Add information about who died last night
+        if self.game_state.night_deaths:
+            deaths = [
+                self.game_state.get_player(pid).name
+                for pid in self.game_state.night_deaths
+                if self.game_state.get_player(pid)
+            ]
+            context_parts.append(f"Last night: {', '.join(deaths)} died.")
+        else:
+            context_parts.append("No one died last night.")
+
+        # Add alive players
+        alive_players = [p.name for p in self.game_state.get_alive_players()]
+        context_parts.append(f"\nAlive players: {', '.join(alive_players)}")
+        context_parts.append("")
+
+        context_parts.append(
+            "Based on the discussion and your role knowledge, "
+            "vote for the player you believe should be eliminated."
+        )
+
+        return "\n".join(context_parts)
+
     def _build_discussion_context(self, player: "Player") -> str:
         """Build context for day discussion.
 
@@ -248,13 +289,27 @@ class GameEngine:
             if not player.can_vote():
                 continue
 
-            # Get vote from agent
-            # This is a simplified version, in a real implementation, the agent
-            # would be prompted with the current game state and asked for a vote
+            possible_targets = self.game_state.get_alive_players(except_ids=[player.player_id])
+            if not possible_targets:
+                continue
+
+            # Get vote from AI agent
             if player.agent:
-                possible_targets = self.game_state.get_alive_players(except_ids=[player.player_id])
-                if possible_targets:
-                    target_player = random.choice(possible_targets)  # noqa: S311
+                from llm_werewolf.ai.action_selector import ActionSelector
+
+                # Build context for voting
+                context = self._build_voting_context(player)
+
+                target_player = ActionSelector.get_target_from_agent(
+                    agent=player.agent,
+                    role_name=player.get_role_name(),
+                    action_description="Vote for a player to eliminate",
+                    possible_targets=possible_targets,
+                    allow_skip=False,
+                    additional_context=context,
+                )
+
+                if target_player:
                     vote_actions.append(VoteAction(player, target_player, self.game_state))
 
         # Process votes
@@ -296,6 +351,16 @@ class GameEngine:
                             data={"player_id": eliminated_id, "role": eliminated.get_role_name()},
                         )
 
+                        # Check if Elder was voted out - disable all villager abilities
+                        from llm_werewolf.core.roles.villager import Elder
+
+                        if isinstance(eliminated.role, Elder):
+                            self._handle_elder_penalty()
+                            messages.append(
+                                "The Elder was executed by the village! "
+                                "All villagers lose their special abilities as punishment!"
+                            )
+
                         # Check if lover dies
                         if eliminated.is_lover() and eliminated.lover_partner_id:
                             partner = self.game_state.get_player(eliminated.lover_partner_id)
@@ -336,6 +401,10 @@ class GameEngine:
                 messages.append("Vote tied. No one is eliminated.")
         else:
             messages.append("No votes cast.")
+
+        # Handle death abilities (Hunter, AlphaWolf) for players who died in voting
+        death_ability_messages = self._handle_death_abilities()
+        messages.extend(death_ability_messages)
 
         return messages
 
@@ -383,6 +452,109 @@ class GameEngine:
                         partner.kill()
                         self.game_state.night_deaths.add(partner.player_id)
                         messages.append(f"{partner.name} died of heartbreak (lover)!")
+
+        return messages
+
+    def _handle_elder_penalty(self) -> None:
+        """Disable all villager abilities when Elder is voted out."""
+        if not self.game_state:
+            return
+
+        from llm_werewolf.core.roles.base import Camp
+
+        for player in self.game_state.players:
+            if player.get_camp() == Camp.VILLAGER.value and player.is_alive():
+                player.role.disabled = True
+
+        self._log_event(
+            EventType.ROLE_REVEALED,
+            "All villager abilities disabled due to Elder execution",
+            data={"reason": "elder_penalty"},
+        )
+
+    def _handle_death_abilities(self) -> list[str]:
+        """Handle abilities that trigger on death (Hunter, AlphaWolf).
+
+        Returns:
+            list[str]: Messages from death abilities.
+        """
+        if not self.game_state:
+            return []
+
+        from llm_werewolf.ai.action_selector import ActionSelector
+        from llm_werewolf.core.roles.villager import Hunter
+        from llm_werewolf.core.roles.werewolf import AlphaWolf
+
+        messages = []
+        all_deaths = self.game_state.night_deaths | self.game_state.day_deaths
+
+        for player_id in all_deaths:
+            # Skip if already used death ability
+            if player_id in self.game_state.death_abilities_used:
+                continue
+            player = self.game_state.get_player(player_id)
+            if not player:
+                continue
+
+            # Check if Hunter or AlphaWolf died
+            if isinstance(player.role, (Hunter, AlphaWolf)):
+                # Mark as used to prevent duplicate triggers
+                self.game_state.death_abilities_used.add(player_id)
+
+                # Get possible targets (alive players)
+                possible_targets = self.game_state.get_alive_players()
+                if not possible_targets:
+                    continue
+
+                role_name = player.get_role_name()
+                messages.append(f"{player.name} ({role_name}) can shoot before dying!")
+
+                # Get target from AI agent
+                if player.agent:
+                    target = ActionSelector.get_target_from_agent(
+                        agent=player.agent,
+                        role_name=role_name,
+                        action_description="Choose a player to shoot before you die",
+                        possible_targets=possible_targets,
+                        allow_skip=False,
+                        additional_context=f"You ({player.name}) have been killed. You can take one player down with you.",
+                    )
+                else:
+                    # Fallback to random
+                    import random
+
+                    target = random.choice(possible_targets)  # noqa: S311
+
+                if target and target.is_alive():
+                    target.kill()
+                    # Add to appropriate death set
+                    if self.game_state.phase.value == "night":
+                        self.game_state.night_deaths.add(target.player_id)
+                    else:
+                        self.game_state.day_deaths.add(target.player_id)
+
+                    messages.append(f"{player.name} shoots {target.name}!")
+
+                    self._log_event(
+                        EventType.HUNTER_REVENGE,
+                        f"{player.name} shoots {target.name}",
+                        data={
+                            "shooter_id": player.player_id,
+                            "target_id": target.player_id,
+                            "role": role_name,
+                        },
+                    )
+
+                    # Check for lover chain death
+                    if target.is_lover() and target.lover_partner_id:
+                        partner = self.game_state.get_player(target.lover_partner_id)
+                        if partner and partner.is_alive():
+                            partner.kill()
+                            if self.game_state.phase.value == "night":
+                                self.game_state.night_deaths.add(partner.player_id)
+                            else:
+                                self.game_state.day_deaths.add(partner.player_id)
+                            messages.append(f"{partner.name} died of heartbreak (lover)!")
 
         return messages
 
@@ -451,6 +623,10 @@ class GameEngine:
                         f"{charmed.name} died from Wolf Beauty's charm",
                         data={"player_id": charmed.player_id, "reason": "wolf_beauty_charm"},
                     )
+
+        # Handle death abilities (Hunter, AlphaWolf)
+        death_ability_messages = self._handle_death_abilities()
+        messages.extend(death_ability_messages)
 
         return messages
 

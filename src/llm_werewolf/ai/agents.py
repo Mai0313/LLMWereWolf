@@ -5,7 +5,7 @@ from functools import cached_property
 
 import yaml
 from openai import OpenAI
-from pydantic import Field, BaseModel, computed_field, field_validator
+from pydantic import Field, BaseModel, ConfigDict, computed_field, field_validator
 from rich.console import Console
 from pydantic_core.core_schema import ValidationInfo
 
@@ -125,6 +125,8 @@ class HumanAgent(BaseModel):
 
 
 class LLMAgent(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     model_name: str
     api_key: str = Field(default="not-needed")
     base_url: str | None = Field(default=None)

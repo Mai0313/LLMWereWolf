@@ -16,8 +16,16 @@
 
 ## 夜晚行動順序與解析
 
-- 系統使用 `ActionPriority` 指定的優先順序進行結算：丘比特（僅第一夜）→ 盜賊 → 守衛 → 狼人 → 白狼 → 女巫 → 預言家 → 墓地守望者 → 烏鴉等。
-- 目前程式的實作優先處理 `GuardProtectAction` → `WerewolfKillAction` → `WitchSaveAction` → `WitchPoisonAction` → `SeerCheckAction`，其他夜晚動作則以預設優先度處理。
+- 系統使用 `ActionPriority` 指定的優先順序進行結算，數字越大越優先：
+  - `CUPID` (100): 丘比特（僅第一夜）
+  - `THIEF` (95): 盜賊（僅第一夜）
+  - `GUARD` (90): 守衛
+  - `WEREWOLF` (80): 狼人
+  - `WHITE_WOLF` (75): 白狼
+  - `WITCH` (70): 女巫
+  - `SEER` (60): 預言家
+  - `GRAVEYARD_KEEPER` (50): 墓地守望者
+  - `RAVEN` (40): 烏鴉
 - 所有夜行動執行後，會統一呼叫 `resolve_deaths()` 進行死亡判定與連動效果。
 
 ## 生死結算與連動效果

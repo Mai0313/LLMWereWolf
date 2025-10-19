@@ -1,5 +1,3 @@
-"""Victory condition checking for the Werewolf game."""
-
 from typing import TYPE_CHECKING
 
 from pydantic import Field, BaseModel

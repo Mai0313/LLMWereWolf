@@ -1,9 +1,3 @@
-"""Unified agent system for LLM Werewolf game.
-
-This module contains all agent implementations and player configuration logic.
-Simplified design with minimal abstractions.
-"""
-
 import os
 import random
 from typing import Any
@@ -82,11 +76,8 @@ class PlayersConfig(BaseModel):
 # ============================================================================
 
 
-class DemoAgent:
-    """Simple demo agent that uses random responses for quick mock games."""
-
-    def __init__(self) -> None:
-        self.model_name = "demo-random"
+class DemoAgent(BaseModel):
+    model_name: str = Field(default="demo-random")
 
     def get_response(self, message: str) -> str:
         """Return a canned response."""
@@ -103,11 +94,8 @@ class DemoAgent:
         return f"DemoAgent(model={self.model_name})"
 
 
-class HumanAgent:
-    """Agent for human players (console input)."""
-
-    def __init__(self) -> None:
-        self.model_name = "human"
+class HumanAgent(BaseModel):
+    model_name: str = Field(default="human")
 
     def get_response(self, message: str) -> str:
         """Get response from human input.

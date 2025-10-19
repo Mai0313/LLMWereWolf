@@ -1,5 +1,3 @@
-"""Event system for the Werewolf game."""
-
 from enum import Enum
 from datetime import datetime
 

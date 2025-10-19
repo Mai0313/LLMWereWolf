@@ -1,5 +1,3 @@
-"""Preset role configurations for different player counts."""
-
 from llm_werewolf.config.game_config import GameConfig
 
 # 6-player preset (beginner friendly)

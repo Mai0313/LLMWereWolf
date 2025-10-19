@@ -1,5 +1,3 @@
-"""Werewolf camp roles."""
-
 import random
 from typing import TYPE_CHECKING
 

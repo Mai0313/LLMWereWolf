@@ -1,5 +1,3 @@
-"""Role definitions for the Werewolf game."""
-
 from llm_werewolf.core.roles.base import ActionPriority, Camp, Role, RoleConfig
 from llm_werewolf.core.roles.neutral import Lover, Thief, WhiteLoverWolf
 from llm_werewolf.core.roles.villager import (

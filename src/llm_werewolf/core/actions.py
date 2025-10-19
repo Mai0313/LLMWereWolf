@@ -1,5 +1,3 @@
-"""Action classes for the Werewolf game."""
-
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import TYPE_CHECKING

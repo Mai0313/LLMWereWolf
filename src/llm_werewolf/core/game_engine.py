@@ -1,5 +1,3 @@
-"""Game engine for the Werewolf game."""
-
 import random
 from typing import TYPE_CHECKING
 

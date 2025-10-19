@@ -1,5 +1,3 @@
-"""Core game logic for the Werewolf game."""
-
 from llm_werewolf.core.actions import (
     Action,
     ActionData,

@@ -1,5 +1,3 @@
-"""Neutral camp roles."""
-
 from llm_werewolf.core.roles.base import Camp, Role, RoleConfig, ActionPriority
 
 

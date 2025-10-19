@@ -1,5 +1,3 @@
-"""Player class for the Werewolf game."""
-
 from enum import Enum
 
 from pydantic import Field, BaseModel

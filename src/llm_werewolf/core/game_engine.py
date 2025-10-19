@@ -550,7 +550,14 @@ class GameEngine:
         phase_messages = []
         current_phase = self.game_state.get_phase()
 
-        if current_phase == GamePhase.NIGHT:
+        if current_phase == GamePhase.SETUP:
+            # Transition from setup to first night phase
+            self.game_state.next_phase()
+            phase_messages = [
+                "Game initialized! Press 'n' to start the first night phase.",
+                f"Round {self.game_state.round_number} begins.",
+            ]
+        elif current_phase == GamePhase.NIGHT:
             phase_messages = self.run_night_phase()
             if not self.check_victory():
                 self.game_state.next_phase()

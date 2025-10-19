@@ -13,25 +13,3 @@
 input 是 message (string), output 則是 result (string), 這樣未來會比較好完成
 另外 目前的專案代碼是一個 python 專案模板, 所以請幫我將全部修改
 目前這個任務已經完成一部份, 我不確定是否有完整改完 如果有遺漏 請幫我補上
-
-## 遊戲玩法更改與確認
-
-我想確認一件事情 目前我遊戲是不是九人之類的 我要去哪裡設定其中九人是哪些模型? 能不能支援真人也參與遊戲? 我想法中應該是設定時要設定九個模型的base url, model name, api key 我不確定有啥辦法可以做到
-
-我感覺可以透過 yaml 檔案來設定 (我只寫了部分當作範例)
-例如
-
-```yaml
-players:
-  - name: gpt-5-chat
-    model_url: https://api.openai.com/v1
-    api_key: OPENAI_API_KEY  # 此為環境變數名稱
-  - name: claude-sonnet-4-5-20250929
-    model_url: https://api.anthropic.com
-    api_key: ANTHROPIC_API_KEY  # 此為環境變數名稱
-  - name: human-player-1
-    model_url: human
-    api_key:
-```
-
-這樣的設定方式也可以減少 .env.example 裡面的大量資訊 只需要保留 api key 這種敏感資訊即可

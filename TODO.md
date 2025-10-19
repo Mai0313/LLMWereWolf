@@ -10,10 +10,8 @@
 - AI 整合, 夜間行動應調用 AI 而非隨機選擇
 - 重構複雜函數 - 將 run_voting_phase 拆分為更小的函數
 - 狼人協商機制 - 實現多隻狼人投票決定殺人目標
-- 保存/加載遊戲 - 使用 Pydantic 序列化 GameState
-- 詳細的 AI 日誌 - 記錄 AI 的決策過程供分析
 - 所有 import 都應該放在檔案最上方 而不是放在 function 內部進行 import
-- 測試覆蓋 - 為新功能添加單元測試
+- 保存/加載遊戲 - 使用 Pydantic 序列化 GameState
 
 當任務完成時 請務必記得透過 `uv run pre-commit run -a` 來確保代碼質量
 

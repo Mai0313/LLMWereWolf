@@ -1,6 +1,6 @@
 """Tests for simplified AI agents."""
 
-from llm_werewolf.ai import DemoAgent, LLMAgent
+from llm_werewolf.ai import LLMAgent, DemoAgent
 
 
 def test_demo_agent_response():

@@ -11,7 +11,10 @@ from pathlib import Path
 
 import yaml
 from pydantic import Field, BaseModel, field_validator
+from rich.console import Console
 from pydantic_core.core_schema import ValidationInfo
+
+console = Console()
 
 # ============================================================================
 # Player Configuration Models
@@ -87,7 +90,6 @@ class DemoAgent:
 
     def get_response(self, message: str) -> str:
         """Return a canned response."""
-        _ = message  # Demo agent ignores the prompt.
         responses = [
             "I agree.",
             "I'm not sure about that.",
@@ -106,9 +108,6 @@ class HumanAgent:
 
     def __init__(self) -> None:
         self.model_name = "human"
-        from rich.console import Console
-
-        self.console = Console()
 
     def get_response(self, message: str) -> str:
         """Get response from human input.
@@ -119,7 +118,7 @@ class HumanAgent:
         Returns:
             str: Human's response.
         """
-        self.console.print(f"\n{message}")
+        console.print(f"\n{message}")
         return input("Your response: ")
 
     def __repr__(self) -> str:

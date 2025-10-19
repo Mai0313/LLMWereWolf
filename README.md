@@ -248,7 +248,7 @@ engine.setup_game(players, roles)
 
 ### Implementing Your Own Agent
 
-Custom providers can plug in through a lightweight protocol—no inheritance required.  
+Custom providers can plug in through a lightweight protocol—no inheritance required.
 An agent only needs a `model_name` attribute and a `get_response(message: str) -> str` method.
 
 ```python

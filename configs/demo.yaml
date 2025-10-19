@@ -1,0 +1,23 @@
+preset: 9-players
+game_type: tui
+show_debug: false
+
+players:
+  - name: DemoPlayer1
+    model: demo
+  - name: DemoPlayer2
+    model: demo
+  - name: DemoPlayer3
+    model: demo
+  - name: DemoPlayer4
+    model: demo
+  - name: DemoPlayer5
+    model: demo
+  - name: DemoPlayer6
+    model: demo
+  - name: DemoPlayer7
+    model: demo
+  - name: DemoPlayer8
+    model: demo
+  - name: DemoPlayer9
+    model: demo

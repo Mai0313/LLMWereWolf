@@ -2,6 +2,7 @@ import os
 import random
 from pathlib import Path
 from functools import cached_property
+from typing import Literal
 
 import yaml
 from openai import OpenAI
@@ -58,6 +59,13 @@ class PlayersConfig(BaseModel):
     players: list[PlayerConfig] = Field(..., min_length=1, description="List of player configs")
     preset: str | None = Field(
         default=None, description="Optional preset name for roles (e.g., '9-players')"
+    )
+    game_type: Literal["tui", "console"] = Field(
+        default="tui", description="Interface mode: 'tui' for interactive UI or 'console' for logs"
+    )
+    show_debug: bool = Field(
+        default=False,
+        description="Show the debug panel (only applied when game_type is 'tui')",
     )
 
     @field_validator("players")

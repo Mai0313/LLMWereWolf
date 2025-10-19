@@ -119,9 +119,9 @@ class HumanAgent(BaseModel):
         """Return a string representation of the LLMAgent instance.
 
         Returns:
-            str: A string in the format "HumanAgent(model=human)".
+            str: A string in the format "HumanAgent(model={self.model_name})".
         """
-        return "HumanAgent(model=human)"
+        return f"HumanAgent(model={self.model_name})"
 
 
 class LLMAgent(BaseModel):

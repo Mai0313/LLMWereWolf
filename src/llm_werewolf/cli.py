@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
-import argparse
 
+import fire
 from rich.console import Console
 
 from llm_werewolf.ai import DemoAgent
@@ -172,72 +172,72 @@ def run_tui_mode(engine: GameEngine, show_debug: bool = True) -> None:
         sys.exit(1)
 
 
-def main() -> None:
-    """Main entry point for the CLI."""
-    parser = argparse.ArgumentParser(
-        description="LLM Werewolf - AI-powered Werewolf game with TUI interface"
-    )
+def main(
+    config: str | None = None,
+    preset: str = "9-players",
+    no_tui: bool = False,
+    debug: bool = False,
+    log_file: str | None = None,
+    log_level: str = "INFO",
+) -> None:
+    """LLM Werewolf - AI-powered Werewolf game with TUI interface
 
-    parser.add_argument(
-        "--config", type=str, help="Path to YAML configuration file for custom player setup"
-    )
+    Args:
+        config: Path to YAML configuration file for custom player setup
+        preset: Game preset to use (role configuration)
+        no_tui: Run in console mode without TUI
+        debug: Show debug panel in TUI mode
+        log_file: Path to log file
+        log_level: Logging level (DEBUG, INFO, WARNING, ERROR)
+    """
+    # Validate preset
+    available_presets = list_preset_names()
+    if preset not in available_presets:
+        console.print(
+            f"[red]Error: Invalid preset '{preset}'. Available presets: {available_presets}[/red]"
+        )
+        sys.exit(1)
 
-    parser.add_argument(
-        "--preset",
-        type=str,
-        default="9-players",
-        choices=list_preset_names(),
-        help="Game preset to use (role configuration)",
-    )
-
-    parser.add_argument("--no-tui", action="store_true", help="Run in console mode without TUI")
-
-    parser.add_argument("--debug", action="store_true", help="Show debug panel in TUI mode")
-
-    parser.add_argument("--log-file", type=str, help="Path to log file")
-
-    parser.add_argument(
-        "--log-level",
-        type=str,
-        default="INFO",
-        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
-        help="Logging level",
-    )
-
-    args = parser.parse_args()
+    # Validate log level
+    valid_log_levels = ["DEBUG", "INFO", "WARNING", "ERROR"]
+    if log_level.upper() not in valid_log_levels:
+        console.print(
+            f"[red]Error: Invalid log level '{log_level}'. Valid levels: {valid_log_levels}[/red]"
+        )
+        sys.exit(1)
 
     # Setup logging
     import logging
 
-    log_level = getattr(logging, args.log_level)
-    setup_logger(level=log_level, log_file=args.log_file)
+    log_level_enum = getattr(logging, log_level.upper())
+    setup_logger(level=log_level_enum, log_file=log_file)
 
     # Create game
     try:
-        if args.config:
+        if config:
             # Create game from YAML configuration
-            config_path = Path(args.config)
+            config_path = Path(config)
             if not config_path.exists():
                 console.print(f"[red]Error: Configuration file not found: {config_path}[/red]")
                 sys.exit(1)
 
-            engine = create_game_from_yaml(config_path, preset_override=args.preset)
+            engine = create_game_from_yaml(config_path, preset_override=preset)
             console.print(f"[green]Game created from config: {config_path}[/green]")
         else:
             # Create demo game with DemoAgents
-            engine = create_demo_game(args.preset)
-            console.print(f"[yellow]Running demo mode with preset: {args.preset}[/yellow]")
+            engine = create_demo_game(preset)
+            console.print(f"[yellow]Running demo mode with preset: {preset}[/yellow]")
     except Exception as e:
         log_error(e, "Error creating game")
         console.print(f"[red]Error: {e}[/red]")
         sys.exit(1)
 
     # Run game
-    if args.no_tui:
+    if no_tui:
         run_console_mode(engine)
     else:
-        run_tui_mode(engine, show_debug=args.debug)
+        run_tui_mode(engine, show_debug=debug)
 
 
 if __name__ == "__main__":
-    main()
+    fire.Fire(main)

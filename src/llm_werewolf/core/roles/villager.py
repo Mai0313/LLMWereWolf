@@ -143,6 +143,10 @@ class Hunter(Role):
     When eliminated (by werewolves or voting), can shoot and eliminate another player.
     """
 
+    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+        """Hunter has no night actions."""
+        return []
+
     def get_config(self) -> RoleConfig:
         """Get configuration for the Hunter role."""
         return RoleConfig(

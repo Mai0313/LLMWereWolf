@@ -1,8 +1,8 @@
 """Game configuration for the Werewolf game."""
 
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING
 
-from pydantic import Field, BaseModel, field_validator
+from pydantic import Field, BaseModel, ConfigDict, field_validator
 
 if TYPE_CHECKING:
     from llm_werewolf.core.roles.base import Role
@@ -10,6 +10,30 @@ if TYPE_CHECKING:
 
 class GameConfig(BaseModel):
     """Configuration for a Werewolf game."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "num_players": 9,
+                "role_names": [
+                    "Werewolf",
+                    "Werewolf",
+                    "Seer",
+                    "Witch",
+                    "Hunter",
+                    "Guard",
+                    "Villager",
+                    "Villager",
+                    "Villager",
+                ],
+                "night_timeout": 60,
+                "day_timeout": 300,
+                "vote_timeout": 60,
+                "allow_revote": False,
+                "show_role_on_death": True,
+            }
+        }
+    )
 
     num_players: int = Field(..., ge=6, le=20, description="Number of players in the game")
     role_names: list[str] = Field(..., description="List of role names to use in the game")
@@ -154,28 +178,3 @@ class GameConfig(BaseModel):
             roles.append(role_map[role_name])
 
         return roles
-
-    class Config:
-        """Pydantic config."""
-
-        json_schema_extra: ClassVar[dict] = {
-            "example": {
-                "num_players": 9,
-                "role_names": [
-                    "Werewolf",
-                    "Werewolf",
-                    "Seer",
-                    "Witch",
-                    "Hunter",
-                    "Guard",
-                    "Villager",
-                    "Villager",
-                    "Villager",
-                ],
-                "night_timeout": 60,
-                "day_timeout": 300,
-                "vote_timeout": 60,
-                "allow_revote": False,
-                "show_role_on_death": True,
-            }
-        }

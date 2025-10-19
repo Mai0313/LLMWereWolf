@@ -277,7 +277,6 @@ src/llm_werewolf/
 │   ├── styles.py        # CSS styling
 │   └── components/      # Reusable widgets
 ├── utils/               # Utilities
-│   ├── logger.py        # Logging setup
 │   └── validator.py     # Input validation
 └── cli.py               # CLI entry point
 ```

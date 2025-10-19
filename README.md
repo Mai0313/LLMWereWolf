@@ -413,7 +413,7 @@ The project follows a modular architecture:
 - **Config**: Game configurations and presets
 - **AI**: Abstract agent interface for LLM integration
 - **UI**: TUI components (Textual-based)
-- **Utils**: Helper functions (logger, validator)
+- **Utils**: Helper functions (validators)
 
 ## Requirements
 

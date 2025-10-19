@@ -384,7 +384,7 @@ ignore-decorators = []
 property-decorators = []
 
 [tool.ruff.lint.pyflakes]
-extend-generics = ["pyrootutils", "autorootcwd", "autoroot", "src.utils.loggers"]
+extend-generics = ["pyrootutils", "autorootcwd", "autoroot"]
 
 [tool.ruff.lint.pyupgrade]
 # Preserve types, even if a file imports `from __future__ import annotations`.

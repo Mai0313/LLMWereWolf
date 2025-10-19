@@ -371,7 +371,7 @@ uv run ruff format src/
 - **Config**：游戏配置和预设
 - **AI**：LLM 整合的抽象 agent 接口
 - **UI**：TUI 组件（基于 Textual）
-- **Utils**：辅助函数（logger、validator）
+- **Utils**：辅助函数（校验器）
 
 ## 需求
 

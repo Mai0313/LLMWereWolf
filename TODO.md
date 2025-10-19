@@ -15,6 +15,11 @@
 
 當任務完成時 請務必記得透過 `uv run pre-commit run -a` 來確保代碼質量
 
+## 更新規則
+
+確認 `rule.md` 裡面的所有腳色都是和規則是否與實際 `./src/llm_werewolf/core` 一致
+如果不一致請修改 `rule.md`
+
 ## 新增警長規則
 
 ## 新增奇蹟商人

@@ -82,8 +82,8 @@ requires-python = ">= 3.10"
 license = { text = "MIT" }
 
 [project.urls]
-Homepage = "https://mai0313.github.io/llm_werewolf"
-Repository = "https://github.com/Mai0313/llm_werewolf"
+Homepage = "https://mai0313.github.io/LLMWerewolf"
+Repository = "https://github.com/Mai0313/LLMWerewolf"
 
 [project.scripts]
 llm-werewolf = "llm_werewolf.cli:main"

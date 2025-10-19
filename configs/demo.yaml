@@ -1,6 +1,8 @@
 preset: 9-players
 game_type: tui
 show_debug: false
+log_level: INFO
+log_file: null
 
 players:
   - name: DemoPlayer1

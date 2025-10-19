@@ -67,6 +67,14 @@ class PlayersConfig(BaseModel):
         default=False,
         description="Show the debug panel (only applied when game_type is 'tui')",
     )
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = Field(
+        default="INFO",
+        description="Logging level for the game runtime",
+    )
+    log_file: str | None = Field(
+        default=None,
+        description="Optional path to a log file",
+    )
 
     @field_validator("players")
     @classmethod

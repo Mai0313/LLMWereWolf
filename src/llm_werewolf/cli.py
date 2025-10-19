@@ -1,7 +1,6 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Final
 
 import fire
 from rich.console import Console
@@ -17,19 +16,18 @@ from llm_werewolf.utils import log_error, log_game_event, setup_logger
 
 console = Console()
 
-DEFAULT_CONFIG_PATH: Final = Path(__file__).resolve().parents[2] / "configs" / "demo.yaml"
-VALID_LOG_LEVELS: Final = {"DEBUG", "INFO", "WARNING", "ERROR"}
 
+def main(config: str | None = None) -> None:
+    """依據設定檔建立並啟動 Werewolf 遊戲。"""
 
-def main(
-    config: str | None = None,
-    preset: str | None = None,
-    log_file: str | None = None,
-    log_level: str = "INFO",
-) -> None:
-    """依據 YAML 設定載入遊戲、建立代理並啟動 Werewolf 遊戲。"""
+    if not config:
+        console.print("[red]請使用 --config 指定設定檔路徑。[/red]")
+        sys.exit(1)
 
-    config_path = Path(config) if config else DEFAULT_CONFIG_PATH
+    config_path = Path(config)
+    if not config_path.exists():
+        console.print(f"[red]找不到設定檔：{config_path}[/red]")
+        sys.exit(1)
 
     try:
         players_config = load_players_config(config_path)
@@ -38,7 +36,11 @@ def main(
         console.print(f"[red]配置讀取失敗：{exc}[/red]")
         sys.exit(1)
 
-    preset_name = preset or players_config.preset or "9-players"
+    if not players_config.preset:
+        console.print("[red]設定檔缺少 preset 欄位。[/red]")
+        sys.exit(1)
+
+    preset_name = players_config.preset
     available_presets = list_preset_names()
     if preset_name not in available_presets:
         console.print(
@@ -46,14 +48,10 @@ def main(
         )
         sys.exit(1)
 
-    log_level_name = log_level.upper()
-    if log_level_name not in VALID_LOG_LEVELS:
-        console.print(
-            f"[red]無效的 log level '{log_level}'。可選：{sorted(VALID_LOG_LEVELS)}[/red]"
-        )
-        sys.exit(1)
-
-    setup_logger(level=getattr(logging, log_level_name), log_file=log_file)
+    setup_logger(
+        level=getattr(logging, players_config.log_level),
+        log_file=players_config.log_file,
+    )
 
     game_config = get_preset_by_name(preset_name)
     if len(players_config.players) != game_config.num_players:
@@ -72,7 +70,7 @@ def main(
             )
             for idx, player_cfg in enumerate(players_config.players)
         ]
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         log_error(exc, "Failed to create agents from configuration")
         console.print(f"[red]建立玩家代理時發生錯誤：{exc}[/red]")
         sys.exit(1)
@@ -90,6 +88,9 @@ def main(
     console.print(f"[green]已載入設定檔：{config_path.resolve()}[/green]")
     console.print(f"[cyan]Preset：{preset_name}[/cyan]")
     console.print(f"[cyan]介面模式：{players_config.game_type}[/cyan]")
+    console.print(f"[cyan]Log level：{players_config.log_level}[/cyan]")
+    if players_config.log_file:
+        console.print(f"[cyan]Log file：{players_config.log_file}[/cyan]")
 
     try:
         if players_config.game_type == "tui":

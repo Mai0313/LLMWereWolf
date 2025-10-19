@@ -1,4 +1,8 @@
 preset: 6-players
+game_type: tui
+show_debug: false
+log_level: INFO
+log_file: null
 
 players:
   - name: gpt-4o

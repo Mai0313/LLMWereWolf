@@ -34,11 +34,7 @@ class ActionSelector:
         Returns:
             str: The formatted prompt.
         """
-        prompt_parts = [
-            f"You are a {role_name}.",
-            f"Action: {action_description}",
-            "",
-        ]
+        prompt_parts = [f"You are a {role_name}.", f"Action: {action_description}", ""]
 
         if additional_context:
             prompt_parts.append(additional_context)
@@ -51,13 +47,11 @@ class ActionSelector:
         if allow_skip:
             prompt_parts.append(f"{len(possible_targets) + 1}. SKIP (do not perform this action)")
 
-        prompt_parts.extend(
-            [
-                "",
-                "Please select a target by responding with ONLY the number (1, 2, 3, etc.).",
-                "Do not include any other text in your response.",
-            ]
-        )
+        prompt_parts.extend([
+            "",
+            "Please select a target by responding with ONLY the number (1, 2, 3, etc.).",
+            "Do not include any other text in your response.",
+        ])
 
         return "\n".join(prompt_parts)
 
@@ -104,22 +98,17 @@ class ActionSelector:
         Returns:
             str: The formatted prompt.
         """
-        prompt_parts = [
-            f"You are a {role_name}.",
-            f"Question: {question}",
-        ]
+        prompt_parts = [f"You are a {role_name}.", f"Question: {question}"]
 
         if context:
             prompt_parts.append("")
             prompt_parts.append(context)
 
-        prompt_parts.extend(
-            [
-                "",
-                "Please respond with ONLY 'YES' or 'NO'.",
-                "Do not include any other text in your response.",
-            ]
-        )
+        prompt_parts.extend([
+            "",
+            "Please respond with ONLY 'YES' or 'NO'.",
+            "Do not include any other text in your response.",
+        ])
 
         return "\n".join(prompt_parts)
 
@@ -171,14 +160,12 @@ class ActionSelector:
         for idx, target in enumerate(possible_targets, 1):
             prompt_parts.append(f"{idx}. {target.name} (Player ID: {target.player_id})")
 
-        prompt_parts.extend(
-            [
-                "",
-                f"Please select {num_targets} targets by responding with the numbers separated by commas.",
-                "Example: 1, 3 (to select the 1st and 3rd targets)",
-                "Do not include any other text in your response.",
-            ]
-        )
+        prompt_parts.extend([
+            "",
+            f"Please select {num_targets} targets by responding with the numbers separated by commas.",
+            "Example: 1, 3 (to select the 1st and 3rd targets)",
+            "Do not include any other text in your response.",
+        ])
 
         return "\n".join(prompt_parts)
 

@@ -1,8 +1,8 @@
 import os
 import random
+from typing import Literal
 from pathlib import Path
 from functools import cached_property
-from typing import Literal
 
 import yaml
 from openai import OpenAI
@@ -64,17 +64,12 @@ class PlayersConfig(BaseModel):
         default="tui", description="Interface mode: 'tui' for interactive UI or 'console' for logs"
     )
     show_debug: bool = Field(
-        default=False,
-        description="Show the debug panel (only applied when game_type is 'tui')",
+        default=False, description="Show the debug panel (only applied when game_type is 'tui')"
     )
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = Field(
-        default="INFO",
-        description="Logging level for the game runtime",
+        default="INFO", description="Logging level for the game runtime"
     )
-    log_file: str | None = Field(
-        default=None,
-        description="Optional path to a log file",
-    )
+    log_file: str | None = Field(default=None, description="Optional path to a log file")
 
     @field_validator("players")
     @classmethod
@@ -233,22 +228,7 @@ def create_agent(config: PlayerConfig) -> LLMAgent | DemoAgent | HumanAgent:
     )
 
 
-def load_players_config(yaml_path: str | Path) -> PlayersConfig:
-    yaml_path = Path(yaml_path)
-
-    if not yaml_path.exists():
-        msg = f"Configuration file not found: {yaml_path}"
-        raise FileNotFoundError(msg)
-
-    try:
-        with yaml_path.open("r", encoding="utf-8") as f:
-            data = yaml.safe_load(f)
-    except yaml.YAMLError as e:
-        msg = f"Invalid YAML format: {e}"
-        raise ValueError(msg) from e
-
-    if not isinstance(data, dict):
-        msg = "YAML file must contain a dictionary at root level"
-        raise ValueError(msg)
-
+def load_config(config_path: str | Path) -> PlayersConfig:
+    config_path = Path(config_path) if isinstance(config_path, str) else config_path
+    data = yaml.safe_load(config_path.read_text())
     return PlayersConfig(**data)

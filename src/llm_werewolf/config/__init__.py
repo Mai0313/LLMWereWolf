@@ -2,7 +2,7 @@ from llm_werewolf.ai.agents import (
     PlayerConfig,
     PlayersConfig,
     create_agent,
-    load_players_config,
+    load_config,
 )
 from llm_werewolf.config.game_config import GameConfig
 from llm_werewolf.config.role_presets import (
@@ -26,7 +26,7 @@ __all__ = [
     # Player config functions
     "create_agent_from_player_config",
     "create_agent",
-    "load_players_config",
+    "load_config",
     # Presets
     "PRESET_6_PLAYERS",
     "PRESET_9_PLAYERS",

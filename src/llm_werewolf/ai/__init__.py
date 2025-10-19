@@ -5,7 +5,7 @@ from llm_werewolf.ai.agents import (
     PlayerConfig,
     PlayersConfig,
     create_agent,
-    load_players_config,
+    load_config,
 )
 from llm_werewolf.ai.message import GameMessage, MessageBuilder, MessageType
 
@@ -22,7 +22,7 @@ __all__ = [
     "PlayersConfig",
     # Factory functions
     "create_agent",
-    "load_players_config",
+    "load_config",
     # Message classes
     "GameMessage",
     "MessageBuilder",

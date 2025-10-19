@@ -1,40 +1,25 @@
-import logging
 import sys
+import logging
 from pathlib import Path
 
 import fire
 from rich.console import Console
 
-from llm_werewolf.config import (
-    create_agent_from_player_config,
-    get_preset_by_name,
-    list_preset_names,
-    load_players_config,
-)
 from llm_werewolf.core import GameEngine
-from llm_werewolf.utils import log_error, log_game_event, setup_logger
+from llm_werewolf.utils import log_error, setup_logger, log_game_event
+from llm_werewolf.config import (
+    list_preset_names,
+    get_preset_by_name,
+    load_config,
+    create_agent_from_player_config,
+)
 
 console = Console()
 
 
-def main(config: str | None = None) -> None:
-    """依據設定檔建立並啟動 Werewolf 遊戲。"""
-
-    if not config:
-        console.print("[red]請使用 --config 指定設定檔路徑。[/red]")
-        sys.exit(1)
-
+def main(config: str) -> None:
     config_path = Path(config)
-    if not config_path.exists():
-        console.print(f"[red]找不到設定檔：{config_path}[/red]")
-        sys.exit(1)
-
-    try:
-        players_config = load_players_config(config_path)
-    except (FileNotFoundError, ValueError) as exc:
-        log_error(exc, "Failed to load player configuration")
-        console.print(f"[red]配置讀取失敗：{exc}[/red]")
-        sys.exit(1)
+    players_config = load_config(config_path=config_path)
 
     if not players_config.preset:
         console.print("[red]設定檔缺少 preset 欄位。[/red]")
@@ -43,14 +28,11 @@ def main(config: str | None = None) -> None:
     preset_name = players_config.preset
     available_presets = list_preset_names()
     if preset_name not in available_presets:
-        console.print(
-            f"[red]無效的 preset '{preset_name}'，可用選項：{available_presets}[/red]"
-        )
+        console.print(f"[red]無效的 preset '{preset_name}'，可用選項：{available_presets}[/red]")
         sys.exit(1)
 
     setup_logger(
-        level=getattr(logging, players_config.log_level),
-        log_file=players_config.log_file,
+        level=getattr(logging, players_config.log_level), log_file=players_config.log_file
     )
 
     game_config = get_preset_by_name(preset_name)
@@ -63,14 +45,10 @@ def main(config: str | None = None) -> None:
 
     try:
         players = [
-            (
-                f"player_{idx + 1}",
-                player_cfg.name,
-                create_agent_from_player_config(player_cfg),
-            )
+            (f"player_{idx + 1}", player_cfg.name, create_agent_from_player_config(player_cfg))
             for idx, player_cfg in enumerate(players_config.players)
         ]
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         log_error(exc, "Failed to create agents from configuration")
         console.print(f"[red]建立玩家代理時發生錯誤：{exc}[/red]")
         sys.exit(1)
@@ -126,7 +104,7 @@ def main(config: str | None = None) -> None:
 
     except KeyboardInterrupt:
         console.print("\n遊戲已由使用者中止。")
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         log_error(exc, "Error during game execution")
         console.print(f"[red]執行遊戲時發生錯誤：{exc}[/red]")
         sys.exit(1)

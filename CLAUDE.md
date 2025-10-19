@@ -207,7 +207,7 @@ All agent implementations live in one module and follow a lightweight protocol:
 **Factory Functions:**
 
 - `create_agent(config: PlayerConfig) -> AgentType`: Creates agent from player config.
-- `load_players_config(yaml_path: Path) -> PlayersConfig`: Loads and validates YAML config.
+- `load_config(yaml_path: Path) -> PlayersConfig`: Loads and validates YAML config.
 
 **Key Design Principle**: The agent protocol stays intentionally minimal. Providers that implement OpenAI's ChatCompletion API can reuse the same `LLMAgent` class by just adjusting `base_url` and `api_key_env`. Future contributions should avoid reintroducing deep inheritance hierarchies.
 
@@ -231,7 +231,7 @@ All agent implementations live in one module and follow a lightweight protocol:
   - Determines agent type based on `model` field
 - `PlayersConfig`: Root configuration containing list of players and optional preset
   - Validates all player names are unique
-  - Can be loaded from YAML via `load_players_config(yaml_path)`
+  - Can be loaded from YAML via `load_config(yaml_path)`
 
 ### TUI System
 

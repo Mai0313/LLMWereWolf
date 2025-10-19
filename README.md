@@ -15,19 +15,19 @@
 
 </div>
 
-An AI Werewolf (Mafia) game that supports multiple LLM models and features a polished Terminal User Interface (TUI).
+An AI Werewolf game that supports multiple LLM models, with a beautiful Terminal User Interface (TUI).
 
 Other languages: [English](README.md) | [繁體中文](README.zh-TW.md) | [简体中文](README.zh-CN.md)
 
 ## Features
 
-- 🎮 **Complete Game Logic**: Implements the full Werewolf rule set with more than 20 roles
-- 🤖 **LLM Integration**: Unified agent interface that makes it easy to plug in any LLM (OpenAI, Anthropic, DeepSeek, local models, etc.)
-- 🖥️ **Polished TUI**: Real-time visualization built on Textual with an interactive terminal UI
-- 👤 **Human Players**: Mix human players with AI agents in the same game
-- ⚙️ **Configurable**: Use YAML configuration files to fine-tune players and game parameters
-- 📊 **Event System**: Detailed event logging and game state tracking
-- 🧪 **Well Tested**: High code coverage with a comprehensive test suite
+- 🎮 **Complete Game Logic**: Full implementation of Werewolf rules with 20+ roles.
+- 🤖 **LLM Integration**: Unified agent interface for easy integration with any LLM (OpenAI, Anthropic, DeepSeek, local models, etc.).
+- 🖥️ **Beautiful TUI**: Real-time game visualization using the Textual framework, supporting an interactive terminal interface.
+- 👤 **Human Players**: Supports mixed games with human players and AIs.
+- ⚙️ **Configurable**: Flexibly configure players and game parameters through YAML configuration files.
+- 📊 **Event System**: Complete event logging and game state tracking.
+- 🧪 **Fully Tested**: High code coverage and a complete test suite.
 
 ## Quick Start
 
@@ -38,46 +38,52 @@ Other languages: [English](README.md) | [繁體中文](README.zh-TW.md) | [简�
 git clone https://github.com/Mai0313/LLMWereWolf.git
 cd LLMWereWolf
 
-# Install base dependencies
+# Install dependencies
 uv sync
-
-# Optional: install dependencies for specific LLM providers
-uv sync --group llm-openai      # For OpenAI models
-uv sync --group llm-anthropic   # For Claude models
-uv sync --group llm-all         # For every supported provider
 ```
 
 ### Running the Game
 
-The CLI entry points (`llm-werewolf` and `werewolf`) load a YAML configuration file that defines players and the interface mode.
+The project offers two execution modes, selectable through different command-line entries:
+
+**TUI Mode (Interactive Terminal Interface):**
 
 ```bash
-# Launch the built-in demo configuration in the TUI (uses demo agents)
-uv run llm-werewolf configs/demo.yaml
+# Start TUI with the built-in demo configuration (using demo agents for testing)
+uv run llm-werewolf-tui configs/demo.yaml
 
-# Launch the LLM player configuration (set your API keys first)
-uv run llm-werewolf configs/players.yaml
+# Use LLM player configuration (requires setting API keys first)
+uv run llm-werewolf-tui configs/players.yaml
+
+# Show the debug panel
+uv run llm-werewolf-tui configs/demo.yaml --debug
 
 # If the package is installed globally
-llm-werewolf configs/demo.yaml
+llm-werewolf-tui configs/demo.yaml
 
-# Run a custom configuration
-uv run llm-werewolf my-game.yaml
+# Using the werewolf-tui alias
+uv run werewolf-tui configs/demo.yaml
+```
 
-# Use the werewolf alias
+**Console Mode (Pure Text Logs):**
+
+```bash
+# Use Console mode (automatic execution)
+uv run llm-werewolf configs/demo.yaml
+
+# Or use the alias
 uv run werewolf configs/demo.yaml
 ```
 
-Adjust interface options directly in the YAML:
+YAML Configuration File Options:
 
-- `game_type: tui` enables the interactive terminal interface (default)
-- `game_type: console` switches to a plain text logging mode
-- `show_debug: true` displays the TUI debug panel (only works in `tui` mode)
-- `preset: <preset-name>` selects a preset role distribution (e.g., `6-players`, `9-players`, `12-players`, `15-players`, `expert`, `chaos`)
+- `preset: <preset-name>`: Specifies the role preset configuration (e.g., `6-players`, `9-players`, `12-players`, `15-players`, `expert`, `chaos`).
+- `show_debug: true`: Shows the TUI debug panel (can be overridden by the `--debug` command-line argument).
+- `players: [...]`: Defines the list of players.
 
-### Environment Setup
+### Environment Configuration
 
-Create a `.env` file to store your LLM API keys:
+Create a `.env` file to configure LLM API keys:
 
 ```bash
 # OpenAI
@@ -92,55 +98,55 @@ DEEPSEEK_API_KEY=sk-...
 # xAI (Grok)
 XAI_API_KEY=xai-...
 
-# Local models (Ollama, etc.) do not need API keys
-# Set base_url directly in the YAML configuration
+# Local models (Ollama, etc.) do not require an API key
+# Just set the base_url in the YAML file
 ```
 
 ## Supported Roles
 
-### Werewolf Camp 🐺
+### Werewolf Faction 🐺
 
-- **Werewolf**: The standard werewolf that joins the pack to kill at night
-- **AlphaWolf**: Can shoot one player when eliminated
-- **WhiteWolf**: May kill another werewolf every other night to become a lone wolf
-- **WolfBeauty**: Charms a player; if the Wolf Beauty dies, the charmed player dies as well
-- **GuardianWolf**: Protects a werewolf each night
-- **HiddenWolf**: Appears as a villager when checked by the Seer
-- **BloodMoonApostle**: Can convert into a werewolf
-- **NightmareWolf**: Silences another player's ability
+- **Werewolf**: Standard werewolf that kills collectively at night.
+- **AlphaWolf**: Can take a player with them when eliminated.
+- **WhiteWolf**: Can kill another werewolf every other night to become a lone wolf.
+- **WolfBeauty**: Charms a player; if the Wolf Beauty dies, the charmed player also dies.
+- **GuardianWolf**: Can protect one werewolf each night.
+- **HiddenWolf**: Appears as a villager to the Seer.
+- **BloodMoonApostle**: Can be converted into a werewolf.
+- **NightmareWolf**: Can block a player's ability.
 
-### Villager Camp 👥
+### Villager Faction 👥
 
-- **Villager**: A classic villager with no special ability
-- **Seer**: Checks one player's alignment each night (werewolf or villager)
-- **Witch**: Has one heal and one poison potion
-- **Hunter**: Can shoot one player when eliminated
-- **Guard**: Protects a player from werewolf attacks each night
-- **Idiot**: Survives a daytime execution but loses voting rights
-- **Elder**: Needs to be attacked twice to die
-- **Knight**: Can challenge another player to a duel once per game
-- **Magician**: Swaps the roles of two players once per game
-- **Cupid**: Links two players as lovers on the first night
-- **Raven**: Marks a player to grant them an extra vote against them
-- **GraveyardKeeper**: Learns the role of a dead player
+- **Villager**: A regular villager with no special abilities.
+- **Seer**: Can check one player's identity (werewolf or villager) each night.
+- **Witch**: Has a healing potion and a poison potion (each for one-time use).
+- **Hunter**: Can take a player with them when eliminated.
+- **Guard**: Can protect one player from a werewolf attack each night.
+- **Idiot**: If voted out, reveals their identity and survives but loses voting rights.
+- **Elder**: Requires two attacks to be killed.
+- **Knight**: Can duel a player once per game.
+- **Magician**: Can swap the roles of two players once.
+- **Cupid**: Links two players as lovers on the first night.
+- **Raven**: Marks a player to receive an extra vote.
+- **GraveyardKeeper**: Can check the identity of dead players.
 
 ### Neutral Roles 👻
 
-- **Thief**: Chooses one of two extra role cards on the first night
-- **Lover**: Linked by Cupid; when one lover dies, the other follows
+- **Thief**: Can choose a role from two extra role cards on the first night.
+- **Lover**: Linked by Cupid; if one dies, the other dies of a broken heart.
 
 ## Configuration
 
-### Using Presets
+### Using Preset Configurations
 
-Set the `preset` field in the configuration file to apply a built-in role distribution:
+Adjust the `preset` field in the configuration file to apply a built-in role combination. Options include:
 
-- `6-players`: Beginner game (6 players) — 2 Werewolves + Seer, Witch, 2 Villagers
-- `9-players`: Standard game (9 players) — 2 Werewolves + Seer, Witch, Hunter, Guard, 3 Villagers
-- `12-players`: Advanced game (12 players) — 3 Werewolves (including AlphaWolf) + Seer, Witch, Hunter, Guard, Cupid, Idiot, 3 Villagers
-- `15-players`: Full game (15 players) — 4 Werewolves (including AlphaWolf and WhiteWolf) + Seer, Witch, Hunter, Guard, Cupid, Idiot, Elder, Raven, 3 Villagers
-- `expert`: Expert setup (12 players) with a complex selection including several special werewolves
-- `chaos`: Chaotic setup (10 players) with uncommon role combinations for experienced players
+- `6-players`: Beginner game (6 players) - 2 Werewolves + Seer, Witch, 2 Villagers.
+- `9-players`: Standard game (9 players) - 2 Werewolves + Seer, Witch, Hunter, Guard, 3 Villagers.
+- `12-players`: Advanced game (12 players) - 3 Werewolves (including AlphaWolf) + Seer, Witch, Hunter, Guard, Cupid, Idiot, 3 Villagers.
+- `15-players`: Full game (15 players) - 4 Werewolves (including AlphaWolf, WhiteWolf) + Seer, Witch, Hunter, Guard, Cupid, Idiot, Elder, Raven, 3 Villagers.
+- `expert`: Expert configuration (12 players) - Complex role combination with various special werewolves.
+- `chaos`: Chaotic role combination (10 players) - Uncommon role pairings, suitable for advanced players.
 
 ### Custom Configuration
 
@@ -150,19 +156,18 @@ Set the `preset` field in the configuration file to apply a built-in role distri
 # Start from the demo configuration (all demo agents)
 cp configs/demo.yaml my-game.yaml
 
-# Or start from the LLM-enabled sample
+# Or start from a template that supports LLMs
 cp configs/players.yaml my-game.yaml
 
-# Edit the configuration
-# configs/players.yaml includes field descriptions and examples
+# Edit the configuration file
+# configs/players.yaml contains field descriptions and examples
 ```
 
 Example `my-game.yaml`:
 
 ```yaml
-preset: 6-players        # Choose a preset
-game_type: tui           # Interface mode: tui or console
-show_debug: false        # Show the debug panel
+preset: 6-players        # Choose a preset configuration
+show_debug: false        # Whether to show the debug panel (for TUI mode)
 
 players:
   - name: GPT-4 Detective
@@ -179,7 +184,7 @@ players:
     temperature: 0.7
     max_tokens: 500
 
-  - name: DeepSeek Strategist
+  - name: DeepSeek Thinker
     model: deepseek-reasoner
     base_url: https://api.deepseek.com/v1
     api_key_env: DEEPSEEK_API_KEY
@@ -187,45 +192,44 @@ players:
     max_tokens: 500
 
   - name: Human Player
-    model: human          # Human-controlled player
+    model: human          # Human player
 
   - name: Local Llama
     model: llama3
     base_url: http://localhost:11434/v1
-    # Local models do not require api_key_env
+    # Local models do not need api_key_env
 
   - name: Test Bot
     model: demo           # Simple agent for testing
 ```
 
-**Configuration Fields:**
+**Configuration Description:**
 
-- `preset`: Required. Defines the role distribution and player count
-- `game_type`: Optional, defaults to `tui`
-- `show_debug`: Optional, defaults to `false`
-- `players`: Required. Player list whose length must match the preset `num_players`
+- `preset`: Required, determines the game's role configuration and number of players.
+- `show_debug`: Optional, defaults to `false`, used to show the debug panel in TUI mode.
+- `players`: Required, list of players, the number must match `num_players` in the preset.
 
 **Player Configuration Fields:**
 
-- `name`: Display name for the player
-- `model`: Model type
-  - `human`: Human player (responds via the terminal)
-  - `demo`: Simple agent for testing (random responses)
-  - LLM model names: e.g., `gpt-4o`, `claude-3-5-sonnet-20241022`, `llama3`
-- `base_url`: API endpoint (required for LLM models)
-- `api_key_env`: Name of the environment variable that holds the API key (required when the endpoint requires auth)
-- `temperature`: Optional, default 0.7
-- `max_tokens`: Optional, default 500
+- `name`: Player's display name.
+- `model`: Model type.
+  - `human`: Human player (input via terminal).
+  - `demo`: Simple agent for testing (random responses).
+  - LLM model name: e.g., `gpt-4o`, `claude-3-5-sonnet-20241022`, `llama3`.
+- `base_url`: API endpoint (required for LLM models).
+- `api_key_env`: Environment variable name (required for authenticated endpoints).
+- `temperature`: Optional, defaults to 0.7.
+- `max_tokens`: Optional, defaults to 500.
 
 **Supported Model Types:**
 
-- **OpenAI-compatible APIs**: Any provider that supports the OpenAI Chat Completions format
-- **Human players**: `model: human`
-- **Demo agents**: `model: demo`
+- **OpenAI-Compatible API**: Any model that supports the OpenAI Chat Completions format.
+- **Human Player**: `model: human`
+- **Test Agent**: `model: demo`
 
 **Local Model Example:**
 
-You can skip `api_key_env` when using a local model such as Ollama:
+If using a local model like Ollama, you can omit `api_key_env`:
 
 ```yaml
   - name: Ollama Llama3
@@ -239,26 +243,26 @@ You can skip `api_key_env` when using a local model such as Ollama:
 
 ### Built-in Agent Types
 
-The project ships with three built-in agent types:
+This project provides three built-in agent types:
 
-1. **LLMAgent**: Works with any LLM that exposes an OpenAI-compatible API
-2. **HumanAgent**: Prompts a human player through the terminal
-3. **DemoAgent**: Simple agent that returns randomized responses for testing
+1. **LLMAgent**: Supports any LLM model with an OpenAI-compatible API.
+2. **HumanAgent**: Human player input via the terminal.
+3. **DemoAgent**: A simple agent for testing (random responses).
 
-### Using Agents via YAML
+### Using Agents via YAML Configuration
 
-The recommended way to configure agents is through the YAML configuration file (see the [Configuration](#configuration) section).
+The recommended way is to configure agents through a YAML file (see the [Configuration](#configuration) section).
 
-### Programmatic Agent Usage
+### Programmatic Usage of Agents
 
-Create agents directly in Python if you need more control:
+If you need to create agents directly in Python code:
 
 ```python
 from llm_werewolf.ai import LLMAgent, HumanAgent, DemoAgent, create_agent, PlayerConfig
 from llm_werewolf.core import GameEngine
 from llm_werewolf.config import get_preset_by_name
 
-# Method 1: instantiate agents directly
+# Method 1: Directly create agent instances
 llm_agent = LLMAgent(
     model_name="gpt-4o",
     api_key="your-api-key",
@@ -270,7 +274,7 @@ llm_agent = LLMAgent(
 human_agent = HumanAgent(model_name="human")
 demo_agent = DemoAgent(model_name="demo")
 
-# Method 2: build from a configuration object (loads API keys from env vars)
+# Method 2: Create from a configuration object (automatically loads API key from environment variables)
 player_config = PlayerConfig(
     name="GPT-4 Player",
     model="gpt-4o",
@@ -299,22 +303,22 @@ result = engine.play_game()
 
 ### Supported LLM Providers
 
-Because the implementation targets OpenAI-compatible APIs, you can use:
+Since it uses an OpenAI-compatible API, the following providers can be used:
 
 - **OpenAI**: GPT-4, GPT-4o, GPT-3.5-turbo, etc.
 - **Anthropic**: Claude 3.5 Sonnet, Claude 3 Opus, Claude 3 Haiku, etc.
 - **DeepSeek**: DeepSeek-Reasoner, DeepSeek-Chat, etc.
-- **xAI**: Grok series models
-- **Local models**: Ollama, LM Studio, vLLM, and more
-- **Other compatible APIs**: Any service that supports the OpenAI Chat Completions protocol
+- **xAI**: Grok series models.
+- **Local Models**: Ollama, LM Studio, vLLM, etc.
+- **Other Compatible APIs**: Any service that supports the OpenAI Chat Completions format.
 
 ### Implementing a Custom Agent
 
-Integrate a custom provider by implementing a lightweight agent interface:
+To integrate a custom LLM provider, you just need to implement a simple agent protocol:
 
 ```python
 class MyCustomAgent:
-    """Example implementation of a custom agent."""
+    """Example of a custom agent implementation."""
 
     def __init__(self, client: YourLLMClient) -> None:
         self.client = client
@@ -322,13 +326,13 @@ class MyCustomAgent:
         self._history: list[dict[str, str]] = []
 
     def get_response(self, message: str) -> str:
-        """Fetch a response from the LLM.
+        """Get a response from the LLM.
 
         Args:
-            message: User message or game prompt
+            message: User message or game prompt.
 
         Returns:
-            str: Response generated by the LLM
+            str: The LLM's response.
         """
         self._history.append({"role": "user", "content": message})
         reply = self.client.generate(message, history=self._history)
@@ -336,168 +340,166 @@ class MyCustomAgent:
         return reply
 
     def reset(self) -> None:
-        """Optional: clear the conversation history before a new game."""
+        """Optional: Clear the conversation history before a new game starts."""
         self._history.clear()
 ```
 
-**Required interface:**
+**Required Interface:**
 
-- `model_name` (attribute): Name of the model
-- `get_response(message: str) -> str`: Receives game prompts and returns the reply
+- `model_name` (attribute): A string for the model name.
+- `get_response(message: str) -> str` (method): Receives a message and returns a response.
 
-**Optional helpers:**
+**Optional Methods:**
 
-- `reset()`: Clear any internal state (conversation history, etc.)
-- `add_to_history(role: str, content: str)`: Manually append to the history
-- `get_history() -> list[dict[str, str]]`: Inspect the stored history
+- `reset()`: Clears the agent's internal state (conversation history, etc.).
+- `add_to_history(role: str, content: str)`: Manually adds to the conversation history.
+- `get_history() -> list[dict[str, str]]`: Gets the conversation history.
 
-You can pass any custom agent directly to `GameEngine.setup_game()`.
+You can pass your custom agent directly into `GameEngine.setup_game()`.
 
 ## TUI Interface
 
-The Terminal User Interface provides a modern, real-time visualization of the game using the [Textual](https://textual.textualize.io/) framework.
+The TUI (Terminal User Interface) provides real-time game visualization with a modern terminal interface, built with the [Textual](https://textual.textualize.io/) framework.
 
 ### Interface Preview
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
 │ 🐺 Werewolf Game                                                       AI-Powered Werewolf     │
-│ q Quit  d Toggle Debug  n Next Step                                         [00:02:34]        │
+│ q Quit  d Toggle Debug  n Next Step                                             [00:02:34]     │
 ├──────────────────────┬─────────────────────────────────────────┬───────────────────────────────┤
 │                      │ ╭───── Game Status ─────╮               │                               │
 │    Players           │ │ 🌙 Round 2 - Night    │               │    Debug Info                 │
 │ ──────────────────   │ │                       │               │ ───────────────────────────   │
-│ Name       Model     │ │ Players Alive: 8/9    │               │ Session ID:                  │
-│            Status    │ │ Werewolves:    2      │               │   ww_20251019_163022          │
-│ ──────────────────   │ │ Villagers:    6       │               │                               │
-│ Alice     gpt-4o     │ ╰───────────────────────╯               │ Config: players.yaml          │
-│           ✓ 🛡️       │                                          │                               │
-│ Bob       claude     │                                          │ Players: 9                   │
-│           ✓          │                                          │ AI: 7  Human: 1  Demo: 1     │
+│ Name      Model      │ │ Total Players: 8/9    │               │ Session ID:                   │
+│           Status     │ │ Werewolves:    2      │               │   ww_20251019_163022          │
+│ ──────────────────   │ │ Villagers:     6      │               │                               │
+│ Alice     gpt-4o     │ ╰─────────────────────╯                 │ Config: players.yaml          │
+│           ✓ 🛡️      │                                          │                               │
+│ Bob       claude     │                                          │ Players: 9                    │
+│           ✓          │                                          │ AI: 7  Human: 1  Demo: 1      │
 │ Charlie   llama3     │                                          │                               │
-│           ✓          │                                          │ Roles:                       │
-│ David     deepseek   │ ╭──── Events / Chat ────╮               │  - Werewolf x2               │
-│           ✓ ❤️       │ │ [00:02:28] 🎮 Game start│               │  - Seer x1                   │
-│ Eve       grok       │ │ [00:02:29] ⏰ Phase: Night│            │  - Witch x1                  │
-│           ✓ ❤️       │ │ [00:02:30] 🐺 Wolves discuss│         │  - Hunter x1                 │
-│ Frank     human      │ │             targets    │               │  - Guard x1                  │
-│           ✓          │ │ [00:02:31] ⏰ Phase: Day │              │  - Villager x3               │
-│ Grace     claude     │ │ [00:02:32] 💀 Iris died  │             │                               │
-│           ✓          │ │ [00:02:33] 💬 Alice:     │             │ Night timeout: 60s           │
-│ Henry     demo       │ │            "I think Bob │             │ Day timeout: 300s            │
-│           ✓          │ │            is acting    │             │ Vote timeout: 60s            │
-│ Iris      demo       │ │            suspicious"  │             │                               │
-│           ✗          │ │ [00:02:34] 💬 Bob:      │             │ Errors: 0                    │
-│                      │ │            "I'm a       │             │                               │
-│                      │ │            villager!    │             │ Source: YAML config          │
-│                      │ │            Alice is deflecting!"│     │                               │
-│                      │ │ [00:02:35] 💬 Charlie:  │             │                               │
-│                      │ │            "Last night's│             │                               │
-│                      │ │            pattern felt │             │                               │
-│                      │ │            strange..."  │             │                               │
-│                      │ ╰─────────────────────────╯             │                               │
+│           ✓          │                                          │ Roles:                        │
+│ David     deepseek   │ ╭──── Events / Chat ────╮               │  - Werewolf x2                │
+│           ✓ ❤️       │ │ [00:02:28] 🎮 Game Start│               │  - Seer x1                    │
+│ Eve       grok       │ │ [00:02:29] ⏰ Phase: Night│               │  - Witch x1                   │
+│           ✓ ❤️       │ │ [00:02:30] 🐺 Werewolves Discuss│       │  - Hunter x1                  │
+│ Frank     human      │ │            Target       │               │  - Guard x1                   │
+│           ✓          │ │ [00:02:31] ⏰ Phase: Day│               │  - Villager x3                │
+│ Grace     claude     │ │ [00:02:32] 💀 Iris Died│               │                               │
+│           ✓          │ │ [00:02:33] 💬 Alice:  │               │ Night Timeout: 60s            │
+│ Henry     demo       │ │            "I think Bob │               │ Day Timeout: 300s             │
+│           ✓          │ │            is suspicious" │               │ Vote Timeout: 60s             │
+│ Iris      demo       │ │ [00:02:34] 💬 Bob:    │               │                               │
+│           ✗          │ │            "I'm a villager!│           │ Errors: 0                     │
+│                      │ │            Alice is trying │           │                               │
+│                      │ │            to deflect"    │           │ Source: YAML Config           │
+│                      │ │ [00:02:35] 💬 Charlie: │               │                               │
+│                      │ │            "Last night's death│       │                               │
+│                      │ │            pattern is strange"│       │                               │
+│                      │ ╰───────────────────────╯               │                               │
 │                      │                                          │                               │
 └──────────────────────┴──────────────────────────────────────────┴───────────────────────────────┘
 ```
 
-### Panel Breakdown
+### Panel Descriptions
 
-#### Player Panel (left)
+#### Player Panel (Left)
 
-Shows all players:
+Displays information for all players:
 
-- **Name**: Display name
-- **Model**: AI model or `human`/`demo`
-- **Status indicators**:
+- **Name**: Player's display name.
+- **Model**: The AI model used, or `human`/`demo`.
+- **Status Indicators**:
   - ✓: Alive
   - ✗: Dead
   - 🛡️: Protected by the Guard
-  - ❤️: Linked as lovers
+  - ❤️: In a lover relationship
   - ☠️: Poisoned by the Witch
   - 🔴: Marked by the Raven
 
-#### Game Panel (top center)
+#### Game Panel (Top Center)
 
 Displays the current game status:
 
-- **Round and phase**:
-  - 🌙 Night
-  - ☀️ Day Discussion
-  - 🗳️ Voting
+- **Round and Phase**:
+  - 🌙 Night Phase
+  - ☀️ Day Discussion Phase
+  - 🗳️ Voting Phase
   - 🏁 Game Over
-- **Player counts**: Live players by faction
-- **Voting tally**: Shown during the voting phase
+- **Player Statistics**: Number of surviving players by faction.
+- **Vote Count** (during voting phase): Shows the number of votes each player has received.
 
-#### Chat Panel (bottom center)
+#### Chat Panel (Bottom Center)
 
-Scrollable event log that records every game event and conversation:
+A scrollable event log showing all events and dialogue in the game:
 
-- 💬 **Player speeches**: AI-generated discussions, accusations, and defenses
-- 🎮 **Game events**: Game start, phase transitions, etc.
-- ⏰ **Phase changes**: Night, day, voting, etc.
-- 💀 **Deaths**: Notifications about eliminated players
-- 🐺 **Werewolf actions**: Night discussions among werewolves
-- 🔮 **Ability usage**: Records of role abilities being triggered
+- 💬 **Player Speech**: AI-generated discussions, accusations, and defenses.
+- 🎮 **Game Events**: Game start, phase changes, etc.
+- ⏰ **Phase Changes**: Night, Day, Voting, etc.
+- 💀 **Death Events**: Player death notifications.
+- 🐺 **Werewolf Actions**: Werewolf discussions at night.
+- 🔮 **Skill Usage**: Records of each role's skill usage.
 
-Events are color-coded by importance so you can spot key information quickly.
+Events are color-coded by importance for quick identification of key information.
 
-#### Debug Panel (right, optional)
+#### Debug Panel (Right, Optional)
 
-Toggle with the `d` key. Includes:
+Toggle with the 'd' key, contains:
 
 - Session ID
-- Source configuration file
-- Player counts and model breakdown
-- Role distribution
-- Timeouts for each phase
+- Configuration file source
+- Player count and type statistics
+- Role assignments
+- Time limit settings
 - Error tracking
 
 ### TUI Controls
 
-- `q`: Quit the game
-- `d`: Toggle the debug panel
-- `n`: Advance to the next step manually (for debugging)
-- Mouse scroll: Navigate through the chat history
-- Arrow keys: Move between focusable widgets
+- **q**: Quit the game.
+- **d**: Toggle the debug panel display (or use the `--debug` argument to open it by default).
+- **n**: Manually proceed to the next step (for debugging).
+- **Mouse Wheel**: Scroll through the chat history.
+- **Arrow Keys**: Move between focusable components.
 
 ### Console Mode
 
-Set `game_type: console` in the configuration file if you prefer a plain-text log instead of the TUI.
+If you prefer not to use the TUI, you can use the `llm-werewolf` or `werewolf` command, and the game will run automatically with output as plain text logs in the terminal.
 
 ## Game Flow
 
-1. **Setup**: Players are assigned roles at random
-2. **Night Phase**: Night roles act in priority order
-3. **Day Discussion**: Players share information and debate
-4. **Day Voting**: Players vote to eliminate a suspect
-5. **Victory Check**: The engine checks for win conditions
-6. Repeat steps 2–5 until a team wins
+1. **Preparation Phase**: Players are randomly assigned roles.
+2. **Night Phase**: Roles with night abilities act in order of priority.
+3. **Day Discussion**: Players discuss and share information.
+4. **Day Voting**: Players vote to eliminate a suspect.
+5. **Victory Check**: The game checks if any faction has won.
+6. Repeat steps 2-5 until victory conditions are met.
 
 ## Victory Conditions
 
-The game checks for victory after every phase:
+The game checks for victory conditions at the end of each phase:
 
-- **Villagers win**: All werewolves are eliminated
-- **Werewolves win**: Werewolves equal or outnumber the villagers
-- **Lovers win**: Only the two lovers remain alive (takes priority over faction wins)
+- **Villager Faction Wins**: All werewolves are eliminated.
+- **Werewolf Faction Wins**: The number of werewolves is greater than or equal to the number of villagers.
+- **Lovers Win**: Only the two lovers remain alive (lover victory takes precedence over faction victory).
 
 ## Development
 
-### Development Environment
+### Development Environment Setup
 
 ```bash
 # Clone the project
 git clone https://github.com/Mai0313/LLMWereWolf.git
 cd LLMWereWolf
 
-# Install every dependency (including dev and test extras)
+# Install all dependencies (including development and test dependencies)
 uv sync --all-groups
 
 # Or install selectively
-uv sync                     # Base dependencies only
-uv sync --group dev         # Development tooling
+uv sync                     # Only base dependencies (LLM support included)
+uv sync --group dev         # Development dependencies
 uv sync --group test        # Test dependencies
-uv sync --group llm-all     # All LLM provider extras
+uv sync --group docs        # Documentation generation dependencies
 ```
 
 ### Running Tests
@@ -506,7 +508,7 @@ uv sync --group llm-all     # All LLM provider extras
 # Run all tests
 uv run pytest
 
-# Run tests with coverage (show missing lines)
+# Run and show coverage
 uv run pytest --cov=src --cov-report=term-missing
 
 # Run a specific test file
@@ -515,139 +517,141 @@ uv run pytest tests/core/test_roles.py -v
 # Run a specific test function
 uv run pytest tests/core/test_roles.py::test_werewolf_role -v
 
-# Run tests in parallel for extra speed
+# Run tests in parallel (faster)
 uv run pytest -n auto
 ```
 
 ### Code Quality
 
 ```bash
-# Run Ruff linter checks
+# Run Ruff linter check
 uv run ruff check src/
 
 # Automatically fix fixable issues
 uv run ruff check --fix src/
 
-# Format the codebase
+# Format the code
 uv run ruff format src/
 
-# Type checking (if mypy is configured)
+# Check types (if mypy is configured)
 uv run mypy src/
 ```
 
-### Pre-commit Hooks
+### Using Pre-commit
 
-A pre-commit configuration is included to enforce code quality before commits:
+The project includes a pre-commit configuration to automatically check code quality before committing:
 
 ```bash
-# Install the pre-commit hooks
+# Install pre-commit hooks
 uv run pre-commit install
 
-# Run every hook manually
+# Manually run all hooks
 uv run pre-commit run --all-files
 ```
 
-### Makefile Shortcuts
+### Using Makefile
 
-A Makefile is provided to streamline common tasks:
+The project provides a Makefile to simplify common operations:
 
 ```bash
-# List available commands
+# See all available commands
 make help
 
-# Remove generated artifacts
+# Clean auto-generated files
 make clean
 
-# Format code (runs pre-commit)
+# Run code formatting (pre-commit)
 make format
 
-# Run the full test suite
+# Run all tests
 make test
 
-# Build documentation
+# Generate documentation (requires creating the docs directory first)
 make gen-docs
 ```
 
-## Project Structure
+**Note**: The `gen-docs` command requires the `./scripts/gen_docs.py` script and the docs directory. This command may not work if your project's documentation system is not yet set up.
 
-The codebase follows a modular structure with clear separation of concerns:
+## Project Architecture
+
+The project uses a modular architecture with clear responsibilities for each module:
 
 ```
 src/llm_werewolf/
-├── cli.py                 # CLI entry point
+├── cli.py                 # Command-line entry point
 ├── ai/                    # Agent system
 │   ├── agents.py         # LLM/Human/Demo agent implementations
-│   └── message.py        # Message handling
+│   └── message.py        # Message processing
 ├── config/               # Configuration system
-│   ├── game_config.py    # Game configuration models
-│   └── role_presets.py   # Role preset definitions
+│   ├── game_config.py    # Game configuration model
+│   └── role_presets.py   # Role preset configurations
 ├── core/                 # Core game logic
 │   ├── game_engine.py    # Game engine
 │   ├── game_state.py     # Game state management
-│   ├── player.py         # Player model
+│   ├── player.py         # Player class
 │   ├── actions.py        # Action system
-│   ├── events.py         # Event tracking
-│   ├── victory.py        # Victory condition checks
+│   ├── events.py         # Event system
+│   ├── victory.py        # Victory condition checking
 │   └── roles/            # Role implementations
-│       ├── base.py       # Role base class
-│       ├── werewolf.py   # Werewolf roles
-│       ├── villager.py   # Villager roles
+│       ├── base.py       # Base role class
+│       ├── werewolf.py   # Werewolf faction roles
+│       ├── villager.py   # Villager faction roles
 │       └── neutral.py    # Neutral roles
 ├── ui/                   # User interface
 │   ├── tui_app.py        # TUI application
-│   ├── styles.py         # TUI styling
-│   └── components/       # TUI widgets
+│   ├── styles.py         # TUI styles
+│   └── components/       # TUI components
 │       ├── player_panel.py
 │       ├── game_panel.py
 │       ├── chat_panel.py
 │       └── debug_panel.py
-└── utils/                # Utility helpers
-    └── validator.py      # Validation utilities
+└── utils/                # Utility functions
+    └── validator.py      # Validation tools
 ```
 
-### Module Overview
+### Module Descriptions
 
-- **cli.py**: Loads configuration and launches the game
-- **ai/**: Agent implementations for AI and human players
-- **config/**: Game configuration models and presets
-- **core/**: Core game logic, including roles, players, state, actions, and events
-- **ui/**: Textual-based terminal interface components
-- **utils/**: Shared utility functions
+- **cli.py**: Command-line interface, responsible for loading configurations and starting the game.
+- **ai/**: Agent system, implementing various AI agents and the human player interface.
+- **config/**: Configuration system, containing game parameters and role presets.
+- **core/**: Core game logic, including roles, players, game state, actions, and the event system.
+- **ui/**: Terminal user interface, based on the Textual framework.
+- **utils/**: General utility functions.
 
 ## System Requirements
 
 - **Python**: 3.10 or higher
-- **Operating Systems**: Linux, macOS, Windows
-- **Terminal**: Modern terminal with ANSI color and Unicode support (required for TUI)
+- **Operating System**: Linux, macOS, Windows
+- **Terminal**: A modern terminal that supports ANSI colors and Unicode (for TUI).
 
-### Key Dependencies
+### Main Dependencies
 
-- **pydantic** (≥2.12.3): Data validation and settings management
-- **textual** (≥6.3.0): TUI framework
-- **rich** (≥14.2.0): Terminal rendering
-- **openai** (≥2.5.0): OpenAI API client (for LLM integration)
-- **python-dotenv** (≥1.1.1): Environment variable loading
-- **pyyaml** (≥6.0.3): YAML parsing
-- **fire** (≥0.7.1): Command-line interface
-- **logfire** (≥4.13.2): Structured logging
+- **pydantic** (≥2.12.3): Data validation and settings management.
+- **textual** (≥6.3.0): TUI framework.
+- **rich** (≥14.2.0): Terminal formatting.
+- **openai** (≥2.5.0): OpenAI API client (for LLM integration).
+- **python-dotenv** (≥1.1.1): Environment variable management.
+- **pyyaml** (≥6.0.3): YAML configuration file parsing.
+- **fire** (≥0.7.1): Command-line interface.
+- **logfire** (≥4.13.2): Structured logging.
 
 ## FAQ
 
 ### How do I add more players?
 
-Edit your YAML configuration, choose a `preset` that matches the desired player count, and add entries to the `players` list. Make sure the player count matches the preset `num_players`.
+Edit your YAML configuration file, adjust the `preset` to match the number of players, and add player configurations to the `players` list. Remember that the number of players must match `num_players` in the preset.
 
 ### Can I mix different LLM models?
 
-Yes. You can mix providers and models within the same game, such as GPT-4, Claude, and local Llama variants.
+Yes! You can use different LLM providers and models in the same game, for example, using GPT-4, Claude, and a local Llama model simultaneously.
 
-### How do I include human players?
+### How do I let a human player join the game?
 
-Set a player's `model` to `human` in the YAML configuration. During the game, that player responds directly through the terminal.
+In the YAML configuration, set a player's `model` to `human`. During the game, that player will need to respond via terminal input.
 
-### How do I configure local models like Ollama?
+### How do I set up a local model (Ollama)?
 
-Ensure Ollama is running, then configure the player in YAML:
+Make sure Ollama is running, then set it up in the YAML file:
 
 ```yaml
   - name: Ollama Player
@@ -655,11 +659,11 @@ Ensure Ollama is running, then configure the player in YAML:
     base_url: http://localhost:11434/v1
 ```
 
-`api_key_env` is not required.
+You do not need to set `api_key_env`.
 
-### What if the game runs too quickly or too slowly?
+### What if the game is too fast or too slow?
 
-Customize `GameConfig` to adjust the timeouts for each phase:
+You can customize the `GameConfig` to adjust the time limits for each phase:
 
 ```python
 from llm_werewolf.config import GameConfig
@@ -667,15 +671,15 @@ from llm_werewolf.config import GameConfig
 config = GameConfig(
     num_players=9,
     role_names=[...],
-    night_timeout=90,  # 90-second night phase
-    day_timeout=600,  # 10-minute day discussion
-    vote_timeout=90,  # 90-second voting phase
+    night_timeout=90,  # 90 seconds for the night phase
+    day_timeout=600,  # 600 seconds for day discussion
+    vote_timeout=90,  # 90 seconds for the voting phase
 )
 ```
 
-### How do I define a custom role set?
+### How do I customize the role combination?
 
-Create a custom `GameConfig` and list the roles you want:
+Create a custom `GameConfig` and specify the roles you want:
 
 ```python
 from llm_werewolf.config import GameConfig
@@ -703,44 +707,43 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## Contributing
 
-We welcome contributions! You can help in many ways:
+Contributions are welcome! You can participate in the following ways:
 
-1. **Report issues**: File bugs or feature requests on the [Issues](https://github.com/Mai0313/LLMWereWolf/issues) page
-2. **Open pull requests**: Fix bugs or add new features
-3. **Improve documentation**: Enhance the README or code comments
-4. **Share feedback**: Let us know about your experience
+1. **Report Issues**: Report bugs or suggest features on the [Issues](https://github.com/Mai0313/LLMWereWolf/issues) page.
+2. **Submit Pull Requests**: Fix bugs or add new features.
+3. **Improve Documentation**: Help improve the README and code comments.
+4. **Share Feedback**: Tell us about your experience using the project.
 
-### Contribution Workflow
+### Contribution Flow
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to your branch (`git push origin feature/amazing-feature`)
-5. Open a pull request
+1. Fork this project.
+2. Create a feature branch (`git checkout -b feature/amazing-feature`).
+3. Commit your changes (`git commit -m 'Add some amazing feature'`).
+4. Push to the branch (`git push origin feature/amazing-feature`).
+5. Open a Pull Request.
 
-Please make sure your changes:
+Please ensure your code:
 
-- Follow the project style guidelines (Ruff)
-- Include appropriate tests
-- Update related documentation
+- Follows the project's code style (using Ruff).
+- Includes appropriate tests.
+- Updates relevant documentation.
 
 ## Acknowledgements
 
-This project is built on top of outstanding open-source tools:
+This project is built with these excellent open-source tools:
 
-- [Pydantic](https://pydantic.dev/) — Data validation and configuration
-- [Textual](https://textual.textualize.io/) — Modern TUI framework
-- [Rich](https://rich.readthedocs.io/) — Beautiful terminal rendering
-- [OpenAI Python SDK](https://github.com/openai/openai-python) — LLM API client
-- [uv](https://docs.astral.sh/uv/) — Fast Python package manager
-- [Ruff](https://github.com/astral-sh/ruff) — Extremely fast Python linter
+- [Pydantic](https://pydantic.dev/) - Data validation and settings management.
+- [Textual](https://textual.textualize.io/) - Modern TUI framework.
+- [Rich](https://rich.readthedocs.io/) - Beautiful terminal output.
+- [OpenAI Python SDK](https://github.com/openai/openai-python) - LLM API client.
+- [uv](https://docs.astral.sh/uv/) - A fast Python package manager.
+- [Ruff](https://github.com/astral-sh/ruff) - An extremely fast Python linter.
 
 ## Related Links
 
 - [Project Homepage](https://github.com/Mai0313/LLMWereWolf)
 - [Issue Tracker](https://github.com/Mai0313/LLMWereWolf/issues)
-- [Documentation](https://mai0313.github.io/llm_werewolf) (in development)
 
 ## Changelog
 
-See the [Releases](https://github.com/Mai0313/LLMWereWolf/releases) page for version history.
+Please see the [Releases](https://github.com/Mai0313/LLMWereWolf/releases) page for the version update history.

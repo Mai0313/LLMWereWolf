@@ -4,7 +4,7 @@ from enum import Enum
 
 from pydantic import Field, BaseModel
 
-from llm_werewolf.ai.base_agent import BaseAgent
+from llm_werewolf.ai.agents import BaseAgent
 from llm_werewolf.core.roles.base import Role
 
 

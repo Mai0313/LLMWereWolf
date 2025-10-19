@@ -1,10 +1,10 @@
-from llm_werewolf.config.game_config import GameConfig
-from llm_werewolf.config.player_config import (
+from llm_werewolf.ai.agents import (
     PlayerConfig,
     PlayersConfig,
-    create_agent_from_player_config,
+    create_agent,
     load_players_config,
 )
+from llm_werewolf.config.game_config import GameConfig
 from llm_werewolf.config.role_presets import (
     PRESET_12_PLAYERS,
     PRESET_15_PLAYERS,
@@ -25,6 +25,7 @@ __all__ = [
     "PlayersConfig",
     # Player config functions
     "create_agent_from_player_config",
+    "create_agent",
     "load_players_config",
     # Presets
     "PRESET_6_PLAYERS",
@@ -39,3 +40,7 @@ __all__ = [
     "list_preset_names",
     "get_preset_by_name",
 ]
+
+
+# Backward compatibility alias
+create_agent_from_player_config = create_agent

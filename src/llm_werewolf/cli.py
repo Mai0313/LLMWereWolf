@@ -1,5 +1,3 @@
-"""CLI entry point for the LLM Werewolf game."""
-
 import sys
 from pathlib import Path
 import argparse

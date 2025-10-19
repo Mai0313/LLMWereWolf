@@ -1,5 +1,3 @@
-"""Logging utilities for the Werewolf game."""
-
 from typing import Any
 import logging
 from pathlib import Path

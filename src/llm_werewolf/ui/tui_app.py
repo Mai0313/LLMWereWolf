@@ -1,5 +1,3 @@
-"""Main TUI application for the Werewolf game."""
-
 from typing import ClassVar
 
 from textual.app import App, ComposeResult

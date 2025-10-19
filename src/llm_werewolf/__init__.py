@@ -1,5 +1,3 @@
-"""LLM Werewolf - AI-powered Werewolf game with LLM integration."""
-
 from importlib.metadata import version
 from pathlib import Path
 

@@ -1,5 +1,3 @@
-"""TUI interface for the Werewolf game."""
-
 from llm_werewolf.ui.components import ChatPanel, DebugPanel, GamePanel, PlayerPanel
 from llm_werewolf.ui.tui_app import WerewolfTUI, run_tui
 

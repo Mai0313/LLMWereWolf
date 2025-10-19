@@ -1,5 +1,3 @@
-"""Game status panel component for TUI."""
-
 from typing import Any
 
 from rich.text import Text

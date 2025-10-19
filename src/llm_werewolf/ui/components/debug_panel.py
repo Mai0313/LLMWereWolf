@@ -1,5 +1,3 @@
-"""Debug information panel component for TUI."""
-
 import uuid
 from typing import Any
 from datetime import datetime

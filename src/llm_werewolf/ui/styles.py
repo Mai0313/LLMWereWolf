@@ -1,5 +1,3 @@
-"""Styles and themes for the TUI interface."""
-
 from rich.style import Style
 
 # Color scheme for different camps

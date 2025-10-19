@@ -1,5 +1,3 @@
-"""Player list panel component for TUI."""
-
 from typing import Any
 
 from rich.table import Table

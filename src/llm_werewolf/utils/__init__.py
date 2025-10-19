@@ -1,5 +1,3 @@
-"""Utility functions for the Werewolf game."""
-
 from llm_werewolf.utils.logger import default_logger, log_error, log_game_event, setup_logger
 from llm_werewolf.utils.validator import (
     sanitize_player_name,

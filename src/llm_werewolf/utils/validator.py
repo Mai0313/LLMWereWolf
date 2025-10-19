@@ -1,5 +1,3 @@
-"""Validation utilities for the Werewolf game."""
-
 from llm_werewolf.core.player import Player
 from llm_werewolf.core.game_state import GameState
 

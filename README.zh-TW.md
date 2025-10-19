@@ -1,4 +1,4 @@
-<center>
+<div align="center">
 
 # LLM 狼人殺 🐺
 
@@ -13,7 +13,7 @@
 [![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Mai0313/LLMWereWolf/pulls)
 [![contributors](https://img.shields.io/github/contributors/Mai0313/LLMWereWolf.svg)](https://github.com/Mai0313/LLMWereWolf/graphs/contributors)
 
-</center>
+</div>
 
 一個支援多種 LLM 模型的 AI 狼人殺遊戲，具有精美的終端介面 (TUI)。
 

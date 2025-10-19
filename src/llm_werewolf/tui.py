@@ -4,17 +4,19 @@ import fire
 import logfire
 from rich.console import Console
 
+from llm_werewolf.ui import run_tui
 from llm_werewolf.core import GameEngine
 from llm_werewolf.config import load_config, get_preset_by_name, create_agent_from_player_config
 
 console = Console()
 
 
-def main(config: str) -> None:
-    """Run Werewolf game in console mode (auto-play).
+def main(config: str, debug: bool = False) -> None:
+    """Run Werewolf game with TUI interface.
 
     Args:
         config: Path to the YAML configuration file
+        debug: Show debug panel (default: False)
     """
     logfire.configure()
     config_path = Path(config)
@@ -37,33 +39,26 @@ def main(config: str) -> None:
 
     engine = GameEngine(game_config)
     engine.setup_game(players, game_config.to_role_list())
-    logfire.info("game_created", config_path=str(config_path), preset=players_config.preset)
+    logfire.info(
+        "tui_started", config_path=str(config_path), preset=players_config.preset, show_debug=debug
+    )
 
     console.print(f"[green]已載入設定檔: {config_path.resolve()}[/green]")
     console.print(f"[cyan]Preset: {players_config.preset}[/cyan]")
-    console.print("[cyan]介面模式: Console (自動執行)[/cyan]")
+    console.print("[cyan]介面模式: TUI[/cyan]")
+    console.print(
+        "\n[yellow]提示: 按 'n' 鍵進行下一步，按 'd' 切換除錯面板，按 'q' 退出[/yellow]\n"
+    )
 
     try:
-        result = engine.play_game()
-        console.print(f"\n{result}")
-
-        if engine.game_state:
-            alive = engine.game_state.get_alive_players()
-            dead = engine.game_state.get_dead_players()
-
-            console.print("\n存活玩家: ")
-            for player in alive:
-                console.print(f"- {player.name} ({player.get_role_name()})")
-
-            console.print("\n淘汰玩家: ")
-            for player in dead:
-                console.print(f"- {player.name} ({player.get_role_name()})")
-
+        # Use show_debug from command line flag, or fall back to config
+        show_debug = debug or players_config.show_debug
+        run_tui(engine, show_debug)
     except KeyboardInterrupt:
         console.print("\n遊戲已由使用者中止。")
     except Exception as exc:
         logfire.error(
-            "game_execution_error",
+            "tui_execution_error",
             error=str(exc),
             config_path=str(config_path),
             preset=players_config.preset,

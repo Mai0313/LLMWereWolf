@@ -1,5 +1,4 @@
 preset: 9-players
-game_type: tui
 show_debug: false
 
 players:

@@ -87,7 +87,9 @@ Repository = "https://github.com/Mai0313/LLMWerewolf"
 
 [project.scripts]
 llm-werewolf = "llm_werewolf.cli:main"
+llm-werewolf-tui = "llm_werewolf.tui:main"
 werewolf = "llm_werewolf.cli:main"
+werewolf-tui = "llm_werewolf.tui:main"
 
 [dependency-groups]
 dev = [
@@ -169,8 +171,12 @@ exclude = [
 ]
 
 [tool.poe.tasks]
-api = "python ./src/llm_werewolf/cli.py"
+# Run game in console mode (auto-play)
+cli = "python ./src/llm_werewolf/cli.py"
 main = "python ./src/llm_werewolf/cli.py"
+
+# Run game in TUI mode (interactive)
+tui = "python ./src/llm_werewolf/tui.py"
 
 # Documentation
 docs_gen = "make gen-docs"

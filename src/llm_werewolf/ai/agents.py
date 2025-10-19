@@ -1,6 +1,5 @@
 import os
 import random
-from typing import Literal
 from pathlib import Path
 from functools import cached_property
 
@@ -60,12 +59,7 @@ class PlayersConfig(BaseModel):
     preset: str | None = Field(
         default=None, description="Optional preset name for roles (e.g., '9-players')"
     )
-    game_type: Literal["tui", "console"] = Field(
-        default="tui", description="Interface mode: 'tui' for interactive UI or 'console' for logs"
-    )
-    show_debug: bool = Field(
-        default=False, description="Show the debug panel (only applied when game_type is 'tui')"
-    )
+    show_debug: bool = Field(default=False, description="Show the debug panel in TUI mode")
 
     @field_validator("players")
     @classmethod

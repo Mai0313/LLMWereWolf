@@ -113,13 +113,19 @@ class GameState:
 
         return self.phase
 
-    def get_alive_players(self) -> list["Player"]:
+    def get_alive_players(self, except_ids: list[str] | None = None) -> list["Player"]:
         """Get all alive players.
+
+        Args:
+            except_ids: Optional list of player IDs to exclude.
 
         Returns:
             list[Player]: List of alive players.
         """
-        return [p for p in self.players if p.is_alive()]
+        alive = [p for p in self.players if p.is_alive()]
+        if except_ids:
+            alive = [p for p in alive if p.player_id not in except_ids]
+        return alive
 
     def get_dead_players(self) -> list["Player"]:
         """Get all dead players.

@@ -173,15 +173,6 @@ def get_all_presets() -> dict[str, GameConfig]:
     }
 
 
-def list_preset_names() -> list[str]:
-    """Get a list of all preset names.
-
-    Returns:
-        list[str]: List of preset names.
-    """
-    return list(get_all_presets().keys())
-
-
 def get_preset_by_name(name: str) -> GameConfig:
     """Get a preset by name.
 

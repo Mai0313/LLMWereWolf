@@ -222,7 +222,7 @@ All agent implementations live in one module and follow a lightweight protocol:
 **Presets** (`config/role_presets.py`):
 
 - Pre-configured game setups: `6-players`, `9-players`, `12-players`, `15-players`, `expert`, `chaos`
-- Access via: `get_preset_by_name("9-players")` or `list_preset_names()`
+- Access via: `get_preset_by_name("9-players")`
 
 **Player Configuration** (`ai/agents.py`):
 

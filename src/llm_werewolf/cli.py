@@ -3,16 +3,13 @@ import logging
 from pathlib import Path
 
 import fire
+import logfire
 from rich.console import Console
 
+from llm_werewolf.ui import run_tui
 from llm_werewolf.core import GameEngine
 from llm_werewolf.utils import log_error, setup_logger, log_game_event
-from llm_werewolf.config import (
-    list_preset_names,
-    get_preset_by_name,
-    load_config,
-    create_agent_from_player_config,
-)
+from llm_werewolf.config import load_config, get_preset_by_name, create_agent_from_player_config
 
 console = Console()
 
@@ -21,50 +18,35 @@ def main(config: str) -> None:
     config_path = Path(config)
     players_config = load_config(config_path=config_path)
 
-    if not players_config.preset:
-        console.print("[red]設定檔缺少 preset 欄位。[/red]")
-        sys.exit(1)
-
-    preset_name = players_config.preset
-    available_presets = list_preset_names()
-    if preset_name not in available_presets:
-        console.print(f"[red]無效的 preset '{preset_name}'，可用選項：{available_presets}[/red]")
-        sys.exit(1)
-
     setup_logger(
         level=getattr(logging, players_config.log_level), log_file=players_config.log_file
     )
 
-    game_config = get_preset_by_name(preset_name)
+    game_config = get_preset_by_name(players_config.preset)
     if len(players_config.players) != game_config.num_players:
-        console.print(
-            "[red]玩家數量與 preset 要求不符："
-            f"設定檔 {len(players_config.players)} 位，preset '{preset_name}' 需要 {game_config.num_players} 位。[/red]"
+        logfire.error(
+            "player_count_mismatch",
+            f"Configured {len(players_config.players)} players, but preset '{players_config.preset}' requires {game_config.num_players}.",
         )
-        sys.exit(1)
+        raise ValueError
 
-    try:
-        players = [
-            (f"player_{idx + 1}", player_cfg.name, create_agent_from_player_config(player_cfg))
-            for idx, player_cfg in enumerate(players_config.players)
-        ]
-    except Exception as exc:
-        log_error(exc, "Failed to create agents from configuration")
-        console.print(f"[red]建立玩家代理時發生錯誤：{exc}[/red]")
-        sys.exit(1)
+    players = [
+        (f"player_{idx + 1}", player_cfg.name, create_agent_from_player_config(player_cfg))
+        for idx, player_cfg in enumerate(players_config.players)
+    ]
 
     engine = GameEngine(game_config)
     engine.setup_game(players, game_config.to_role_list())
     log_game_event(
         "game_created",
         (
-            f"Game created from '{config_path}' with preset '{preset_name}' "
+            f"Game created from '{config_path}' with preset '{players_config.preset}' "
             f"and mode '{players_config.game_type}'"
         ),
     )
 
     console.print(f"[green]已載入設定檔：{config_path.resolve()}[/green]")
-    console.print(f"[cyan]Preset：{preset_name}[/cyan]")
+    console.print(f"[cyan]Preset：{players_config.preset}[/cyan]")
     console.print(f"[cyan]介面模式：{players_config.game_type}[/cyan]")
     console.print(f"[cyan]Log level：{players_config.log_level}[/cyan]")
     if players_config.log_file:
@@ -72,13 +54,6 @@ def main(config: str) -> None:
 
     try:
         if players_config.game_type == "tui":
-            try:
-                from llm_werewolf.ui import run_tui
-            except ImportError as exc:
-                console.print(f"[red]TUI 依賴尚未安裝：{exc}[/red]")
-                console.print("請執行： [cyan]uv sync[/cyan]")
-                sys.exit(1)
-
             run_tui(engine, players_config.show_debug)
             return
 

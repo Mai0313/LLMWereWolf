@@ -3,13 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from llm_werewolf.config import (
-    PRESET_6_PLAYERS,
-    GameConfig,
-    get_preset,
-    list_preset_names,
-    get_preset_by_name,
-)
+from llm_werewolf.config import PRESET_6_PLAYERS, GameConfig, get_preset, get_preset_by_name
 
 
 def test_valid_game_config():
@@ -85,11 +79,3 @@ def test_get_preset_by_name():
     """Test getting preset by name."""
     preset = get_preset_by_name("9-players")
     assert preset.num_players == 9
-
-
-def test_list_preset_names():
-    """Test listing all preset names."""
-    names = list_preset_names()
-    assert "9-players" in names
-    assert "6-players" in names
-    assert isinstance(names, list)

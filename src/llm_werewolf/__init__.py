@@ -2,7 +2,7 @@ from importlib.metadata import version
 from pathlib import Path
 
 from llm_werewolf.ai import AgentType, DemoAgent, GameMessage, MessageBuilder
-from llm_werewolf.config import GameConfig, get_preset, list_preset_names
+from llm_werewolf.config import GameConfig, get_preset
 from llm_werewolf.core import (
     GameEngine,
     GamePhase,
@@ -29,7 +29,6 @@ __all__ = [
     # Config
     "GameConfig",
     "get_preset",
-    "list_preset_names",
     # AI
     "AgentType",
     "DemoAgent",

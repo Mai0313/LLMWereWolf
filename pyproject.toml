@@ -68,6 +68,7 @@ authors = [
 ]
 dependencies = [
     "fire>=0.7.1",
+    "logfire>=4.13.2",
     "openai>=2.5.0",
     "pydantic>=2.12.3",
     "pydantic-settings>=2.11.0",

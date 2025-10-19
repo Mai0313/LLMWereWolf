@@ -15,7 +15,6 @@ from llm_werewolf.config.role_presets import (
     get_all_presets,
     get_preset,
     get_preset_by_name,
-    list_preset_names,
 )
 
 __all__ = [
@@ -37,7 +36,6 @@ __all__ = [
     # Preset functions
     "get_preset",
     "get_all_presets",
-    "list_preset_names",
     "get_preset_by_name",
 ]
 

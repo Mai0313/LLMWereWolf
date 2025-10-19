@@ -1,55 +1,47 @@
 from typing import TYPE_CHECKING
 
-from pydantic import Field, BaseModel, ConfigDict, field_validator
+from pydantic import Field, BaseModel, field_validator
 
 if TYPE_CHECKING:
     from llm_werewolf.core.roles.base import Role
 
 
 class GameConfig(BaseModel):
-    """Configuration for a Werewolf game."""
-
-    model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "num_players": 9,
-                "role_names": [
-                    "Werewolf",
-                    "Werewolf",
-                    "Seer",
-                    "Witch",
-                    "Hunter",
-                    "Guard",
-                    "Villager",
-                    "Villager",
-                    "Villager",
-                ],
-                "night_timeout": 60,
-                "day_timeout": 300,
-                "vote_timeout": 60,
-                "allow_revote": False,
-                "show_role_on_death": True,
-            }
-        }
+    num_players: int = Field(
+        ..., ge=6, le=20, description="Number of players in the game", examples=[6, 9, 12]
     )
-
-    num_players: int = Field(..., ge=6, le=20, description="Number of players in the game")
-    role_names: list[str] = Field(..., description="List of role names to use in the game")
+    role_names: list[str] = Field(
+        ...,
+        description="List of role names to use in the game",
+        examples=[["Werewolf", "Seer", "Witch", "Hunter", "Guard", "Villager"]],
+    )
 
     night_timeout: int = Field(
-        default=60, ge=10, description="Timeout for night actions in seconds"
+        default=60,
+        ge=10,
+        description="Timeout for night actions in seconds",
+        examples=[30, 60, 90],
     )
     day_timeout: int = Field(
-        default=300, ge=30, description="Timeout for day discussion in seconds"
+        default=300,
+        ge=30,
+        description="Timeout for day discussion in seconds",
+        examples=[120, 300, 600],
     )
-    vote_timeout: int = Field(default=60, ge=10, description="Timeout for voting in seconds")
+    vote_timeout: int = Field(
+        default=60, ge=10, description="Timeout for voting in seconds", examples=[30, 60, 90]
+    )
 
-    allow_revote: bool = Field(default=False, description="Allow players to change their vote")
+    allow_revote: bool = Field(
+        default=False, description="Allow players to change their vote", examples=[True, False]
+    )
     show_role_on_death: bool = Field(
-        default=True, description="Reveal player's role when they die"
+        default=True, description="Reveal player's role when they die", examples=[True, False]
     )
     enable_sheriff: bool = Field(
-        default=False, description="Enable sheriff election (future feature)"
+        default=False,
+        description="Enable sheriff election (future feature)",
+        examples=[True, False],
     )
 
     @field_validator("role_names")

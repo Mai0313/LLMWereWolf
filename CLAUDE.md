@@ -331,6 +331,73 @@ All workflows in `.github/workflows/`:
   - `*.ipynb`: Ignore T201 (print), F401 (unused imports), S105, F811, ANN, PERF, SLF
   - `examples/*.py`: Ignore UP, DOC, RUF, D, C, F401, T201
 
+## Pydantic Models
+
+This project uses **Pydantic v2** (currently v2.11.7). All Pydantic models MUST use Pydantic v2 syntax.
+
+### Configuration Pattern
+
+**CORRECT** (Pydantic v2):
+
+```python
+from pydantic import BaseModel, Field, ConfigDict
+
+
+class MyModel(BaseModel):
+    """My model description."""
+
+    field_name: str = Field(..., description="Field description")
+
+    model_config = ConfigDict(
+        json_encoders={datetime: lambda v: v.isoformat()},
+        frozen=True,  # Make model immutable if needed
+        str_strip_whitespace=True,  # Example of other config options
+    )
+```
+
+**INCORRECT** (Pydantic v1 - DO NOT USE):
+
+```python
+from typing import ClassVar
+from pydantic import BaseModel, Field
+
+
+class MyModel(BaseModel):
+    """My model description."""
+
+    field_name: str = Field(..., description="Field description")
+
+    class Config:  # ❌ This is deprecated in Pydantic v2
+        json_encoders: ClassVar[dict] = {datetime: lambda v: v.isoformat()}
+        frozen = True
+```
+
+### Common ConfigDict Options
+
+- `json_encoders`: Custom JSON serialization for specific types
+- `frozen`: Make model immutable (like dataclass frozen=True)
+- `str_strip_whitespace`: Automatically strip whitespace from strings
+- `validate_assignment`: Validate fields on assignment after initialization
+- `arbitrary_types_allowed`: Allow arbitrary types in model fields
+- `use_enum_values`: Use enum values instead of enum objects in dict/json
+
+### Examples in Codebase
+
+- `core/events.py`: Event model with datetime JSON encoding
+- `config/game_config.py`: GameConfig with validation
+- `config/llm_config.py`: LLM configuration models
+
+### Migration Notes
+
+If you encounter a Pydantic v1 style nested `Config` class:
+
+1. Import `ConfigDict` from `pydantic`
+2. Remove `from typing import ClassVar` if only used for Config
+3. Replace nested `class Config:` with `model_config = ConfigDict(...)`
+4. Remove `ClassVar[dict]` type annotations from `json_encoders`
+
+This ensures compatibility with mkdocstrings documentation generation and Pydantic v2 best practices.
+
 ## Dependency Management
 
 ```bash

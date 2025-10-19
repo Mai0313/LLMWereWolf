@@ -1,10 +1,9 @@
 """Event system for the Werewolf game."""
 
 from enum import Enum
-from typing import ClassVar
 from datetime import datetime
 
-from pydantic import Field, BaseModel
+from pydantic import Field, BaseModel, ConfigDict
 
 
 class EventType(str, Enum):
@@ -84,10 +83,7 @@ class Event(BaseModel):
         """
         return self.message
 
-    class Config:
-        """Pydantic config."""
-
-        json_encoders: ClassVar[dict] = {datetime: lambda v: v.isoformat()}
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
 
 class EventLogger:

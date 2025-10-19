@@ -66,7 +66,7 @@ Instead of using demo agents, you can configure custom AI players and human play
 2. Edit the YAML file to specify your players:
 
    ```yaml
-   preset: "9-players"
+   preset: 9-players
    players:
      - name: GPT-4 Player
        model: gpt-4
@@ -206,6 +206,7 @@ All agent implementations are consolidated in a single file with a simplified ar
   - Configure via `base_url` parameter (OpenAI, Anthropic, xAI, local models, etc.)
 
 **Factory Functions:**
+
 - `create_agent(config: PlayerConfig) -> BaseAgent`: Creates agent from player config
 - `load_players_config(yaml_path: Path) -> PlayersConfig`: Loads and validates YAML config
 
@@ -421,6 +422,7 @@ uv remove <package>                 # Remove dependency
 **For OpenAI-Compatible APIs (Most Common):**
 
 No code changes needed! Just configure in YAML:
+
 1. Add player entry with `model`, `base_url`, and `api_key_env` fields
 2. Set environment variable with API key in `.env`
 3. The unified `LLMAgent` handles all OpenAI-compatible endpoints

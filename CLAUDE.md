@@ -35,7 +35,11 @@ uv sync --group llm-all         # For all supported LLM providers
 uv run llm-werewolf
 uv run werewolf          # Alternative command
 
-# Run with specific preset
+# Run with custom YAML configuration (recommended for real games)
+uv run llm-werewolf --config players.yaml
+uv run llm-werewolf --config players.yaml --preset 9-players
+
+# Run with specific preset (demo mode)
 uv run llm-werewolf --preset 9-players
 uv run llm-werewolf --preset 12-players
 
@@ -48,6 +52,62 @@ uv run llm-werewolf --debug
 # View help
 uv run llm-werewolf --help
 ```
+
+**Player Configuration via YAML:**
+
+Instead of using demo agents, you can configure custom AI players and human players using a YAML file:
+
+1. Copy the example configuration:
+
+   ```bash
+   cp configs/players.yaml.example my-game.yaml
+   ```
+
+2. Edit the YAML file to specify your players:
+
+   ```yaml
+   preset: 9-players
+   players:
+     - name: GPT-4 Player
+       provider: openai
+       model: gpt-4
+       api_key_env: OPENAI_API_KEY
+
+     - name: Claude Player
+       provider: anthropic
+       model: claude-3-5-sonnet-20241022
+       api_key_env: ANTHROPIC_API_KEY
+
+     - name: Human Player
+       provider: human
+   ```
+
+3. Run with your configuration:
+
+   ```bash
+   uv run llm-werewolf --config my-game.yaml
+   ```
+
+**Supported Providers:**
+
+- `openai`: OpenAI GPT models (requires `OPENAI_API_KEY`)
+- `anthropic`: Anthropic Claude models (requires `ANTHROPIC_API_KEY`)
+- `local`: Local models via Ollama or similar (no API key needed)
+- `custom`: Custom OpenAI-compatible APIs (e.g., xAI Grok)
+- `human`: Human player via console input
+- `demo`: Random response bot (for testing)
+
+**YAML Configuration Fields:**
+
+- `name`: Display name for the player (must be unique)
+- `provider`: Provider type (required)
+- `model`: Model name (required for LLM providers)
+- `base_url`: API endpoint (optional, uses provider defaults)
+- `api_key_env`: Environment variable name containing API key
+- `temperature`: LLM temperature 0.0-2.0 (default: 0.7)
+- `max_tokens`: Maximum response tokens (default: 500)
+
+**Note:** API keys are stored in `.env` file (see `.env.example`). The YAML file only references the environment variable names for security.
 
 ### Testing
 

@@ -1,6 +1,7 @@
 """CLI entry point for the LLM Werewolf game."""
 
 import sys
+from pathlib import Path
 import argparse
 
 from rich.console import Console
@@ -8,7 +9,12 @@ from rich.console import Console
 from llm_werewolf.ai import DemoAgent
 from llm_werewolf.core import GameEngine
 from llm_werewolf.utils import log_error, setup_logger, log_game_event
-from llm_werewolf.config import list_preset_names, get_preset_by_name
+from llm_werewolf.config import (
+    list_preset_names,
+    get_preset_by_name,
+    load_players_config,
+    create_agent_from_player_config,
+)
 
 console = Console()
 
@@ -43,6 +49,61 @@ def create_demo_game(preset_name: str = "9-players") -> GameEngine:
     engine.setup_game(players, roles)
 
     log_game_event("game_created", f"Demo game created with preset '{preset_name}'")
+
+    return engine
+
+
+def create_game_from_yaml(yaml_path: str | Path, preset_override: str | None = None) -> GameEngine:
+    """Create a game from YAML configuration file.
+
+    Args:
+        yaml_path: Path to the YAML configuration file.
+        preset_override: Optional preset name to override config file.
+
+    Returns:
+        GameEngine: Initialized game engine.
+
+    Raises:
+        ValueError: If configuration is invalid.
+    """
+    # Load and validate configuration
+    players_config = load_players_config(yaml_path)
+
+    # Determine preset (CLI override > YAML config > default)
+    preset_name = preset_override or players_config.preset or "9-players"
+
+    # Get preset configuration
+    game_config = get_preset_by_name(preset_name)
+
+    # Validate player count matches preset
+    num_players = len(players_config.players)
+    if num_players != game_config.num_players:
+        msg = (
+            f"Player count mismatch: YAML has {num_players} players "
+            f"but preset '{preset_name}' requires {game_config.num_players}"
+        )
+        raise ValueError(msg)
+
+    # Create game engine
+    engine = GameEngine(game_config)
+
+    # Create players from config
+    players = []
+    for i, player_cfg in enumerate(players_config.players):
+        player_id = f"player_{i + 1}"
+        player_name = player_cfg.name
+        agent = create_agent_from_player_config(player_cfg)
+        players.append((player_id, player_name, agent))
+
+    # Get roles from config
+    roles = game_config.to_role_list()
+
+    # Setup game
+    engine.setup_game(players, roles)
+
+    log_game_event(
+        "game_created", f"Game created from YAML config '{yaml_path}' with preset '{preset_name}'"
+    )
 
     return engine
 
@@ -120,11 +181,15 @@ def main() -> None:
     )
 
     parser.add_argument(
+        "--config", type=str, help="Path to YAML configuration file for custom player setup"
+    )
+
+    parser.add_argument(
         "--preset",
         type=str,
         default="9-players",
         choices=list_preset_names(),
-        help="Game preset to use",
+        help="Game preset to use (role configuration)",
     )
 
     parser.add_argument("--no-tui", action="store_true", help="Run in console mode without TUI")
@@ -149,9 +214,21 @@ def main() -> None:
     log_level = getattr(logging, args.log_level)
     setup_logger(level=log_level, log_file=args.log_file)
 
-    # Create demo game
+    # Create game
     try:
-        engine = create_demo_game(args.preset)
+        if args.config:
+            # Create game from YAML configuration
+            config_path = Path(args.config)
+            if not config_path.exists():
+                console.print(f"[red]Error: Configuration file not found: {config_path}[/red]")
+                sys.exit(1)
+
+            engine = create_game_from_yaml(config_path, preset_override=args.preset)
+            console.print(f"[green]Game created from config: {config_path}[/green]")
+        else:
+            # Create demo game with DemoAgents
+            engine = create_demo_game(args.preset)
+            console.print(f"[yellow]Running demo mode with preset: {args.preset}[/yellow]")
     except Exception as e:
         log_error(e, "Error creating game")
         console.print(f"[red]Error: {e}[/red]")

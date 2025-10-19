@@ -157,6 +157,10 @@ ENV/
 env.bak/
 venv.bak/
 
+# Player configurations (user-specific, may contain sensitive choices)
+players.yaml
+# Keep example file: !configs/players.yaml.example
+
 # Spyder project settings
 .spyderproject
 .spyproject

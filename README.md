@@ -73,7 +73,10 @@ LOCAL_MODEL=llama2
 ### Basic Usage
 
 ```bash
-# Start a 9-player game with TUI
+# Run with custom player configuration (recommended for real games)
+uv run llm-werewolf --config players.yaml
+
+# Start a 9-player demo game with TUI (uses demo agents)
 uv run llm-werewolf --preset 9-players
 
 # Start a 6-player game without TUI
@@ -85,6 +88,44 @@ uv run llm-werewolf --debug
 # View help
 uv run llm-werewolf --help
 ```
+
+### Player Configuration
+
+Configure custom AI players and human players using a YAML file:
+
+```bash
+# Copy example configuration
+cp configs/players.yaml.example my-game.yaml
+
+# Edit the configuration
+# configs/players.yaml.example contains detailed comments and examples
+```
+
+Example `players.yaml`:
+
+```yaml
+preset: 9-players
+players:
+  - name: GPT-4 Detective
+    provider: openai
+    model: gpt-4
+    api_key_env: OPENAI_API_KEY
+
+  - name: Claude Analyst
+    provider: anthropic
+    model: claude-3-5-sonnet-20241022
+    api_key_env: ANTHROPIC_API_KEY
+
+  - name: Human Player
+    provider: human
+
+  - name: Local Llama
+    provider: local
+    model: llama3
+    base_url: http://localhost:11434/v1
+```
+
+Supported providers: `openai`, `anthropic`, `local`, `custom`, `human`, `demo`
 
 ## Supported Roles
 
@@ -262,27 +303,27 @@ The TUI provides real-time visualization with a modern terminal interface:
 │    Players           │ │ 🌙 Round 2 - Night          │        │    Debug Info            │
 │ ──────────────────   │ │                             │        │ ──────────────────────   │
 │ Name      Model      │ │ Total Players:    8/9       │        │ Session ID:              │
-│           Status     │ │ Werewolves:       2         │        │   ww_20231019_143022     │
+│           Status     │ │ Werewolves:       2         │        │   ww_20251019_163022     │
 │ ──────────────────   │ │ Villagers:        6         │        │                          │
-│ Alice     GPT-4      │ ╰─────────────────────────────╯        │ Config: 9-players        │
+│ Alice     gpt-4      │ ╰─────────────────────────────╯        │ Config: players.yaml     │
 │           ✓ 🛡️      │                                         │                          │
-│ Bob       Claude     │                                         │ Players: 9               │
+│ Bob       claude-3.5 │                                         │ Players: 9               │
+│           ✓          │                                         │ AI: 6  Human: 1          │
+│ Charlie   llama3     │                                         │                          │
 │           ✓          │                                         │ Roles:                   │
-│ Charlie   Llama2     │                                         │  - Werewolf x2           │
-│           ✓          │                                         │  - Seer x1               │
-│ David     GPT-3.5    │ ╭──── Chat / Events ────────╮          │  - Witch x1              │
-│           ✓ ❤️       │ │ [00:02:28] 🎮 Game started│          │  - Hunter x1             │
-│ Eve       DemoAgent  │ │ [00:02:29] ⏰ Phase: Night│          │  - Guard x1              │
-│           ✓ ❤️       │ │ [00:02:30] 🐺 Werewolves  │          │  - Villager x3           │
-│ Frank     GPT-4      │ │           discuss targets │          │                          │
-│           ✓          │ │ [00:02:31] ⏰ Phase: Day  │          │ Night timeout: 60s       │
-│ Grace     Claude     │ │ [00:02:32] 💀 Iris died   │          │ Day timeout: 300s        │
-│           ✓          │ │ [00:02:33] 💬 Alice: "I   │          │                          │
-│ Henry     DemoAgent  │ │           think Bob's act-│          │                          │
-│           ✓          │ │           ing suspicious" │          │ Errors: 0                │
-│ Iris      DemoAgent  │ │ [00:02:34] 💬 Bob: "I'm a │          │                          │
+│ David     gpt-3.5    │ ╭──── Chat / Events ────────╮          │  - Werewolf x2           │
+│           ✓ ❤️       │ │ [00:02:28] 🎮 Game started│          │  - Seer x1               │
+│ Eve       grok-beta  │ │ [00:02:29] ⏰ Phase: Night│          │  - Witch x1              │
+│           ✓ ❤️       │ │ [00:02:30] 🐺 Werewolves  │          │  - Hunter x1             │
+│ Frank     human      │ │           discuss targets │          │  - Guard x1              │
+│           ✓          │ │ [00:02:31] ⏰ Phase: Day  │          │  - Villager x3           │
+│ Grace     claude-3.5 │ │ [00:02:32] 💀 Iris died   │          │                          │
+│           ✓          │ │ [00:02:33] 💬 Alice: "I   │          │ Night timeout: 60s       │
+│ Henry     demo       │ │           think Bob's act-│          │ Day timeout: 300s        │
+│           ✓          │ │           ing suspicious" │          │                          │
+│ Iris      demo       │ │ [00:02:34] 💬 Bob: "I'm a │          │ Errors: 0                │
 │           ✗          │ │           villager! Alice │          │                          │
-│                      │ │           is deflecting!" │          │                          │
+│                      │ │           is deflecting!" │          │ Source: YAML config      │
 │                      │ │ [00:02:35] 💬 Charlie:    │          │                          │
 │                      │ │           "Last night's   │          │                          │
 │                      │ │           death pattern..." │        │                          │

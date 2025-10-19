@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import fire
 import logfire
 from rich.console import Console
 
@@ -73,4 +72,6 @@ def main(config: str) -> None:
 
 
 if __name__ == "__main__":
+    import fire
+
     fire.Fire(main)

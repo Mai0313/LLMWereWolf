@@ -47,6 +47,7 @@ uv sync
 專案提供兩種執行模式,透過不同的命令列入口來選擇:
 
 **TUI 模式（互動式終端介面）：**
+
 ```bash
 # 使用內建示範配置啟動 TUI（使用 demo 代理測試）
 uv run llm-werewolf-tui configs/demo.yaml
@@ -65,6 +66,7 @@ uv run werewolf-tui configs/demo.yaml
 ```
 
 **Console 模式（純文字日誌）：**
+
 ```bash
 # 使用 Console 模式（自動執行）
 uv run llm-werewolf configs/demo.yaml

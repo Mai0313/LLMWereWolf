@@ -247,7 +247,7 @@ players:
 
 ### 通过 YAML 配置代理
 
-推荐在 YAML 配置文件中设置代理（见[配置](#配置)章节）。
+推荐在 YAML 配置文件中设置代理（见[配置](#%E9%85%8D%E7%BD%AE)章节）。
 
 ### 程序化使用代理
 
@@ -666,8 +666,8 @@ config = GameConfig(
     num_players=9,
     role_names=[...],
     night_timeout=90,  # 夜晚阶段 90 秒
-    day_timeout=600,   # 白天讨论 600 秒
-    vote_timeout=90,   # 投票阶段 90 秒
+    day_timeout=600,  # 白天讨论 600 秒
+    vote_timeout=90,  # 投票阶段 90 秒
 )
 ```
 

@@ -668,8 +668,8 @@ config = GameConfig(
     num_players=9,
     role_names=[...],
     night_timeout=90,  # 90-second night phase
-    day_timeout=600,   # 10-minute day discussion
-    vote_timeout=90,   # 90-second voting phase
+    day_timeout=600,  # 10-minute day discussion
+    vote_timeout=90,  # 90-second voting phase
 )
 ```
 

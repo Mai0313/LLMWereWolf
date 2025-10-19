@@ -38,42 +38,46 @@
 git clone https://github.com/Mai0313/LLMWereWolf.git
 cd LLMWereWolf
 
-# 安裝基礎依賴
+# 安裝依賴
 uv sync
-
-# 可選：安裝 LLM 提供商依賴
-uv sync --group llm-openai      # 用於 OpenAI 模型
-uv sync --group llm-anthropic   # 用於 Claude 模型
-uv sync --group llm-all         # 用於所有支援的 LLM 提供商
 ```
 
 ### 執行遊戲
 
-命令列入口（`llm-werewolf` 與 `werewolf`）需要載入一個 YAML 設定檔，描述玩家與介面模式。
+專案提供兩種執行模式,透過不同的命令列入口來選擇:
 
+**TUI 模式（互動式終端介面）：**
 ```bash
 # 使用內建示範配置啟動 TUI（使用 demo 代理測試）
-uv run llm-werewolf configs/demo.yaml
+uv run llm-werewolf-tui configs/demo.yaml
 
 # 使用 LLM 玩家配置（需先設定 API 金鑰）
-uv run llm-werewolf configs/players.yaml
+uv run llm-werewolf-tui configs/players.yaml
+
+# 顯示除錯面板
+uv run llm-werewolf-tui configs/demo.yaml --debug
 
 # 若已全域安裝套件
-llm-werewolf configs/demo.yaml
+llm-werewolf-tui configs/demo.yaml
 
-# 執行自訂設定
-uv run llm-werewolf my-game.yaml
+# 使用 werewolf-tui 別名
+uv run werewolf-tui configs/demo.yaml
+```
 
-# 使用 werewolf 別名
+**Console 模式（純文字日誌）：**
+```bash
+# 使用 Console 模式（自動執行）
+uv run llm-werewolf configs/demo.yaml
+
+# 或使用別名
 uv run werewolf configs/demo.yaml
 ```
 
-可在 YAML 中調整介面選項：
+YAML 設定檔選項：
 
-- `game_type: tui` 啟用互動式終端介面（預設）
-- `game_type: console` 使用純文字日誌模式
-- `show_debug: true` 顯示 TUI 除錯面板（僅 `tui` 模式有效）
 - `preset: <preset-name>` 指定角色預設配置（如 `6-players`、`9-players`、`12-players`、`15-players`、`expert`、`chaos`）
+- `show_debug: true` 顯示 TUI 除錯面板（可被命令列 `--debug` 參數覆蓋）
+- `players: [...]` 定義玩家列表
 
 ### 環境配置
 
@@ -161,8 +165,7 @@ cp configs/players.yaml my-game.yaml
 
 ```yaml
 preset: 6-players        # 選擇預設配置
-game_type: tui           # 介面模式：tui 或 console
-show_debug: false        # 是否顯示除錯面板
+show_debug: false        # 是否顯示除錯面板（TUI 模式適用）
 
 players:
   - name: GPT-4 偵探
@@ -201,8 +204,7 @@ players:
 **配置說明：**
 
 - `preset`：必填，決定遊戲的角色配置和玩家數量
-- `game_type`：選填，預設為 `tui`
-- `show_debug`：選填，預設為 `false`
+- `show_debug`：選填，預設為 `false`，用於 TUI 模式顯示除錯面板
 - `players`：必填，玩家列表，數量必須與 preset 的 `num_players` 一致
 
 **玩家配置欄位：**
@@ -453,14 +455,14 @@ TUI (Terminal User Interface) 提供現代化終端介面的即時遊戲視覺�
 ### TUI 控制
 
 - **q**：退出遊戲
-- **d**：切換除錯面板顯示/隱藏
+- **d**：切換除錯面板顯示/隱藏（或使用 `--debug` 參數預設開啟）
 - **n**：手動進入下一步（除錯用）
 - **滑鼠滾輪**：捲動對話歷史
 - **方向鍵**：在可聚焦元件間移動
 
 ### Console 模式
 
-如果不想使用 TUI，可以在配置檔案中設定 `game_type: console`，遊戲將以純文字日誌形式輸出到終端。
+如果不想使用 TUI，可以使用 `llm-werewolf` 或 `werewolf` 命令，遊戲將以純文字日誌形式自動執行並輸出到終端。
 
 ## 遊戲流程
 
@@ -492,10 +494,10 @@ cd LLMWereWolf
 uv sync --all-groups
 
 # 或選擇性安裝
-uv sync                     # 僅基礎依賴
+uv sync                     # 僅基礎依賴（已包含 LLM 支援）
 uv sync --group dev         # 開發依賴
 uv sync --group test        # 測試依賴
-uv sync --group llm-all     # 所有 LLM 提供商依賴
+uv sync --group docs        # 文件生成依賴
 ```
 
 ### 執行測試
@@ -562,9 +564,11 @@ make format
 # 執行所有測試
 make test
 
-# 生成文件
+# 生成文件（需要先建立 docs 目錄）
 make gen-docs
 ```
+
+**注意**：`gen-docs` 命令需要 `./scripts/gen_docs.py` 腳本和 docs 目錄。如果您的專案尚未設定文件系統，此命令可能無法使用。
 
 ## 專案架構
 
@@ -737,7 +741,6 @@ config = GameConfig(
 
 - [專案首頁](https://github.com/Mai0313/LLMWereWolf)
 - [問題追蹤](https://github.com/Mai0313/LLMWereWolf/issues)
-- [文件](https://mai0313.github.io/llm_werewolf) (開發中)
 
 ## 更新日誌
 

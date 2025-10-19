@@ -46,7 +46,7 @@ class EventType(str, Enum):
 
 
 class Event(BaseModel):
-    """Represents a game event."""
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
     event_type: EventType = Field(..., description="Type of the event")
     timestamp: datetime = Field(
@@ -80,8 +80,6 @@ class Event(BaseModel):
             str: The public message.
         """
         return self.message
-
-    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
 
 class EventLogger:

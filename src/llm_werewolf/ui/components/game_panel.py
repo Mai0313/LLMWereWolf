@@ -66,6 +66,15 @@ class GamePanel(Static):
             "Villagers:", f"[green]{villagers}[/green]" if villagers > 0 else "[dim]0[/dim]"
         )
 
+        # Render stats table to string
+        from io import StringIO
+
+        from rich.console import Console
+
+        console = Console(file=StringIO(), width=40)
+        console.print(stats_table)
+        stats_content = console.file.getvalue()
+
         # Vote counts (if in voting phase)
         vote_content = ""
         if self.game_state.phase.value == "day_voting":
@@ -84,17 +93,13 @@ class GamePanel(Static):
                     if player:
                         vote_table.add_row(player.name, str(count))
 
-                from io import StringIO
-
-                from rich.console import Console
-
                 console = Console(file=StringIO(), width=40)
                 console.print(vote_table)
                 vote_content = console.file.getvalue()
 
         # Combine all content
         content = Text.assemble(title, "\n\n")
-        content.append(stats_table)
+        content.append(stats_content)
 
         if vote_content:
             content.append("\n")

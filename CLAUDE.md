@@ -66,20 +66,20 @@ Instead of using demo agents, you can configure custom AI players and human play
 2. Edit the YAML file to specify your players:
 
    ```yaml
-   preset: 9-players
+   preset: "9-players"
    players:
      - name: GPT-4 Player
-       provider: openai
        model: gpt-4
+       base_url: https://api.openai.com/v1
        api_key_env: OPENAI_API_KEY
 
      - name: Claude Player
-       provider: anthropic
        model: claude-3-5-sonnet-20241022
+       base_url: https://api.anthropic.com/v1
        api_key_env: ANTHROPIC_API_KEY
 
      - name: Human Player
-       provider: human
+       model: human
    ```
 
 3. Run with your configuration:
@@ -88,22 +88,20 @@ Instead of using demo agents, you can configure custom AI players and human play
    uv run llm-werewolf --config my-game.yaml
    ```
 
-**Supported Providers:**
-
-- `openai`: OpenAI GPT models (requires `OPENAI_API_KEY`)
-- `anthropic`: Anthropic Claude models (requires `ANTHROPIC_API_KEY`)
-- `local`: Local models via Ollama or similar (no API key needed)
-- `custom`: Custom OpenAI-compatible APIs (e.g., xAI Grok)
-- `human`: Human player via console input
-- `demo`: Random response bot (for testing)
-
 **YAML Configuration Fields:**
 
 - `name`: Display name for the player (must be unique)
-- `provider`: Provider type (required)
-- `model`: Model name (required for LLM providers)
-- `base_url`: API endpoint (optional, uses provider defaults)
-- `api_key_env`: Environment variable name containing API key
+- `model`: Model identifier (required):
+  - `"human"`: Human player via console input
+  - `"demo"`: Random response bot (for testing)
+  - `<model_name>`: LLM model name (e.g., `"gpt-4"`, `"claude-3-5-sonnet-20241022"`, `"llama3"`)
+- `base_url`: API endpoint (required for LLM models):
+  - OpenAI: `https://api.openai.com/v1`
+  - Anthropic: `https://api.anthropic.com/v1`
+  - xAI (Grok): `https://api.x.ai/v1`
+  - Local (Ollama): `http://localhost:11434/v1`
+  - Any OpenAI-compatible API endpoint
+- `api_key_env`: Environment variable name containing API key (required for most providers)
 - `temperature`: LLM temperature 0.0-2.0 (default: 0.7)
 - `max_tokens`: Maximum response tokens (default: 500)
 
@@ -192,23 +190,26 @@ The game engine operates through several interconnected components:
 
 ### AI Agent Interface
 
-**Abstract Agent Pattern** (`ai/base_agent.py`):
+**Unified Agent System** (`ai/agents.py`):
 
-- `BaseAgent`: Abstract base class with single required method: `get_response(message: str) -> str`
-- Input: String containing role info, game state, and action request
-- Output: String with agent's decision
-- Optional: `initialize()`, `reset()`, conversation history management
+All agent implementations are consolidated in a single file with a simplified architecture:
 
-**Implementations** (`ai/llm_agents.py`):
-
-- `DemoAgent`: Simple random choice agent (no LLM)
+- `BaseAgent`: Base class with single required method: `get_response(message: str) -> str`
+  - Input: String containing role info, game state, and action request
+  - Output: String with agent's decision
+  - Maintains conversation history automatically
+- `DemoAgent`: Random choice agent (no LLM, for testing)
 - `HumanAgent`: Console input for human players
-- `OpenAIAgent`: OpenAI GPT models
-- `AnthropicAgent`: Anthropic Claude models
-- `GenericLLMAgent`: Any OpenAI-compatible API
-- Factory function: `create_agent_from_config()` auto-loads from `.env`
+- `LLMAgent`: Unified LLM agent using ChatCompletion API
+  - Supports any OpenAI-compatible API endpoint
+  - Single implementation replaces old provider-specific agents (`OpenAIAgent`, `AnthropicAgent`, etc.)
+  - Configure via `base_url` parameter (OpenAI, Anthropic, xAI, local models, etc.)
 
-**Key Design Principle**: The agent interface is intentionally minimal to support any LLM provider. Future instances should maintain this abstraction when adding new agent types.
+**Factory Functions:**
+- `create_agent(config: PlayerConfig) -> BaseAgent`: Creates agent from player config
+- `load_players_config(yaml_path: Path) -> PlayersConfig`: Loads and validates YAML config
+
+**Key Design Principle**: The agent interface is intentionally minimal. All LLM providers that support OpenAI's ChatCompletion API format can use the same `LLMAgent` class - just change the `base_url` and `api_key_env`. Future instances should maintain this abstraction.
 
 ### Configuration System
 
@@ -222,6 +223,15 @@ The game engine operates through several interconnected components:
 
 - Pre-configured game setups: `6-players`, `9-players`, `12-players`, `15-players`, `expert`, `chaos`
 - Access via: `get_preset_by_name("9-players")` or `list_preset_names()`
+
+**Player Configuration** (`ai/agents.py`):
+
+- `PlayerConfig`: Pydantic model for individual player configuration
+  - Validates `base_url` is provided for LLM models (not required for `human`/`demo`)
+  - Determines agent type based on `model` field
+- `PlayersConfig`: Root configuration containing list of players and optional preset
+  - Validates all player names are unique
+  - Can be loaded from YAML via `load_players_config(yaml_path)`
 
 ### TUI System
 
@@ -245,12 +255,10 @@ The game engine operates through several interconnected components:
 ```
 src/llm_werewolf/
 ├── ai/                  # AI agent implementations
-│   ├── base_agent.py    # Abstract interface
-│   ├── llm_agents.py    # LLM provider implementations
+│   ├── agents.py        # All agent implementations (BaseAgent, DemoAgent, HumanAgent, LLMAgent)
 │   └── message.py       # Message formatting utilities
 ├── config/              # Game configurations
 │   ├── game_config.py   # GameConfig Pydantic model
-│   ├── llm_config.py    # LLM provider settings
 │   └── role_presets.py  # Preset configurations
 ├── core/                # Core game logic
 │   ├── game_engine.py   # Main game orchestrator
@@ -385,7 +393,7 @@ class MyModel(BaseModel):
 
 - `core/events.py`: Event model with datetime JSON encoding
 - `config/game_config.py`: GameConfig with validation
-- `config/llm_config.py`: LLM configuration models
+- `ai/agents.py`: PlayerConfig and PlayersConfig models
 
 ### Migration Notes
 
@@ -410,11 +418,20 @@ uv remove <package>                 # Remove dependency
 
 ### When Adding New LLM Providers
 
-1. Inherit from `BaseAgent` in `ai/llm_agents.py`
+**For OpenAI-Compatible APIs (Most Common):**
+
+No code changes needed! Just configure in YAML:
+1. Add player entry with `model`, `base_url`, and `api_key_env` fields
+2. Set environment variable with API key in `.env`
+3. The unified `LLMAgent` handles all OpenAI-compatible endpoints
+
+**For Non-Compatible APIs (Rare):**
+
+1. Create new agent class in `ai/agents.py` inheriting from `BaseAgent`
 2. Implement only `get_response(message: str) -> str`
-3. Add provider configuration to `config/llm_config.py`
+3. Update `create_agent()` factory function to handle new model type
 4. Update `.env.example` with required environment variables
-5. Create optional dependency group in `pyproject.toml` under `[dependency-groups]`
+5. Optionally create dependency group in `pyproject.toml` under `[dependency-groups]`
 
 ### When Adding New Roles
 
@@ -474,5 +491,6 @@ This decouples game logic from UI, allowing console mode, TUI, or future web int
 - Documentation: `docs/`
 - Scripts: `scripts/`
 - Examples: `examples/`
+- Player configs: `configs/` (YAML player configuration files)
 - CI reports: `.github/reports/`
 - Cache directories: `.cache/` (pytest, ruff, mypy, logfire)

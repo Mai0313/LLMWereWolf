@@ -154,7 +154,80 @@ class GameEngine:
         else:
             messages.append("No one died last night.")
 
+        # Day discussion - players share thoughts and suspicions
+        messages.append("\n--- Discussion Phase ---")
+        alive_players = self.game_state.get_alive_players()
+
+        for player in alive_players:
+            if player.agent:
+                # Build context for the player
+                game_context = self._build_discussion_context(player)
+
+                # Get player's speech from their agent
+                try:
+                    speech = player.agent.get_response(game_context)
+
+                    # Log the player's speech
+                    self._log_event(
+                        EventType.PLAYER_SPEECH,
+                        f"{player.name}: {speech}",
+                        data={
+                            "player_id": player.player_id,
+                            "player_name": player.name,
+                            "speech": speech,
+                        },
+                    )
+
+                    messages.append(f"{player.name}: {speech}")
+                except Exception as e:
+                    messages.append(f"{player.name}: [Unable to speak - {e}]")
+
         return messages
+
+    def _build_discussion_context(self, player: "Player") -> str:
+        """Build context for day discussion.
+
+        Args:
+            player: The player who will speak.
+
+        Returns:
+            str: Context message for the player's agent.
+        """
+        if not self.game_state:
+            return ""
+
+        context_parts = [
+            f"You are {player.name}, a {player.get_role_name()}.",
+            f"It is Day {self.game_state.round_number}, discussion phase.",
+            "",
+        ]
+
+        # Add information about who died
+        if self.game_state.night_deaths:
+            deaths = [
+                self.game_state.get_player(pid).name
+                for pid in self.game_state.night_deaths
+                if self.game_state.get_player(pid)
+            ]
+            context_parts.append(f"Last night, {', '.join(deaths)} died.")
+        else:
+            context_parts.append("No one died last night.")
+
+        # Add alive players
+        alive_players = [p.name for p in self.game_state.get_alive_players()]
+        context_parts.append(f"\nAlive players: {', '.join(alive_players)}")
+        context_parts.append("")
+
+        # Add role-specific instructions
+        context_parts.append(
+            "Share your thoughts, suspicions, or information. "
+            "Your goal is to help your team win while staying in character."
+        )
+        context_parts.append(
+            "\nProvide a brief statement (1-3 sentences) for this discussion round."
+        )
+
+        return "\n".join(context_parts)
 
     def run_voting_phase(self) -> list[str]:
         """Execute the voting phase.

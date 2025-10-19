@@ -249,17 +249,81 @@ The `BaseAgent` provides:
 
 ## TUI Interface
 
-The TUI provides real-time visualization of:
+The TUI provides real-time visualization with a modern terminal interface:
 
-- **Player Panel** (Left): Shows all players, their AI models, and status
-- **Game Panel** (Top Center): Displays current round, phase, and statistics
-- **Chat Panel** (Bottom Center): Shows game events and messages
-- **Debug Panel** (Right): Shows session info, config, and errors (toggle with 'd')
+### Interface Preview
+
+```
+┌───────────────────────────────────────────────────────────────────────────────────────────┐
+│ 🐺 Werewolf Game                                                    AI-Powered Werewolf  │
+│ q Quit  d Toggle Debug  n Next Step                                         [00:02:34]   │
+├──────────────────────┬─────────────────────────────────────────┬──────────────────────────┤
+│                      │ ╭─────── Game Status ─────────╮        │                          │
+│    Players           │ │ 🌙 Round 2 - Night          │        │    Debug Info            │
+│ ──────────────────   │ │                             │        │ ──────────────────────   │
+│ Name      Model      │ │ Total Players:    8/9       │        │ Session ID:              │
+│           Status     │ │ Werewolves:       2         │        │   ww_20231019_143022     │
+│ ──────────────────   │ │ Villagers:        6         │        │                          │
+│ Alice     GPT-4      │ ╰─────────────────────────────╯        │ Config: 9-players        │
+│           ✓ 🛡️      │                                         │                          │
+│ Bob       Claude     │                                         │ Players: 9               │
+│           ✓          │                                         │ Roles:                   │
+│ Charlie   Llama2     │                                         │  - Werewolf x2           │
+│           ✓          │                                         │  - Seer x1               │
+│ David     GPT-3.5    │ ╭──── Chat / Events ────────╮          │  - Witch x1              │
+│           ✓ ❤️       │ │ [00:02:28] 🎮 Game started│          │  - Hunter x1             │
+│ Eve       DemoAgent  │ │ [00:02:29] ⏰ Phase: Night│          │  - Guard x1              │
+│           ✓ ❤️       │ │ [00:02:30] 🐺 Werewolves  │          │  - Villager x3           │
+│ Frank     GPT-4      │ │           discuss targets │          │                          │
+│           ✓          │ │ [00:02:31] ⏰ Phase: Day  │          │ Night timeout: 60s       │
+│ Grace     Claude     │ │ [00:02:32] 💀 Iris died   │          │ Day timeout: 300s        │
+│           ✓          │ │ [00:02:33] 💬 Alice: "I   │          │                          │
+│ Henry     DemoAgent  │ │           think Bob's act-│          │                          │
+│           ✓          │ │           ing suspicious" │          │ Errors: 0                │
+│ Iris      DemoAgent  │ │ [00:02:34] 💬 Bob: "I'm a │          │                          │
+│           ✗          │ │           villager! Alice │          │                          │
+│                      │ │           is deflecting!" │          │                          │
+│                      │ │ [00:02:35] 💬 Charlie:    │          │                          │
+│                      │ │           "Last night's   │          │                          │
+│                      │ │           death pattern..." │        │                          │
+│                      │ ╰───────────────────────────╯          │                          │
+│                      │                                         │                          │
+└──────────────────────┴─────────────────────────────────────────┴──────────────────────────┘
+```
+
+### Panel Description
+
+- **Player Panel** (Left): Shows all players with their AI models, status indicators, and roles
+
+  - ✓/✗: Alive/Dead status
+  - 🛡️: Protected by Guard
+  - ❤️: Linked as Lovers
+  - ☠️: Poisoned
+  - 🔴: Marked by Raven
+
+- **Game Panel** (Top Center): Displays current round, phase, and real-time statistics
+
+  - Phase icons: 🌙 Night | ☀️ Day Discussion | 🗳️ Voting | 🏁 Game Over
+  - Live player counts by faction
+  - Vote counts during voting phase
+
+- **Chat Panel** (Bottom Center): Scrollable event log with **full player discussions and game events**
+
+  - 💬 **Player speeches**: Real-time AI-generated discussions, accusations, and defenses
+  - Color-coded messages based on event importance
+  - Event icons for quick visual scanning
+  - Shows complete conversation flow during day discussion phase
+
+- **Debug Panel** (Right, optional): Shows session info, configuration, and error tracking
+
+  - Toggle visibility with 'd' key
+  - Displays game configuration and runtime info
 
 ### TUI Controls
 
 - `q`: Quit the application
 - `d`: Toggle debug panel
+- `n`: Advance to next step (for debugging)
 - Mouse: Scroll through chat history
 
 ## Game Flow

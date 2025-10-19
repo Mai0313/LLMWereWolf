@@ -50,7 +50,9 @@ class ChatPanel(RichLog):
             "vote_cast": "🗳️",
             "vote_result": "📊",
             "player_eliminated": "❌",
-            "message": "💬",
+            "player_speech": "💬",
+            "player_discussion": "🗨️",
+            "message": "📢",
             "error": "⚠️",
         }
         icon = event_icons.get(event.event_type.value, "i")
@@ -67,6 +69,8 @@ class ChatPanel(RichLog):
             "vote_cast": "yellow",
             "vote_result": "bold yellow",
             "player_eliminated": "bold red",
+            "player_speech": "cyan",
+            "player_discussion": "blue",
             "error": "bold red",
         }
         style = message_styles.get(event.event_type.value, "white")

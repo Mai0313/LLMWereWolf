@@ -39,6 +39,10 @@ class EventType(str, Enum):
     HUNTER_REVENGE = "hunter_revenge"
     KNIGHT_DUEL = "knight_duel"
 
+    # Communication events
+    PLAYER_SPEECH = "player_speech"
+    PLAYER_DISCUSSION = "player_discussion"
+
     # System events
     MESSAGE = "message"
     ERROR = "error"

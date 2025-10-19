@@ -31,52 +31,54 @@ uv sync --group llm-all         # For all supported LLM providers
 ### Running the Game
 
 ```bash
-# Run with TUI (default, uses demo agents)
-uv run llm-werewolf
-uv run werewolf          # Alternative command
+# Run with demo configuration (TUI with demo agents)
+uv run llm-werewolf configs/demo.yaml
+uv run werewolf configs/demo.yaml          # Alternative command
 
-# Run with custom YAML configuration (recommended for real games)
-uv run llm-werewolf --config players.yaml
-uv run llm-werewolf --config players.yaml --preset 9-players
+# Run with custom YAML configuration
+uv run llm-werewolf my-game.yaml
 
-# Run with specific preset (demo mode)
-uv run llm-werewolf --preset 9-players
-uv run llm-werewolf --preset 12-players
-
-# Run in console mode (no TUI)
-uv run llm-werewolf --no-tui
-
-# Enable debug panel
-uv run llm-werewolf --debug
-
-# View help
-uv run llm-werewolf --help
+# Execute CLI module directly
+uv run python -m llm_werewolf.cli my-game.yaml
 ```
+
+**Note:** The game requires a YAML configuration file. Interface mode (`tui` or `console`) and debug panel visibility are controlled via fields in the YAML file, not CLI flags.
 
 **Player Configuration via YAML:**
 
 Instead of using demo agents, you can configure custom AI players and human players using a YAML file:
 
-1. Copy the example configuration:
+1. Copy an example configuration:
 
    ```bash
-   cp configs/players.yaml.example my-game.yaml
+   # Start from demo config (all demo agents)
+   cp configs/demo.yaml my-game.yaml
+
+   # Or start from LLM-enabled sample
+   cp configs/players.yaml my-game.yaml
    ```
 
-2. Edit the YAML file to specify your players:
+2. Edit the YAML file to specify game settings and players:
 
    ```yaml
    preset: 9-players
+   game_type: tui        # "tui" or "console"
+   show_debug: false     # Show debug panel (TUI only)
+
    players:
      - name: GPT-4 Player
-       model: gpt-4
+       model: gpt-4o
        base_url: https://api.openai.com/v1
        api_key_env: OPENAI_API_KEY
+       temperature: 0.7
+       max_tokens: 500
 
      - name: Claude Player
        model: claude-3-5-sonnet-20241022
        base_url: https://api.anthropic.com/v1
        api_key_env: ANTHROPIC_API_KEY
+       temperature: 0.7
+       max_tokens: 500
 
      - name: Human Player
        model: human
@@ -85,25 +87,36 @@ Instead of using demo agents, you can configure custom AI players and human play
 3. Run with your configuration:
 
    ```bash
-   uv run llm-werewolf --config my-game.yaml
+   uv run llm-werewolf my-game.yaml
    ```
 
 **YAML Configuration Fields:**
+
+**Game Settings (top level):**
+
+- `preset`: Game preset name (e.g., `"6-players"`, `"9-players"`, `"12-players"`, `"15-players"`, `"expert"`, `"chaos"`)
+- `game_type`: Interface mode (required):
+  - `"tui"`: Terminal User Interface (interactive, real-time visualization)
+  - `"console"`: Console mode (log-style output)
+- `show_debug`: Show debug panel in TUI (default: `false`, only applies when `game_type` is `"tui"`)
+
+**Player Configuration (per player):**
 
 - `name`: Display name for the player (must be unique)
 - `model`: Model identifier (required):
   - `"human"`: Human player via console input
   - `"demo"`: Random response bot (for testing)
-  - `<model_name>`: LLM model name (e.g., `"gpt-4"`, `"claude-3-5-sonnet-20241022"`, `"llama3"`)
-- `base_url`: API endpoint (required for LLM models):
+  - `<model_name>`: LLM model name (e.g., `"gpt-4o"`, `"claude-3-5-sonnet-20241022"`, `"llama3"`)
+- `base_url`: API endpoint (required for LLM models, not needed for `human`/`demo`):
   - OpenAI: `https://api.openai.com/v1`
   - Anthropic: `https://api.anthropic.com/v1`
   - xAI (Grok): `https://api.x.ai/v1`
+  - DeepSeek: `https://api.deepseek.com/v1`
   - Local (Ollama): `http://localhost:11434/v1`
   - Any OpenAI-compatible API endpoint
-- `api_key_env`: Environment variable name containing API key (required for most providers)
-- `temperature`: LLM temperature 0.0-2.0 (default: 0.7)
-- `max_tokens`: Maximum response tokens (default: 500)
+- `api_key_env`: Environment variable name containing API key (required for most providers, optional for local endpoints)
+- `temperature`: LLM temperature 0.0-2.0 (optional, default: 0.7)
+- `max_tokens`: Maximum response tokens (optional, default: 500)
 
 **Note:** API keys are stored in `.env` file (see `.env.example`). The YAML file only references the environment variable names for security.
 
@@ -238,11 +251,15 @@ All agent implementations live in one module and follow a lightweight protocol:
 **Textual Framework** (`ui/tui_app.py`):
 
 - Real-time game visualization with four panels:
-  - Player Panel (left): Lists players, AI models, status
+  - Player Panel (left): Lists players, AI models, status (alive/dead, protected, lovers, etc.)
   - Game Panel (top center): Round, phase, statistics
-  - Chat Panel (bottom center): Scrollable event log with player discussions
-  - Debug Panel (right): Toggle with 'd' key
-- Keyboard controls: 'q' to quit, 'd' to toggle debug panel, 'n' to advance to next step
+  - Chat Panel (bottom center): Scrollable event log with player discussions and game events
+  - Debug Panel (right): Session info, config details, error tracking (toggle with 'd' key)
+- Keyboard controls:
+  - `q`: Quit application
+  - `d`: Toggle debug panel
+  - `n`: Advance to next step (for debugging/stepping through game)
+  - Mouse scroll: Navigate chat history
 
 **Components** (`ui/components/`):
 

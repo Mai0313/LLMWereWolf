@@ -1,6 +1,8 @@
 import random
 from typing import TYPE_CHECKING
 
+from rich.console import Console
+
 from llm_werewolf.core.events import Event, EventType, EventLogger
 from llm_werewolf.core.player import Player
 from llm_werewolf.core.actions import Action, VoteAction
@@ -13,6 +15,9 @@ if TYPE_CHECKING:
 
     from llm_werewolf.ai import AgentType
     from llm_werewolf.core.roles.base import Role
+
+
+console = Console()
 
 
 class GameEngine:
@@ -30,7 +35,11 @@ class GameEngine:
         self.victory_checker: VictoryChecker | None = None
 
         # Callback for UI updates
-        self.on_event: Callable[[Event], None] | None = None
+        self.on_event: Callable[[Event], None] = self.print_event
+
+    def print_event(self, event: Event) -> None:
+        prefix = f"[回合 {event.round_number}][{event.phase.upper()}]"
+        console.print(f"{prefix} {event.message}")
 
     def setup_game(self, players: list[tuple[str, str, "AgentType"]], roles: list["Role"]) -> None:
         """Initialize the game with players and roles.
@@ -512,8 +521,7 @@ class GameEngine:
         )
 
         # Notify UI or other listeners
-        if self.on_event:
-            self.on_event(event)
+        self.on_event(event)
 
     def get_game_state(self) -> GameState | None:
         """Get the current game state.

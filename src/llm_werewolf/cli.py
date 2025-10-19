@@ -1,4 +1,3 @@
-import sys
 from pathlib import Path
 
 import fire
@@ -6,7 +5,7 @@ import logfire
 from rich.console import Console
 
 from llm_werewolf.ui import run_tui
-from llm_werewolf.core import GameEngine, Event
+from llm_werewolf.core import GameEngine
 from llm_werewolf.config import load_config, get_preset_by_name, create_agent_from_player_config
 
 console = Console()
@@ -50,11 +49,6 @@ def main(config: str) -> None:
             run_tui(engine, players_config.show_debug)
             return
 
-        def _print_event(event: Event) -> None:
-            prefix = f"[回合 {event.round_number}][{event.phase.upper()}]"
-            console.print(f"{prefix} {event.message}")
-
-        engine.on_event = _print_event
         result = engine.play_game()
         console.print(f"\n{result}")
 
@@ -81,7 +75,7 @@ def main(config: str) -> None:
             game_type=players_config.game_type,
         )
         console.print(f"[red]執行遊戲時發生錯誤: {exc}[/red]")
-        sys.exit(1)
+        raise
 
 
 if __name__ == "__main__":

@@ -31,7 +31,7 @@ markers = [
 minversion = "8.2"
 testpaths = "tests/"
 python_files = "test_*.py"
-cache_dir = "./.cache/pytest"
+cache_dir = "~/.cache/pytest"
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
@@ -245,7 +245,7 @@ extend-include = ["**/*.ipynb", "*.sh"]
 src = ["src", "tests"]
 
 # Set the cache directory to `logs/ruff_cache`.
-cache-dir = "./.cache/ruff"  # default: ".ruff_cache", now it is not allowed to create cache dir in logs
+cache-dir = "~/.cache/ruff"  # default: ".ruff_cache", now it is not allowed to create cache dir in logs
 
 # Group violations by containing file.
 # This is output message format; nothing about coding
@@ -468,7 +468,7 @@ console_include_timestamps = true
 console_verbose = true
 console_min_log_level = "debug"
 show_summary = true
-data_dir = "./.cache/.logfire"
+data_dir = "~/.cache/.logfire"
 # base_url = ""
 collect_system_metrics = false
 id_generator = true
@@ -495,7 +495,7 @@ ignore-words-list = ["ameba", "mke"]
 plugins = ["pydantic.mypy"]
 # strict = true
 explicit_package_bases = true
-cache_dir = "./.cache/.mypy_cache"
+cache_dir = "~/.cache/.mypy_cache"
 exclude = ["^tests/"]
 ignore_missing_imports = true
 warn_unused_configs = true

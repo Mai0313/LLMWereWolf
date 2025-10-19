@@ -1,9 +1,9 @@
-site_name: RepoTemplate
-site_url: https://mai0313.github.io/repo_template
+site_name: LLMWereWolf
+site_url: https://mai0313.github.io/LLMWereWolf
 site_author: Wei Lee
 
-repo_name: Mai0313/repo_template
-repo_url: https://github.com/Mai0313/repo_template
+repo_name: Mai0313/LLMWereWolf
+repo_url: https://github.com/Mai0313/LLMWereWolf
 edit_uri: edit/main/docs/
 
 docs_dir: docs
@@ -164,7 +164,7 @@ plugins:
 extra:
   social:
   - icon: fontawesome/brands/github-alt
-    link: https://github.com/Mai0313/repo_template
+    link: https://github.com/Mai0313/LLMWereWolf
 
   alternate:
   - link: /

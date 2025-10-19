@@ -78,7 +78,7 @@ class PlayersConfig(BaseModel):
 
 
 class DemoAgent(BaseModel):
-    model_name: str = Field(default="demo-random")
+    model_name: str = Field(default="demo")
 
     def get_response(self, message: str) -> str:
         """Return a canned response."""
@@ -192,21 +192,19 @@ def create_agent(config: PlayerConfig) -> LLMAgent | DemoAgent | HumanAgent:
     model = config.model.lower()
 
     if model == "human":
-        return HumanAgent()
+        return HumanAgent(model_name="human")
 
     if model == "demo":
-        return DemoAgent()
+        return DemoAgent(model_name="demo")
 
     # For LLM models
     api_key = None
     if config.api_key_env:
         api_key = os.getenv(config.api_key_env)
-        if not api_key:
-            msg = (
-                f"API key not found in environment variable '{config.api_key_env}' "
-                f"for player '{config.name}'"
-            )
-            raise ValueError(msg)
+    if not api_key:
+        raise ValueError(
+            f"API key not found in environment variable '{config.api_key_env}' for player '{config.name}'"
+        )
 
     return LLMAgent(
         model_name=config.model,
@@ -218,18 +216,6 @@ def create_agent(config: PlayerConfig) -> LLMAgent | DemoAgent | HumanAgent:
 
 
 def load_players_config(yaml_path: str | Path) -> PlayersConfig:
-    """Load and validate player configuration from YAML file.
-
-    Args:
-        yaml_path: Path to the YAML configuration file.
-
-    Returns:
-        PlayersConfig: Validated configuration.
-
-    Raises:
-        FileNotFoundError: If YAML file doesn't exist.
-        ValueError: If YAML is invalid or validation fails.
-    """
     yaml_path = Path(yaml_path)
 
     if not yaml_path.exists():

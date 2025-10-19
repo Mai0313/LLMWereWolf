@@ -6,7 +6,7 @@ from llm_werewolf.ai import LLMAgent, DemoAgent
 def test_demo_agent_response():
     """Demo agent should always return some canned text."""
     agent = DemoAgent()
-    assert agent.model_name == "demo-random"
+    assert agent.model_name == "demo"
 
     response = agent.get_response("Test message")
     assert isinstance(response, str)
@@ -17,7 +17,7 @@ def test_demo_agent_repr():
     """Demo agent repr includes the model name."""
     agent = DemoAgent()
     assert "DemoAgent" in repr(agent)
-    assert "demo-random" in repr(agent)
+    assert "demo" in repr(agent)
 
 
 def test_llm_agent_history_helpers():

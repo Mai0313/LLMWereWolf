@@ -59,6 +59,7 @@ class WerewolfTUI(App):
 
     BINDINGS: ClassVar = [
         ("q", "quit", "Quit"),
+        ("ctrl+c", "quit", "Quit"),
         ("d", "toggle_debug", "Toggle Debug"),
         ("n", "next_step", "Next Step"),
     ]

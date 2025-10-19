@@ -15,69 +15,75 @@
 
 </div>
 
-一个支持多种 LLM 模型的 AI 狼人杀游戏，拥有精致的终端界面（TUI）。
+一个支持多种 LLM 模型的 AI 狼人杀游戏，具有精美的终端界面 (TUI)。
 
 其他语言: [English](README.md) | [繁體中文](README.zh-TW.md) | [简体中文](README.zh-CN.md)
 
 ## 特色功能
 
-- 🎮 **完整游戏逻辑**：实现超过 20 个角色的完整狼人杀规则
-- 🤖 **LLM 整合**：统一的代理接口，轻松接入任意 LLM（OpenAI、Anthropic、DeepSeek、本地模型等）
-- 🖥️ **精美 TUI**：基于 Textual 打造的实时互动终端界面
-- 👤 **真人玩家**：支持真人与 AI 混合对战
-- ⚙️ **高度可配置**：通过 YAML 配置文件灵活调整玩家与游戏参数
-- 📊 **事件系统**：完整的事件记录与游戏状态追踪
-- 🧪 **充分测试**：高代码覆盖率与完备测试套件
+- 🎮 **完整游戏逻辑**：包含 20+ 种角色的完整狼人杀规则实现
+- 🤖 **LLM 整合**：统一的代理界面，轻松整合任何 LLM（OpenAI、Anthropic、DeepSeek、本地模型等）
+- 🖥️ **精美 TUI**：使用 Textual 框架的实时游戏可视化，支持交互式终端界面
+- 👤 **真人玩家**：支持真人玩家与 AI 混合游戏
+- ⚙️ **可配置**：通过 YAML 配置文件灵活设置玩家和游戏参数
+- 📊 **事件系统**：完整的事件记录和游戏状态追踪
+- 🧪 **充分测试**：高代码覆盖率与完整测试套件
 
 ## 快速开始
 
 ### 安装
 
 ```bash
-# 复制仓库
+# 复制存储库
 git clone https://github.com/Mai0313/LLMWereWolf.git
 cd LLMWereWolf
 
-# 安装基础依赖
+# 安装依赖
 uv sync
-
-# 可选：安装特定 LLM 提供商的依赖
-uv sync --group llm-openai      # OpenAI 模型
-uv sync --group llm-anthropic   # Claude 模型
-uv sync --group llm-all         # 所有已支持的提供商
 ```
 
-### 运行游戏
+### 执行游戏
 
-命令行入口（`llm-werewolf` 与 `werewolf`）会加载一个 YAML 配置文件，用于描述玩家与界面模式。
+项目提供两种执行模式,通过不同的命令行入口来选择:
+
+**TUI 模式（交互式终端界面）：**
 
 ```bash
-# 使用内建示例配置启动 TUI（使用 demo 代理）
+# 使用内置演示配置启动 TUI（使用 demo 代理测试）
+uv run llm-werewolf-tui configs/demo.yaml
+
+# 使用 LLM 玩家配置（需先设置 API 密钥）
+uv run llm-werewolf-tui configs/players.yaml
+
+# 显示调试面板
+uv run llm-werewolf-tui configs/demo.yaml --debug
+
+# 若已全局安装套件
+llm-werewolf-tui configs/demo.yaml
+
+# 使用 werewolf-tui 别名
+uv run werewolf-tui configs/demo.yaml
+```
+
+**Console 模式（纯文本日志）：**
+
+```bash
+# 使用 Console 模式（自动执行）
 uv run llm-werewolf configs/demo.yaml
 
-# 启动包含 LLM 玩家的示例（需先配置 API 密钥）
-uv run llm-werewolf configs/players.yaml
-
-# 若已全局安装
-llm-werewolf configs/demo.yaml
-
-# 运行自定义配置
-uv run llm-werewolf my-game.yaml
-
-# 使用 werewolf 别名
+# 或使用别名
 uv run werewolf configs/demo.yaml
 ```
 
-可以在 YAML 中调整以下界面选项：
+YAML 配置文件选项：
 
-- `game_type: tui` 启用交互式终端界面（默认）
-- `game_type: console` 切换为纯文本日志模式
-- `show_debug: true` 显示 TUI 调试面板（仅在 `tui` 模式有效）
-- `preset: <preset-name>` 指定角色预设组合（如 `6-players`、`9-players`、`12-players`、`15-players`、`expert`、`chaos`）
+- `preset: <preset-name>` 指定角色预设配置（如 `6-players`、`9-players`、`12-players`、`15-players`、`expert`、`chaos`）
+- `show_debug: true` 显示 TUI 调试面板（可被命令行 `--debug` 参数覆盖）
+- `players: [...]` 定义玩家列表
 
 ### 环境配置
 
-创建 `.env` 文件保存 LLM API 密钥：
+创建 `.env` 文件配置 LLM API 密钥：
 
 ```bash
 # OpenAI
@@ -92,77 +98,76 @@ DEEPSEEK_API_KEY=sk-...
 # xAI (Grok)
 XAI_API_KEY=xai-...
 
-# 本地模型（如 Ollama）无需 API 密钥
-# 只需在 YAML 中设置 base_url
+# 本地模型（Ollama 等）不需要 API 密钥
+# 只需在 YAML 中设置 base_url 即可
 ```
 
 ## 支持的角色
 
 ### 狼人阵营 🐺
 
-- **普通狼人 (Werewolf)**：标准狼人，夜间结伴杀人
-- **狼王 (AlphaWolf)**：被淘汰时可带走一名玩家
-- **白狼王 (WhiteWolf)**：每隔一晚可杀死另一名狼人，成为独狼
-- **狼美人 (WolfBeauty)**：魅惑一名玩家，狼美人被杀后该玩家同亡
-- **守卫狼 (GuardianWolf)**：每晚可保护一名狼人
-- **隐狼 (HiddenWolf)**：在预言家查验中显示为村民
+- **普通狼人 (Werewolf)**：在夜晚集体杀人的标准狼人
+- **狼王 (AlphaWolf)**：被淘汰时可以开枪带走一人
+- **白狼王 (WhiteWolf)**：每隔一晚可以杀死另一个狼人，成为独狼
+- **狼美人 (WolfBeauty)**：魅惑一名玩家，狼美人死亡时该玩家同死
+- **守卫狼 (GuardianWolf)**：每晚可以保护一名狼人
+- **隐狼 (HiddenWolf)**：预言家查验显示为村民
 - **血月使徒 (BloodMoonApostle)**：可以转化为狼人
-- **梦魇狼 (NightmareWolf)**：封锁一名玩家的能力
+- **梦魇狼 (NightmareWolf)**：可以封锁玩家的能力
 
 ### 村民阵营 👥
 
 - **平民 (Villager)**：没有特殊能力的普通村民
-- **预言家 (Seer)**：每晚可查验一名玩家的阵营
-- **女巫 (Witch)**：拥有一瓶解药和一瓶毒药
-- **猎人 (Hunter)**：被淘汰时可以带走一人
-- **守卫 (Guard)**：每晚可保护一名玩家免受狼人攻击
-- **白痴 (Idiot)**：被投票处决时翻牌存活但失去投票权
+- **预言家 (Seer)**：每晚可以查验一名玩家的身份（狼人或村民）
+- **女巫 (Witch)**：拥有解药和毒药（各一次性使用）
+- **猎人 (Hunter)**：被淘汰时可以开枪带走一人
+- **守卫 (Guard)**：每晚可以保护一名玩家免于狼人攻击
+- **白痴 (Idiot)**：被投票淘汰时翻牌存活但失去投票权
 - **长老 (Elder)**：需要两次攻击才会死亡
 - **骑士 (Knight)**：每局可以与一名玩家决斗一次
-- **魔术师 (Magician)**：可以交换两名玩家的角色各一次
-- **丘比特 (Cupid)**：首夜连结两名玩家成为恋人
-- **乌鸦 (Raven)**：标记一名玩家，使其额外获得一票
-- **守墓人 (GraveyardKeeper)**：可以查看死亡玩家的身份
+- **魔术师 (Magician)**：可以交换两名玩家的角色一次
+- **丘比特 (Cupid)**：第一晚将两名玩家连结为恋人
+- **乌鸦 (Raven)**：标记一名玩家获得额外投票
+- **守墓人 (GraveyardKeeper)**：可以查验死亡玩家的身份
 
 ### 中立角色 👻
 
-- **盗贼 (Thief)**：首夜可以从两张额外角色牌中挑选一张
-- **恋人 (Lover)**：由丘比特连结，一方死亡另一方殉情
+- **盗贼 (Thief)**：第一晚可以从两张额外角色卡中选择一个
+- **恋人 (Lover)**：由丘比特连结，一人死亡另一人殉情
 
 ## 配置
 
-### 使用预设
+### 使用预设配置
 
-在配置文件中设置 `preset` 字段即可应用内建角色组合：
+在配置文件中调整 `preset` 字段即可应用内置角色组合，可选项：
 
-- `6-players`：新手局（6 人）— 2 狼人 + 预言家、女巫、2 平民
-- `9-players`：标准局（9 人）— 2 狼人 + 预言家、女巫、猎人、守卫、3 平民
-- `12-players`：进阶局（12 人）— 3 狼人（含狼王）+ 预言家、女巫、猎人、守卫、丘比特、白痴、3 平民
-- `15-players`：完整版（15 人）— 4 狼人（含狼王、白狼王）+ 预言家、女巫、猎人、守卫、丘比特、白痴、长老、乌鸦、3 平民
-- `expert`：专家配置（12 人），包含多种特殊狼人
-- `chaos`：混乱配置（10 人），适合进阶玩家的少见组合
+- `6-players`：新手局（6 人）- 2 狼人 + 预言家、女巫、2 平民
+- `9-players`：标准局（9 人）- 2 狼人 + 预言家、女巫、猎人、守卫、3 平民
+- `12-players`：进阶局（12 人）- 3 狼人（含狼王）+ 预言家、女巫、猎人、守卫、丘比特、白痴、3 平民
+- `15-players`：完整局（15 人）- 4 狼人（含狼王、白狼王）+ 预言家、女巫、猎人、守卫、丘比特、白痴、长老、乌鸦、3 平民
+- `expert`：专家配置（12 人）- 复杂角色组合，包含多种特殊狼人
+- `chaos`：混乱角色组合（10 人）- 不常见的角色搭配，适合进阶玩家
 
 ### 自定义配置
 
 #### 玩家配置文件
 
 ```bash
-# 从示例配置开始（全部为 demo 代理）
+# 由演示配置开始（全部为 demo 代理）
 cp configs/demo.yaml my-game.yaml
 
-# 或从支持 LLM 的示例开始
+# 或由支持 LLM 的样板开始
 cp configs/players.yaml my-game.yaml
 
-# 编辑配置
-# configs/players.yaml 包含字段说明与示例
+# 编辑配置文件
+# configs/players.yaml 含有字段说明与范例
 ```
 
-示例 `my-game.yaml`：
+范例 `my-game.yaml`：
 
 ```yaml
-preset: 6-players        # 选择预设
-game_type: tui           # 界面模式：tui 或 console
-show_debug: false        # 是否显示调试面板
+preset: 6-players        # 选择预设配置
+show_debug: false        # 是否显示调试面板（TUI 模式适用）
 
 players:
   - name: GPT-4 侦探
@@ -186,46 +191,45 @@ players:
     temperature: 0.7
     max_tokens: 500
 
-  - name: 真人玩家
-    model: human          # 玩家手动操作
+  - name: 人类玩家
+    model: human          # 真人玩家
 
   - name: 本地 Llama
     model: llama3
     base_url: http://localhost:11434/v1
-    # 本地模型无需 api_key_env
+    # 本地模型不需要 api_key_env
 
   - name: 测试机器人
-    model: demo           # 测试用简易代理
+    model: demo           # 测试用的简单代理
 ```
 
-**配置字段说明：**
+**配置说明：**
 
-- `preset`：必填，决定角色组合与玩家数量
-- `game_type`：可选，默认为 `tui`
-- `show_debug`：可选，默认为 `false`
-- `players`：必填，玩家列表，数量需与预设的 `num_players` 相同
+- `preset`：必填，决定游戏的角色配置和玩家数量
+- `show_debug`：选填，默认为 `false`，用于 TUI 模式显示调试面板
+- `players`：必填，玩家列表，数量必须与 preset 的 `num_players` 一致
 
 **玩家配置字段：**
 
 - `name`：玩家显示名称
 - `model`：模型类型
-  - `human`：真人玩家（终端输入）
-  - `demo`：测试用随机代理
+  - `human`：真人玩家（通过终端输入）
+  - `demo`：测试用简单代理（随机回应）
   - LLM 模型名称：如 `gpt-4o`、`claude-3-5-sonnet-20241022`、`llama3`
 - `base_url`：API 端点（LLM 模型必填）
-- `api_key_env`：存放 API 密钥的环境变量名称（需要鉴权时必填）
-- `temperature`：可选，默认 0.7
-- `max_tokens`：可选，默认 500
+- `api_key_env`：环境变量名称（有验证的端点必填）
+- `temperature`：选填，默认 0.7
+- `max_tokens`：选填，默认 500
 
 **支持的模型类型：**
 
-- **OpenAI 兼容 API**：任何遵循 OpenAI Chat Completions 协议的服务
+- **OpenAI 兼容 API**：任何支持 OpenAI Chat Completions 格式的模型
 - **真人玩家**：`model: human`
 - **测试代理**：`model: demo`
 
-**本地模型示例：**
+**本地模型范例：**
 
-使用本地模型（如 Ollama）时可省略 `api_key_env`：
+若使用 Ollama 等本地模型，可省略 `api_key_env`：
 
 ```yaml
   - name: Ollama Llama3
@@ -237,17 +241,17 @@ players:
 
 ## 代理系统
 
-### 内建代理类型
+### 内置代理类型
 
-项目内建三种代理：
+本项目提供三种内置代理类型：
 
 1. **LLMAgent**：支持任何 OpenAI 兼容 API 的 LLM 模型
 2. **HumanAgent**：真人玩家通过终端输入
-3. **DemoAgent**：返回随机回应的测试代理
+3. **DemoAgent**：测试用的简单代理（随机回应）
 
-### 通过 YAML 配置代理
+### 通过 YAML 配置使用代理
 
-推荐在 YAML 配置文件中设置代理（见[配置](#%E9%85%8D%E7%BD%AE)章节）。
+推荐方式是通过 YAML 配置文件来设置代理（参见[配置](#配置)章节）。
 
 ### 程序化使用代理
 
@@ -258,7 +262,7 @@ from llm_werewolf.ai import LLMAgent, HumanAgent, DemoAgent, create_agent, Playe
 from llm_werewolf.core import GameEngine
 from llm_werewolf.config import get_preset_by_name
 
-# 方法 1：直接实例化代理
+# 方法 1：直接创建代理实例
 llm_agent = LLMAgent(
     model_name="gpt-4o",
     api_key="your-api-key",
@@ -270,7 +274,7 @@ llm_agent = LLMAgent(
 human_agent = HumanAgent(model_name="human")
 demo_agent = DemoAgent(model_name="demo")
 
-# 方法 2：通过配置对象创建（自动从环境变量读取 API 密钥）
+# 方法 2：从配置对象创建（自动从环境变量加载 API 密钥）
 player_config = PlayerConfig(
     name="GPT-4 玩家",
     model="gpt-4o",
@@ -299,22 +303,22 @@ result = engine.play_game()
 
 ### 支持的 LLM 提供商
 
-由于实现基于 OpenAI 兼容 API，以下提供商均可使用：
+由于使用 OpenAI 兼容 API，以下提供商都可以使用：
 
 - **OpenAI**：GPT-4、GPT-4o、GPT-3.5-turbo 等
 - **Anthropic**：Claude 3.5 Sonnet、Claude 3 Opus、Claude 3 Haiku 等
 - **DeepSeek**：DeepSeek-Reasoner、DeepSeek-Chat 等
 - **xAI**：Grok 系列模型
 - **本地模型**：Ollama、LM Studio、vLLM 等
-- **其他兼容 API**：任何支持 OpenAI Chat Completions 协议的服务
+- **其他兼容 API**：任何支持 OpenAI Chat Completions 格式的服务
 
 ### 实现自定义代理
 
-可以通过实现简洁的代理接口来接入自定义提供商：
+要整合自定义 LLM 提供商，只需实现简单的代理协议：
 
 ```python
 class MyCustomAgent:
-    """自定义代理实现示例。"""
+    """自定义代理实现范例。"""
 
     def __init__(self, client: YourLLMClient) -> None:
         self.client = client
@@ -322,13 +326,13 @@ class MyCustomAgent:
         self._history: list[dict[str, str]] = []
 
     def get_response(self, message: str) -> str:
-        """获取 LLM 回复。
+        """获取 LLM 回应。
 
         Args:
-            message: 用户消息或游戏提示
+            message: 用户信息或游戏提示
 
         Returns:
-            str: LLM 的回复
+            str: LLM 的回应
         """
         self._history.append({"role": "user", "content": message})
         reply = self.client.generate(message, history=self._history)
@@ -336,26 +340,26 @@ class MyCustomAgent:
         return reply
 
     def reset(self) -> None:
-        """可选：在新游戏开始前清空对话记录。"""
+        """可选：在新游戏开始前清空对话历史。"""
         self._history.clear()
 ```
 
 **必须实现的接口：**
 
-- `model_name`（属性）：模型名称
-- `get_response(message: str) -> str`：接收消息并返回回复
+- `model_name` (属性)：模型名称字符串
+- `get_response(message: str) -> str` (方法)：接收消息并返回回应
 
-**可选帮助方法：**
+**可选实现的方法：**
 
-- `reset()`：清空内部状态（对话历史等）
-- `add_to_history(role: str, content: str)`：手动追加历史记录
-- `get_history() -> list[dict[str, str]]`：读取历史记录
+- `reset()`：清除代理的内部状态（对话历史等）
+- `add_to_history(role: str, content: str)`：手动添加对话历史
+- `get_history() -> list[dict[str, str]]`：获取对话历史
 
-自定义代理可以直接传入 `GameEngine.setup_game()`。
+您可以直接将自定义代理传入 `GameEngine.setup_game()`。
 
 ## TUI 界面
 
-TUI（Terminal User Interface）基于 [Textual](https://textual.textualize.io/) 提供现代终端中的实时可视化体验。
+TUI (Terminal User Interface) 提供现代化终端界面的实时游戏可视化，使用 [Textual](https://textual.textualize.io/) 框架构建。
 
 ### 界面预览
 
@@ -384,7 +388,7 @@ TUI（Terminal User Interface）基于 [Textual](https://textual.textualize.io/)
 │           ✓          │ │ [00:02:31] ⏰ 阶段：白│                │  - Villager x3                │
 │ Grace     claude     │ │ [00:02:32] 💀 Iris 死亡│               │                               │
 │           ✓          │ │ [00:02:33] 💬 Alice：  │               │ 夜晚超时：60s                 │
-│ Henry     demo       │ │            "我觉得 Bob │               │ 白天超时：300s                │
+│ Henry     demo       │ │            "我觉得Bob │               │ 白天超时：300s                │
 │           ✓          │ │            行为可疑"  │               │ 投票超时：60s                 │
 │ Iris      demo       │ │ [00:02:34] 💬 Bob：    │               │                               │
 │           ✗          │ │            "我是村民！│               │ 错误：0                       │
@@ -402,11 +406,11 @@ TUI（Terminal User Interface）基于 [Textual](https://textual.textualize.io/)
 
 #### 玩家面板（左侧）
 
-展示所有玩家信息：
+显示所有玩家的信息：
 
 - **名字**：玩家显示名称
-- **模型**：所用 AI 模型或 `human`/`demo`
-- **状态指示**：
+- **模型**：使用的 AI 模型或 `human`/`demo`
+- **状态指示器**：
   - ✓：存活
   - ✗：死亡
   - 🛡️：被守卫保护
@@ -414,9 +418,9 @@ TUI（Terminal User Interface）基于 [Textual](https://textual.textualize.io/)
   - ☠️：被女巫下毒
   - 🔴：被乌鸦标记
 
-#### 游戏面板（上方中央）
+#### 游戏面板（中央上方）
 
-展示当前游戏状态：
+显示当前游戏状态：
 
 - **回合与阶段**：
   - 🌙 夜晚阶段
@@ -424,103 +428,103 @@ TUI（Terminal User Interface）基于 [Textual](https://textual.textualize.io/)
   - 🗳️ 投票阶段
   - 🏁 游戏结束
 - **玩家统计**：按阵营统计存活玩家数
-- **投票统计**：投票阶段显示票数
+- **投票计数**（投票阶段）：显示各玩家得票数
 
-#### 对话面板（下方中央）
+#### 对话面板（中央下方）
 
-可滚动的事件日志，记录所有游戏事件与对话：
+可滚动的事件日志，显示游戏中的所有事件和对话：
 
-- 💬 **玩家发言**：AI 生成的讨论、指控与辩护
+- 💬 **玩家发言**：AI 生成的讨论、指控、辩护
 - 🎮 **游戏事件**：游戏开始、阶段切换等
 - ⏰ **阶段变化**：夜晚、白天、投票等
 - 💀 **死亡事件**：玩家死亡通知
-- 🐺 **狼人行动**：夜间狼人讨论
-- 🔮 **技能使用**：角色技能触发记录
+- 🐺 **狼人行动**：狼人夜晚讨论
+- 🔮 **技能使用**：各角色技能的使用记录
 
-事件根据重要程度进行颜色区分，便于快速识别关键信息。
+事件根据重要性进行颜色编码，便于快速识别关键信息。
 
 #### 调试面板（右侧，可选）
 
-按 `d` 键切换显示，包含：
+按 'd' 键切换显示，包含：
 
 - 会话 ID
 - 配置文件来源
-- 玩家数量与类型
+- 玩家数量与类型统计
 - 角色分配
-- 各阶段超时时间
+- 时间限制设置
 - 错误追踪
 
 ### TUI 控制
 
-- `q`：退出游戏
-- `d`：切换调试面板
-- `n`：手动进入下一步（调试）
-- 鼠标滚轮：滚动对话历史
-- 方向键：在可聚焦组件间移动
+- **q**：退出游戏
+- **d**：切换调试面板显示/隐藏（或使用 `--debug` 参数默认开启）
+- **n**：手动进入下一步（调试用）
+- **鼠标滚轮**：滚动对话历史
+- **方向键**：在可聚焦组件间移动
 
 ### Console 模式
 
-若不想使用 TUI，可在配置中设置 `game_type: console`，游戏将以纯文本日志输出。
+如果不想使用 TUI，可以使用 `llm-werewolf` 或 `werewolf` 命令，游戏将以纯文本日志形式自动执行并输出到终端。
 
 ## 游戏流程
 
-1. **准备阶段**：随机分配角色
-2. **夜晚阶段**：具备夜行能力的角色按优先级行动
-3. **白天讨论**：玩家交流信息并讨论
+1. **准备阶段**：玩家被随机分配角色
+2. **夜晚阶段**：具有夜晚能力的角色按优先顺序行动
+3. **白天讨论**：玩家讨论并分享信息
 4. **白天投票**：玩家投票淘汰嫌疑人
-5. **胜利判定**：检测是否满足胜利条件
-6. 重复步骤 2–5 直至出现胜利阵营
+5. **检查胜利**：游戏检查是否有阵营获胜
+6. 重复步骤 2-5 直到满足胜利条件
 
 ## 胜利条件
 
-每个阶段结束后都会检查胜利条件：
+游戏会在每个阶段结束后检查胜利条件：
 
 - **村民阵营获胜**：所有狼人被淘汰
 - **狼人阵营获胜**：狼人数量 ≥ 村民数量
-- **恋人获胜**：只剩两名恋人存活（优先级高于阵营胜利）
+- **恋人获胜**：只剩下两个恋人存活（恋人胜利优先于阵营胜利）
 
 ## 开发
 
-### 开发环境
+### 开发环境设定
 
 ```bash
-# 克隆项目
+# 复制项目
 git clone https://github.com/Mai0313/LLMWereWolf.git
 cd LLMWereWolf
 
-# 安装全量依赖（包含开发与测试）
+# 安装所有依赖（包含开发和测试依赖）
 uv sync --all-groups
 
-# 或按需安装
-uv sync                     # 仅基础依赖
-uv sync --group dev         # 开发工具
+# 或选择性安装
+uv sync                     # 仅基础依赖（已包含 LLM 支持）
+uv sync --group dev         # 开发依赖
 uv sync --group test        # 测试依赖
-uv sync --group llm-all     # 全部 LLM 扩展
+uv sync --group docs        # 文件生成依赖
 ```
 
 ### 执行测试
 
 ```bash
-# 运行全部测试
+# 执行所有测试
 uv run pytest
 
-# 带覆盖率报告
+# 执行并显示覆盖率
 uv run pytest --cov=src --cov-report=term-missing
 
-# 运行单个测试文件
+# 执行特定测试文件
 uv run pytest tests/core/test_roles.py -v
 
-# 运行单个测试函数
+# 执行特定测试函数
 uv run pytest tests/core/test_roles.py::test_werewolf_role -v
 
-# 并行执行测试（更快）
+# 平行执行测试（更快）
 uv run pytest -n auto
 ```
 
 ### 代码质量
 
 ```bash
-# 执行 Ruff 检查
+# 执行 Ruff linter 检查
 uv run ruff check src/
 
 # 自动修复可修复的问题
@@ -529,46 +533,48 @@ uv run ruff check --fix src/
 # 格式化代码
 uv run ruff format src/
 
-# 类型检查（若已配置 mypy）
+# 检查类型（若有设定 mypy）
 uv run mypy src/
 ```
 
-### Pre-commit
+### 使用 Pre-commit
 
-项目提供 pre-commit 配置，在提交前自动检查代码质量：
+项目包含 pre-commit 设置，自动在提交前检查代码质量：
 
 ```bash
-# 安装 pre-commit 钩子
+# 安装 pre-commit hooks
 uv run pre-commit install
 
-# 手动运行全部钩子
+# 手动执行所有 hooks
 uv run pre-commit run --all-files
 ```
 
-### Makefile 快捷命令
+### 使用 Makefile
 
-Makefile 提供常用命令封装：
+项目提供 Makefile 简化常见操作：
 
 ```bash
-# 查看可用命令
+# 查看所有可用命令
 make help
 
-# 清理生成的文件
+# 清理自动生成的文件
 make clean
 
-# 格式化代码（调用 pre-commit）
+# 执行代码格式化（pre-commit）
 make format
 
-# 运行全部测试
+# 执行所有测试
 make test
 
-# 生成文档
+# 生成文件（需要先创建 docs 目录）
 make gen-docs
 ```
 
-## 项目结构
+**注意**：`gen-docs` 命令需要 `./scripts/gen_docs.py` 脚本和 docs 目录。如果您的项目尚未设置文件系统，此命令可能无法使用。
 
-项目采用模块化设计，职责划分清晰：
+## 项目架构
+
+项目采用模块化架构，各模块职责清晰：
 
 ```
 src/llm_werewolf/
@@ -582,17 +588,17 @@ src/llm_werewolf/
 ├── core/                 # 核心游戏逻辑
 │   ├── game_engine.py    # 游戏引擎
 │   ├── game_state.py     # 游戏状态管理
-│   ├── player.py         # 玩家模型
-│   ├── actions.py        # 行动系统
+│   ├── player.py         # 玩家类
+│   ├── actions.py        # 动作系统
 │   ├── events.py         # 事件系统
-│   ├── victory.py        # 胜利条件判定
+│   ├── victory.py        # 胜利条件检查
 │   └── roles/            # 角色实现
 │       ├── base.py       # 角色基类
 │       ├── werewolf.py   # 狼人阵营角色
 │       ├── villager.py   # 村民阵营角色
 │       └── neutral.py    # 中立角色
 ├── ui/                   # 用户界面
-│   ├── tui_app.py        # TUI 应用
+│   ├── tui_app.py        # TUI 应用程序
 │   ├── styles.py         # TUI 样式
 │   └── components/       # TUI 组件
 │       ├── player_panel.py
@@ -600,52 +606,52 @@ src/llm_werewolf/
 │       ├── chat_panel.py
 │       └── debug_panel.py
 └── utils/                # 工具函数
-    └── validator.py      # 校验工具
+    └── validator.py      # 验证工具
 ```
 
 ### 模块说明
 
-- **cli.py**：加载配置并启动游戏
-- **ai/**：AI 代理与真人玩家接口实现
-- **config/**：游戏参数与角色预设
-- **core/**：核心逻辑，包含角色、玩家、状态、行动与事件系统
-- **ui/**：基于 Textual 的终端界面组件
+- **cli.py**：命令行界面，负责加载配置并启动游戏
+- **ai/**：代理系统，实现各种 AI 代理和真人玩家界面
+- **config/**：配置系统，包含游戏参数和角色预设
+- **core/**：游戏核心逻辑，包含角色、玩家、游戏状态、动作和事件系统
+- **ui/**：终端用户界面，基于 Textual 框架
 - **utils/**：通用工具函数
 
 ## 系统需求
 
 - **Python**：3.10 或更高版本
 - **操作系统**：Linux、macOS、Windows
-- **终端**：支持 ANSI 色彩与 Unicode 的现代终端（用于 TUI）
+- **终端**：支持 ANSI 颜色和 Unicode 的现代终端（用于 TUI）
 
 ### 主要依赖
 
-- **pydantic** (≥2.12.3)：数据验证与配置管理
+- **pydantic** (≥2.12.3)：数据验证和设定管理
 - **textual** (≥6.3.0)：TUI 框架
-- **rich** (≥14.2.0)：终端渲染
+- **rich** (≥14.2.0)：终端格式化
 - **openai** (≥2.5.0)：OpenAI API 客户端（用于 LLM 整合）
 - **python-dotenv** (≥1.1.1)：环境变量管理
-- **pyyaml** (≥6.0.3)：YAML 解析
-- **fire** (≥0.7.1)：命令行接口
-- **logfire** (≥4.13.2)：结构化日志
+- **pyyaml** (≥6.0.3)：YAML 配置文件解析
+- **fire** (≥0.7.1)：命令行界面
+- **logfire** (≥4.13.2)：结构化日志记录
 
 ## 常见问题
 
-### 如何增加玩家数量？
+### 如何新增更多玩家？
 
-编辑 YAML 配置文件，选择匹配玩家数量的 `preset`，并在 `players` 列表中添加对应配置。请确保玩家数量与预设的 `num_players` 保持一致。
+编辑您的 YAML 配置文件，调整 `preset` 以匹配玩家数量，并在 `players` 列表中新增玩家配置。记得玩家数量必须与 preset 的 `num_players` 一致。
 
-### 可以混用不同的 LLM 模型吗？
+### 可以混合不同的 LLM 模型吗？
 
-可以！同一局游戏中可以混合使用多个提供商与模型，例如同时使用 GPT-4、Claude 和本地 Llama 模型。
+可以！您可以在同一场游戏中使用不同的 LLM 提供商和模型，例如同时使用 GPT-4、Claude 和本地 Llama 模型。
 
-### 如何让真人玩家加入？
+### 如何让真人玩家参与游戏？
 
-在 YAML 中将某个玩家的 `model` 设置为 `human`。游戏过程中该玩家会直接在终端输入回应。
+在 YAML 配置中，将某个玩家的 `model` 设置为 `human`。游戏进行时，该玩家需要通过终端输入来回应。
 
-### 如何配置本地模型（如 Ollama）？
+### 本地模型（Ollama）如何设定？
 
-确保 Ollama 正在运行，然后在 YAML 中设置：
+确保 Ollama 正在执行，然后在 YAML 中设定：
 
 ```yaml
   - name: Ollama 玩家
@@ -653,11 +659,11 @@ src/llm_werewolf/
     base_url: http://localhost:11434/v1
 ```
 
-无需设置 `api_key_env`。
+不需要设定 `api_key_env`。
 
-### 游戏节奏太快或太慢怎么办？
+### 游戏太快或太慢怎么办？
 
-可自定义 `GameConfig` 调整各阶段的时间限制：
+您可以自定义 `GameConfig` 来调整各阶段的时间限制：
 
 ```python
 from llm_werewolf.config import GameConfig
@@ -673,7 +679,7 @@ config = GameConfig(
 
 ### 如何自定义角色组合？
 
-创建自定义 `GameConfig` 并指定需要的角色：
+创建自定义的 `GameConfig`，指定您想要的角色：
 
 ```python
 from llm_werewolf.config import GameConfig
@@ -697,48 +703,47 @@ config = GameConfig(
 
 ## 授权
 
-本项目使用 [MIT License](LICENSE) 授权。
+本项目采用 [MIT License](LICENSE) 授权。
 
 ## 贡献
 
-欢迎贡献！你可以通过以下方式参与：
+欢迎贡献！您可以通过以下方式参与：
 
-1. **反馈问题**：在 [Issues](https://github.com/Mai0313/LLMWereWolf/issues) 页面报告 bug 或提交功能建议
-2. **提交 Pull Request**：修复问题或新增功能
-3. **改进文档**：完善 README 与代码注释
-4. **分享反馈**：告诉我们你的使用体验
+1. **回报问题**：在 [Issues](https://github.com/Mai0313/LLMWereWolf/issues) 页面回报 bug 或提出功能建议
+2. **提交 Pull Request**：修复 bug 或新增功能
+3. **改进文档**：帮助改善 README 和代码注解
+4. **分享反馈**：告诉我们您的使用体验
 
 ### 贡献流程
 
-1. Fork 项目
+1. Fork 本项目
 2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
 3. 提交变更 (`git commit -m 'Add some amazing feature'`)
-4. 推送分支 (`git push origin feature/amazing-feature`)
-5. 发起 Pull Request
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 开启 Pull Request
 
-请确保你的改动：
+请确保您的代码：
 
-- 遵循项目代码风格（使用 Ruff）
-- 包含相应测试
+- 遵循项目的代码风格（使用 Ruff）
+- 包含适当的测试
 - 更新相关文档
 
 ## 致谢
 
-项目基于以下优秀的开源工具构建：
+本项目使用以下优秀的开源工具构建：
 
-- [Pydantic](https://pydantic.dev/) — 数据验证与配置管理
-- [Textual](https://textual.textualize.io/) — 现代化 TUI 框架
-- [Rich](https://rich.readthedocs.io/) — 精美的终端输出
-- [OpenAI Python SDK](https://github.com/openai/openai-python) — LLM API 客户端
-- [uv](https://docs.astral.sh/uv/) — 高速 Python 包管理器
-- [Ruff](https://github.com/astral-sh/ruff) — 极速 Python linter
+- [Pydantic](https://pydantic.dev/) - 数据验证和设定管理
+- [Textual](https://textual.textualize.io/) - 现代化 TUI 框架
+- [Rich](https://rich.readthedocs.io/) - 精美的终端输出
+- [OpenAI Python SDK](https://github.com/openai/openai-python) - LLM API 客户端
+- [uv](https://docs.astral.sh/uv/) - 快速的 Python 包管理器
+- [Ruff](https://github.com/astral-sh/ruff) - 极速 Python linter
 
 ## 相关链接
 
-- [项目主页](https://github.com/Mai0313/LLMWereWolf)
+- [项目首页](https://github.com/Mai0313/LLMWereWolf)
 - [问题追踪](https://github.com/Mai0313/LLMWereWolf/issues)
-- [文档站点](https://mai0313.github.io/llm_werewolf)（建设中）
 
 ## 更新日志
 
-请参阅 [Releases](https://github.com/Mai0313/LLMWereWolf/releases) 获取版本更新记录。
+请参阅 [Releases](https://github.com/Mai0313/LLMWereWolf/releases) 页面查看版本更新记录。

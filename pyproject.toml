@@ -67,13 +67,13 @@ authors = [
     { name = "Wei", email = "mai@mai0313.com" },
 ]
 dependencies = [
-    "pydantic>=2.0.0",
-    "pydantic-settings>=2.0.0",
-    "textual>=0.40.0",
-    "rich>=13.0.0",
-    "python-dotenv>=1.0.0",
-    "pyyaml>=6.0.0",
     "openai>=2.5.0",
+    "pydantic>=2.11.7",
+    "pydantic-settings>=2.11.0",
+    "python-dotenv>=1.1.1",
+    "pyyaml>=6.0.2",
+    "rich>=14.1.0",
+    "textual>=6.2.1",
 ]
 readme = "README.md"
 requires-python = ">= 3.10"

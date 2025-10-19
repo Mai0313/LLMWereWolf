@@ -44,13 +44,28 @@ uv sync
 uv sync --group llm-openai      # 用於 OpenAI 模型
 uv sync --group llm-anthropic   # 用於 Claude 模型
 uv sync --group llm-all         # 用於所有支援的 LLM 提供商
-
-# 使用 TUI 執行（預設，使用演示代理）
-uv run llm-werewolf
-
-# 使用命令列模式執行
-uv run llm-werewolf --no-tui
 ```
+
+### 執行遊戲
+
+命令列入口（`llm-werewolf` 與 `werewolf`）需要載入一個 YAML 設定檔，描述玩家與介面模式。
+
+```bash
+# 使用內建示範配置啟動 TUI
+uv run llm-werewolf configs/demo.yaml
+
+# 若已全域安裝套件
+llm-werewolf configs/demo.yaml
+
+# 執行自訂設定
+uv run llm-werewolf my-game.yaml
+```
+
+可在 YAML 中調整介面選項：
+
+- `game_type: tui` 啟用互動式終端介面
+- `game_type: console` 使用純文字輸出
+- `show_debug: true` 顯示 TUI 除錯面板（僅 `tui` 模式有效）
 
 ### 環境配置
 
@@ -77,17 +92,14 @@ LOCAL_MODEL=llama2
 ### 基本使用
 
 ```bash
-# 啟動 9 人局 TUI 模式
-uv run llm-werewolf --preset 9-players
+# 依照 YAML 設定啟動遊戲（介面模式由檔案決定）
+uv run llm-werewolf my-game.yaml
 
-# 啟動 6 人局命令列模式
-uv run llm-werewolf --preset 6-players --no-tui
+# 使用 werewolf 別名
+uv run werewolf my-game.yaml
 
-# 啟用除錯面板
-uv run llm-werewolf --debug
-
-# 查看說明
-uv run llm-werewolf --help
+# 直接執行模組
+uv run python -m llm_werewolf.cli my-game.yaml
 ```
 
 ## 支援的角色
@@ -122,40 +134,65 @@ uv run llm-werewolf --help
 
 ### 使用預設配置
 
-```bash
-# 可用的預設配置
-uv run llm-werewolf --preset 6-players   # 新手局（6 人）
-uv run llm-werewolf --preset 9-players   # 標準局（9 人）
-uv run llm-werewolf --preset 12-players  # 進階局（12 人）
-uv run llm-werewolf --preset 15-players  # 完整局（15 人）
-uv run llm-werewolf --preset expert      # 專家配置
-uv run llm-werewolf --preset chaos       # 混亂角色組合
-```
+在設定檔中調整 `preset` 欄位即可套用內建角色組合，可選項目：
+
+- `6-players`：新手局（6 人）
+- `9-players`：標準局（9 人）
+- `12-players`：進階局（12 人）
+- `15-players`：完整局（15 人）
+- `expert`：專家配置
+- `chaos`：混亂角色組合
 
 ### 自訂配置
 
-在 Python 中建立自訂配置：
+```bash
+# 由示範配置開始（全部為 demo 代理）
+cp configs/demo.yaml my-game.yaml
 
-```python
-from llm_werewolf import GameConfig
+# 或由支援 LLM 的樣板開始
+cp configs/players.yaml my-game.yaml
 
-config = GameConfig(
-    num_players=9,
-    role_names=[
-        "Werewolf",
-        "Werewolf",
-        "Seer",
-        "Witch",
-        "Hunter",
-        "Villager",
-        "Villager",
-        "Villager",
-        "Villager",
-    ],
-    night_timeout=60,
-    day_timeout=300,
-)
+# 編輯設定檔
+# configs/players.yaml 含有欄位說明
 ```
+
+範例 `players.yaml`：
+
+```yaml
+preset: 9-players
+game_type: tui
+show_debug: false
+
+players:
+  - name: GPT-4 偵探
+    model: gpt-4o
+    base_url: https://api.openai.com/v1
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: 500
+
+  - name: Claude 分析師
+    model: claude-3-5-sonnet-20241022
+    base_url: https://api.anthropic.com/v1
+    api_key_env: ANTHROPIC_API_KEY
+    temperature: 0.7
+    max_tokens: 500
+
+  - name: 人類玩家
+    model: human
+
+  - name: 本地 Llama
+    model: llama3
+    base_url: http://localhost:11434/v1
+```
+
+支援的模型類型：
+
+- 任意相容 OpenAI Chat Completions 的模型（需 `model` + `base_url` + `api_key_env`）
+- `human`：由終端輸入的真人玩家
+- `demo`：適合測試的示範機器人
+
+若本地端點不需要驗證，可省略 `api_key_env`。
 
 ## LLM 整合
 

@@ -44,13 +44,28 @@ uv sync
 uv sync --group llm-openai      # For OpenAI models
 uv sync --group llm-anthropic   # For Claude models
 uv sync --group llm-all         # For all supported LLM providers
-
-# Run with TUI (default, uses demo agents)
-uv run llm-werewolf
-
-# Run in console mode
-uv run llm-werewolf --no-tui
 ```
+
+### Running the Game
+
+The CLI entry points (`llm-werewolf` and `werewolf`) expect a YAML configuration file that defines the players and interface mode.
+
+```bash
+# Launch the built-in demo game in the TUI
+uv run llm-werewolf configs/demo.yaml
+
+# If the package is installed globally
+llm-werewolf configs/demo.yaml
+
+# Run your customized configuration
+uv run llm-werewolf my-game.yaml
+```
+
+Control the interface by editing your YAML file:
+
+- `game_type: tui` enables the interactive terminal UI
+- `game_type: console` runs in log-style console mode
+- `show_debug: true` displays the TUI debug panel (only when `game_type` is `tui`)
 
 ### Environment Setup
 
@@ -77,20 +92,14 @@ LOCAL_MODEL=llama2
 ### Basic Usage
 
 ```bash
-# Run with custom player configuration (recommended for real games)
-uv run llm-werewolf --config players.yaml
+# Run any configuration (TUI or console is chosen in the YAML)
+uv run llm-werewolf my-game.yaml
 
-# Start a 9-player demo game with TUI (uses demo agents)
-uv run llm-werewolf --preset 9-players
+# Use the `werewolf` alias
+uv run werewolf my-game.yaml
 
-# Start a 6-player game without TUI
-uv run llm-werewolf --preset 6-players --no-tui
-
-# Enable debug panel
-uv run llm-werewolf --debug
-
-# View help
-uv run llm-werewolf --help
+# Execute the CLI module directly
+uv run python -m llm_werewolf.cli my-game.yaml
 ```
 
 ### Player Configuration
@@ -98,38 +107,53 @@ uv run llm-werewolf --help
 Configure custom AI players and human players using a YAML file:
 
 ```bash
-# Copy example configuration
-cp configs/players.yaml.example my-game.yaml
+# Start from the demo configuration (all demo agents)
+cp configs/demo.yaml my-game.yaml
+
+# Or start from the LLM-enabled sample
+cp configs/players.yaml my-game.yaml
 
 # Edit the configuration
-# configs/players.yaml.example contains detailed comments and examples
+# configs/players.yaml contains field descriptions
 ```
 
 Example `players.yaml`:
 
 ```yaml
 preset: 9-players
+game_type: tui
+show_debug: false
+
 players:
   - name: GPT-4 Detective
-    provider: openai
-    model: gpt-4
+    model: gpt-4o
     api_key_env: OPENAI_API_KEY
+    base_url: https://api.openai.com/v1
+    temperature: 0.7
+    max_tokens: 500
 
   - name: Claude Analyst
-    provider: anthropic
     model: claude-3-5-sonnet-20241022
+    base_url: https://api.anthropic.com/v1
     api_key_env: ANTHROPIC_API_KEY
+    temperature: 0.7
+    max_tokens: 500
 
   - name: Human Player
-    provider: human
+    model: human
 
   - name: Local Llama
-    provider: local
     model: llama3
     base_url: http://localhost:11434/v1
 ```
 
-Supported providers: `openai`, `anthropic`, `local`, `custom`, `human`, `demo`
+Supported model types:
+
+- Any OpenAI-compatible LLM (`model` + `base_url` + `api_key_env`)
+- `human` for a player controlled via the console
+- `demo` for a lightweight rule-free bot (useful for testing)
+
+Local endpoints that do not require authentication can omit `api_key_env`.
 
 ## Supported Roles
 

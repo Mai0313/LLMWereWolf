@@ -44,13 +44,28 @@ uv sync
 uv sync --group llm-openai      # 用于 OpenAI 模型
 uv sync --group llm-anthropic   # 用于 Claude 模型
 uv sync --group llm-all         # 用于所有支持的 LLM 提供商
-
-# 使用 TUI 执行（默认，使用演示代理）
-uv run llm-werewolf
-
-# 使用命令行模式执行
-uv run llm-werewolf --no-tui
 ```
+
+### 运行游戏
+
+命令行入口（`llm-werewolf` 与 `werewolf`）需要读取一个 YAML 配置文件，其中定义玩家与界面模式。
+
+```bash
+# 使用内建演示配置启动 TUI
+uv run llm-werewolf configs/demo.yaml
+
+# 如果已全局安装套件
+llm-werewolf configs/demo.yaml
+
+# 运行自定义配置
+uv run llm-werewolf my-game.yaml
+```
+
+在 YAML 中可以控制界面模式：
+
+- `game_type: tui` 开启交互式终端界面
+- `game_type: console` 使用纯命令行输出
+- `show_debug: true` 在 TUI 中显示调试面板（仅 `tui` 模式有效）
 
 ### 环境配置
 
@@ -77,17 +92,14 @@ LOCAL_MODEL=llama2
 ### 基本使用
 
 ```bash
-# 启动 9 人局 TUI 模式
-uv run llm-werewolf --preset 9-players
+# 运行任何配置（界面模式由 YAML 决定）
+uv run llm-werewolf my-game.yaml
 
-# 启动 6 人局命令行模式
-uv run llm-werewolf --preset 6-players --no-tui
+# 使用别名 werewolf
+uv run werewolf my-game.yaml
 
-# 启用调试面板
-uv run llm-werewolf --debug
-
-# 查看说明
-uv run llm-werewolf --help
+# 直接运行模块
+uv run python -m llm_werewolf.cli my-game.yaml
 ```
 
 ## 支持的角色
@@ -122,40 +134,65 @@ uv run llm-werewolf --help
 
 ### 使用预设配置
 
-```bash
-# 可用的预设配置
-uv run llm-werewolf --preset 6-players   # 新手局（6 人）
-uv run llm-werewolf --preset 9-players   # 标准局（9 人）
-uv run llm-werewolf --preset 12-players  # 进阶局（12 人）
-uv run llm-werewolf --preset 15-players  # 完整局（15 人）
-uv run llm-werewolf --preset expert      # 专家配置
-uv run llm-werewolf --preset chaos       # 混乱角色组合
-```
+在配置文件中设置 `preset` 字段即可使用内建的角色组合，可选值包括：
+
+- `6-players`：新手局（6 人）
+- `9-players`：标准局（9 人）
+- `12-players`：进阶局（12 人）
+- `15-players`：完整局（15 人）
+- `expert`：专家级组合
+- `chaos`：混乱角色组合
 
 ### 自定义配置
 
-在 Python 中创建自定义配置：
+```bash
+# 从演示配置开始（全部为 demo 代理）
+cp configs/demo.yaml my-game.yaml
 
-```python
-from llm_werewolf import GameConfig
+# 或从支持 LLM 的范例开始
+cp configs/players.yaml my-game.yaml
 
-config = GameConfig(
-    num_players=9,
-    role_names=[
-        "Werewolf",
-        "Werewolf",
-        "Seer",
-        "Witch",
-        "Hunter",
-        "Villager",
-        "Villager",
-        "Villager",
-        "Villager",
-    ],
-    night_timeout=60,
-    day_timeout=300,
-)
+# 编辑配置文件
+# configs/players.yaml 内含字段说明
 ```
+
+范例 `players.yaml`：
+
+```yaml
+preset: 9-players
+game_type: tui
+show_debug: false
+
+players:
+  - name: GPT-4 侦探
+    model: gpt-4o
+    base_url: https://api.openai.com/v1
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: 500
+
+  - name: Claude 分析师
+    model: claude-3-5-sonnet-20241022
+    base_url: https://api.anthropic.com/v1
+    api_key_env: ANTHROPIC_API_KEY
+    temperature: 0.7
+    max_tokens: 500
+
+  - name: 人类玩家
+    model: human
+
+  - name: 本地 Llama
+    model: llama3
+    base_url: http://localhost:11434/v1
+```
+
+支持的模型类型：
+
+- 任意兼容 OpenAI Chat Completions 的模型（需要 `model` + `base_url` + `api_key_env`）
+- `human`：通过控制台输入的真人玩家
+- `demo`：用于测试的演示机器人
+
+对不需要认证的本地端点，可以省略 `api_key_env`。
 
 ## LLM 整合
 

@@ -1,10 +1,11 @@
 import os
 import random
-from typing import Any
 from pathlib import Path
+from functools import cached_property
 
 import yaml
-from pydantic import Field, BaseModel, field_validator
+from openai import OpenAI
+from pydantic import Field, BaseModel, computed_field, field_validator
 from rich.console import Console
 from pydantic_core.core_schema import ValidationInfo
 
@@ -91,6 +92,11 @@ class DemoAgent(BaseModel):
         return random.choice(responses)  # noqa: S311
 
     def __repr__(self) -> str:
+        """Return a string representation of the LLMAgent instance.
+
+        Returns:
+            str: A string in the format "DemoAgent(model={self.model_name})".
+        """
         return f"DemoAgent(model={self.model_name})"
 
 
@@ -110,95 +116,59 @@ class HumanAgent(BaseModel):
         return input("Your response: ")
 
     def __repr__(self) -> str:
+        """Return a string representation of the LLMAgent instance.
+
+        Returns:
+            str: A string in the format "HumanAgent(model=human)".
+        """
         return "HumanAgent(model=human)"
 
 
-class LLMAgent:
-    """Unified agent for all LLM providers using OpenAI ChatCompletion API.
+class LLMAgent(BaseModel):
+    model_name: str
+    api_key: str = Field(default="not-needed")
+    base_url: str | None = Field(default=None)
+    temperature: float = Field(default=0.7)
+    max_tokens: int = Field(default=500)
+    chat_history: list[dict[str, str]] = Field(default=[])
 
-    Supports OpenAI, Anthropic, xAI, local models, and any ChatCompletion-compatible API.
-    """
-
-    def __init__(
-        self,
-        model_name: str,
-        api_key: str | None = None,
-        base_url: str | None = None,
-        temperature: float = 0.7,
-        max_tokens: int = 500,
-    ) -> None:
-        """Initialize the LLM agent.
-
-        Args:
-            model_name: Name of the model to use (e.g., "gpt-4", "claude-3-5-sonnet").
-            api_key: API key for the provider. Can be None for local models.
-            base_url: Base URL for the API endpoint.
-            temperature: Temperature for response generation (0.0-2.0).
-            max_tokens: Maximum tokens in response.
-        """
-        self.model_name = model_name
-        self.api_key = api_key or "not-needed"
-        self.base_url = base_url
-        self.temperature = temperature
-        self.max_tokens = max_tokens
-        self.client: Any = None
-        self._history: list[dict[str, str]] = []
-
-    def initialize(self) -> None:
-        """Initialize the OpenAI client."""
-        try:
-            from openai import OpenAI
-
-            self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)
-        except ImportError as e:
-            msg = "openai package not installed. Install with: uv sync --group llm-openai"
-            raise ImportError(msg) from e
+    @computed_field
+    @cached_property
+    def client(self) -> OpenAI:
+        client = OpenAI(api_key=self.api_key, base_url=self.base_url)
+        return client
 
     def get_response(self, message: str) -> str:
-        """Get response from the LLM using ChatCompletion API.
+        self.chat_history.append({"role": "user", "content": message})
+        response = self.client.chat.completions.create(
+            model=self.model_name,
+            messages=self.chat_history,
+            temperature=self.temperature,
+            max_tokens=self.max_tokens,
+        )
+        self.chat_history.append({
+            "role": "assistant",
+            "content": response.choices[0].message.content,
+        })
 
-        Args:
-            message: The input message/prompt.
-
-        Returns:
-            str: The AI's response.
-        """
-        if self.client is None:
-            self.initialize()
-
-        # Add message to history
-        self._history.append({"role": "user", "content": message})
-
-        try:
-            response = self.client.chat.completions.create(
-                model=self.model_name,
-                messages=self._history,
-                temperature=self.temperature,
-                max_tokens=self.max_tokens,
-            )
-
-            assistant_message = response.choices[0].message.content or ""
-            self._history.append({"role": "assistant", "content": assistant_message})
-
-            return assistant_message
-
-        except Exception as e:
-            return f"LLM API error: {e}"
+        return response.choices[0].message.content
 
     def reset(self) -> None:
-        """Clear cached conversation history and client."""
-        self._history.clear()
+        self.chat_history.clear()
         self.client = None
 
     def add_to_history(self, role: str, content: str) -> None:
-        """Manually push a message into the chat history."""
-        self._history.append({"role": role, "content": content})
+        self.chat_history.append({"role": role, "content": content})
 
     def get_history(self) -> list[dict[str, str]]:
-        """Return a copy of the stored chat history."""
-        return self._history.copy()
+        return self.chat_history.copy()
 
     def __repr__(self) -> str:
+        """Return a string representation of the LLMAgent instance.
+
+        Returns:
+            str: A string in the format "LLMAgent(model=<model_name>)".
+        """
         return f"LLMAgent(model={self.model_name})"
 
 

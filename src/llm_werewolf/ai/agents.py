@@ -75,90 +75,19 @@ class PlayersConfig(BaseModel):
 
 
 # ============================================================================
-# Base Agent Interface
-# ============================================================================
-
-
-class BaseAgent:
-    """Base class for all AI agents.
-
-    Simplified interface - agents just need to respond to messages.
-    """
-
-    def __init__(self, model_name: str = "unknown") -> None:
-        """Initialize the agent.
-
-        Args:
-            model_name: Name of the AI model (e.g., "gpt-4", "human", "demo").
-        """
-        self.model_name = model_name
-        self.conversation_history: list[dict[str, str]] = []
-
-    def get_response(self, message: str) -> str:
-        """Get a response from the AI agent.
-
-        Args:
-            message: The input message/prompt for the AI.
-
-        Returns:
-            str: The AI's response.
-        """
-        raise NotImplementedError
-
-    def initialize(self) -> None:
-        """Initialize the agent (optional setup before game starts)."""
-        pass
-
-    def reset(self) -> None:
-        """Reset the agent's state for a new game."""
-        self.conversation_history.clear()
-
-    def add_to_history(self, role: str, content: str) -> None:
-        """Add a message to the conversation history.
-
-        Args:
-            role: The role of the message sender (e.g., "user", "assistant").
-            content: The message content.
-        """
-        self.conversation_history.append({"role": role, "content": content})
-
-    def get_history(self) -> list[dict[str, str]]:
-        """Get the conversation history.
-
-        Returns:
-            list[dict[str, str]]: A copy of the conversation history.
-        """
-        return self.conversation_history.copy()
-
-    def __repr__(self) -> str:
-        """String representation of the agent."""
-        return f"{self.__class__.__name__}(model={self.model_name})"
-
-
-# ============================================================================
 # Agent Implementations
 # ============================================================================
 
 
-class DemoAgent(BaseAgent):
-    """Simple demo agent that uses random responses.
-
-    For testing and demonstration purposes only.
-    """
+class DemoAgent:
+    """Simple demo agent that uses random responses for quick mock games."""
 
     def __init__(self) -> None:
-        """Initialize the demo agent."""
-        super().__init__(model_name="demo-random")
+        self.model_name = "demo-random"
 
     def get_response(self, message: str) -> str:
-        """Get a random demo response.
-
-        Args:
-            message: The input message (ignored).
-
-        Returns:
-            str: A random response.
-        """
+        """Return a canned response."""
+        _ = message  # Demo agent ignores the prompt.
         responses = [
             "I agree.",
             "I'm not sure about that.",
@@ -168,13 +97,15 @@ class DemoAgent(BaseAgent):
         ]
         return random.choice(responses)  # noqa: S311
 
+    def __repr__(self) -> str:
+        return f"DemoAgent(model={self.model_name})"
 
-class HumanAgent(BaseAgent):
+
+class HumanAgent:
     """Agent for human players (console input)."""
 
     def __init__(self) -> None:
-        """Initialize the human agent."""
-        super().__init__(model_name="human")
+        self.model_name = "human"
         from rich.console import Console
 
         self.console = Console()
@@ -191,8 +122,11 @@ class HumanAgent(BaseAgent):
         self.console.print(f"\n{message}")
         return input("Your response: ")
 
+    def __repr__(self) -> str:
+        return "HumanAgent(model=human)"
 
-class LLMAgent(BaseAgent):
+
+class LLMAgent:
     """Unified agent for all LLM providers using OpenAI ChatCompletion API.
 
     Supports OpenAI, Anthropic, xAI, local models, and any ChatCompletion-compatible API.
@@ -215,12 +149,13 @@ class LLMAgent(BaseAgent):
             temperature: Temperature for response generation (0.0-2.0).
             max_tokens: Maximum tokens in response.
         """
-        super().__init__(model_name=model_name)
+        self.model_name = model_name
         self.api_key = api_key or "not-needed"
         self.base_url = base_url
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.client: Any = None
+        self._history: list[dict[str, str]] = []
 
     def initialize(self) -> None:
         """Initialize the OpenAI client."""
@@ -245,23 +180,39 @@ class LLMAgent(BaseAgent):
             self.initialize()
 
         # Add message to history
-        self.conversation_history.append({"role": "user", "content": message})
+        self._history.append({"role": "user", "content": message})
 
         try:
             response = self.client.chat.completions.create(
                 model=self.model_name,
-                messages=self.conversation_history,
+                messages=self._history,
                 temperature=self.temperature,
                 max_tokens=self.max_tokens,
             )
 
             assistant_message = response.choices[0].message.content or ""
-            self.conversation_history.append({"role": "assistant", "content": assistant_message})
+            self._history.append({"role": "assistant", "content": assistant_message})
 
             return assistant_message
 
         except Exception as e:
             return f"LLM API error: {e}"
+
+    def reset(self) -> None:
+        """Clear cached conversation history and client."""
+        self._history.clear()
+        self.client = None
+
+    def add_to_history(self, role: str, content: str) -> None:
+        """Manually push a message into the chat history."""
+        self._history.append({"role": role, "content": content})
+
+    def get_history(self) -> list[dict[str, str]]:
+        """Return a copy of the stored chat history."""
+        return self._history.copy()
+
+    def __repr__(self) -> str:
+        return f"LLMAgent(model={self.model_name})"
 
 
 # ============================================================================
@@ -269,14 +220,14 @@ class LLMAgent(BaseAgent):
 # ============================================================================
 
 
-def create_agent(config: PlayerConfig) -> BaseAgent:
+def create_agent(config: PlayerConfig) -> LLMAgent | DemoAgent | HumanAgent:
     """Create an agent instance from player configuration.
 
     Args:
         config: Player configuration.
 
     Returns:
-        BaseAgent: Created agent instance.
+        LLMAgent | DemoAgent | HumanAgent: Created agent instance.
 
     Raises:
         ValueError: If configuration is invalid or API key is missing.

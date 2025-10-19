@@ -13,7 +13,7 @@ from llm_werewolf.config.game_config import GameConfig
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from llm_werewolf.ai.base_agent import BaseAgent
+    from llm_werewolf.ai import AgentType
     from llm_werewolf.core.roles.base import Role
 
 
@@ -34,7 +34,7 @@ class GameEngine:
         # Callback for UI updates
         self.on_event: Callable[[Event], None] | None = None
 
-    def setup_game(self, players: list[tuple[str, str, "BaseAgent"]], roles: list["Role"]) -> None:
+    def setup_game(self, players: list[tuple[str, str, "AgentType"]], roles: list["Role"]) -> None:
         """Initialize the game with players and roles.
 
         Args:

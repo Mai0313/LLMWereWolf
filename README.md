@@ -248,49 +248,37 @@ engine.setup_game(players, roles)
 
 ### Implementing Your Own Agent
 
-For custom LLM integrations, implement the `BaseAgent` class:
+Custom providers can plug in through a lightweight protocol—no inheritance required.  
+An agent only needs a `model_name` attribute and a `get_response(message: str) -> str` method.
 
 ```python
-from llm_werewolf.ai import BaseAgent
-
-
-class MyLLMAgent(BaseAgent):
-    def __init__(self, model_name: str = "my-model"):
-        super().__init__(model_name)
-        # Initialize your LLM client here
-        self.client = YourLLMClient()
+class MyLLMAgent:
+    def __init__(self, client: YourLLMClient) -> None:
+        self.client = client
+        self.model_name = "my-llm"
+        self._history: list[dict[str, str]] = []
 
     def get_response(self, message: str) -> str:
-        """
-        Get response from your LLM.
+        self._history.append({"role": "user", "content": message})
+        reply = self.client.generate(message)
+        self._history.append({"role": "assistant", "content": reply})
+        return reply
 
-        Args:
-            message: The game prompt (role info, game state, action request, etc.)
-
-        Returns:
-            str: The LLM's response
-        """
-        # Add to conversation history (optional)
-        self.add_to_history("user", message)
-
-        # Call your LLM API
-        response = self.client.generate(message)
-
-        # Add response to history (optional)
-        self.add_to_history("assistant", response)
-
-        return response
+    def reset(self) -> None:
+        """Optional: clear cached state between games."""
+        self._history.clear()
 ```
 
-### Agent Interface Details
+Pass custom agents directly to `GameEngine.setup_game`, or extend `create_agent()` if you want to load them through YAML configs.
 
-The `BaseAgent` provides:
+### Agent Protocol
 
-- `get_response(message: str) -> str`: Main method to implement (required)
-- `initialize()`: Setup method called before game starts (optional)
-- `reset()`: Clear conversation history for new game (optional)
-- `add_to_history(role: str, content: str)`: Track conversation (optional)
-- `get_history() -> list[dict]`: Get conversation history (optional)
+Agents may optionally expose the following helpers:
+
+- `reset()`: Clear internal state between games.
+- `add_to_history(role: str, content: str)`: Preload conversation context.
+- `get_history() -> list[dict[str, str]]`: Inspect stored messages.
+- `initialize()`: Perform deferred setup before the first response.
 
 ## TUI Interface
 

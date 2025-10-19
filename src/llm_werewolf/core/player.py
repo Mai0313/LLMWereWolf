@@ -4,7 +4,7 @@ from enum import Enum
 
 from pydantic import Field, BaseModel
 
-from llm_werewolf.ai.agents import BaseAgent
+from llm_werewolf.ai import AgentType
 from llm_werewolf.core.roles.base import Role
 
 
@@ -42,7 +42,7 @@ class Player:
         player_id: str,
         name: str,
         role: Role,
-        agent: BaseAgent | None = None,
+        agent: AgentType | None = None,
         ai_model: str = "unknown",
     ) -> None:
         """Initialize a player.

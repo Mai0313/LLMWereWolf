@@ -207,49 +207,36 @@ engine.setup_game(players, roles)
 
 ### 实现您自己的代理
 
-对于自定义 LLM 整合，实现 `BaseAgent` 类：
+自定义提供者只需遵守一个轻量协议：代理需要 `model_name` 属性与 `get_response(message: str) -> str` 方法。
 
 ```python
-from llm_werewolf.ai import BaseAgent
-
-
-class MyLLMAgent(BaseAgent):
-    def __init__(self, model_name: str = "my-model"):
-        super().__init__(model_name)
-        # 初始化您的 LLM 客户端
-        self.client = YourLLMClient()
+class MyLLMAgent:
+    def __init__(self, client: YourLLMClient) -> None:
+        self.client = client
+        self.model_name = "my-llm"
+        self._history: list[dict[str, str]] = []
 
     def get_response(self, message: str) -> str:
-        """
-        从您的 LLM 获取响应。
+        self._history.append({"role": "user", "content": message})
+        reply = self.client.generate(message)
+        self._history.append({"role": "assistant", "content": reply})
+        return reply
 
-        Args:
-            message: 游戏提示（角色信息、游戏状态、行动请求等）
-
-        Returns:
-            str: LLM 的响应
-        """
-        # 添加到对话历史（可选）
-        self.add_to_history("user", message)
-
-        # 调用您的 LLM API
-        response = self.client.generate(message)
-
-        # 添加响应到历史（可选）
-        self.add_to_history("assistant", response)
-
-        return response
+    def reset(self) -> None:
+        """可选：在新游戏前清空状态。"""
+        self._history.clear()
 ```
 
-### 代理接口详情
+可以直接把自定义代理传入 `GameEngine.setup_game`，或扩展 `create_agent()` 以便通过 YAML 配置加载。
 
-`BaseAgent` 提供：
+### 代理协议
 
-- `get_response(message: str) -> str`：需要实现的主要方法（必需）
-- `initialize()`：游戏开始前调用的设置方法（可选）
-- `reset()`：为新游戏清除对话历史（可选）
-- `add_to_history(role: str, content: str)`：追踪对话（可选）
-- `get_history() -> list[dict]`：获取对话历史（可选）
+代理可以根据需要补充以下辅助方法：
+
+- `reset()`：在新游戏前清理内部状态
+- `add_to_history(role: str, content: str)`：预先载入对话
+- `get_history() -> list[dict[str, str]]`：查看缓存的消息
+- `initialize()`：第一次响应前执行延迟初始化
 
 ## TUI 界面
 

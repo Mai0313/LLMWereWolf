@@ -192,25 +192,24 @@ The game engine operates through several interconnected components:
 
 **Unified Agent System** (`ai/agents.py`):
 
-All agent implementations are consolidated in a single file with a simplified architecture:
+All agent implementations live in one module and follow a lightweight protocol:
 
-- `BaseAgent`: Base class with single required method: `get_response(message: str) -> str`
-  - Input: String containing role info, game state, and action request
-  - Output: String with agent's decision
-  - Maintains conversation history automatically
-- `DemoAgent`: Random choice agent (no LLM, for testing)
-- `HumanAgent`: Console input for human players
-- `LLMAgent`: Unified LLM agent using ChatCompletion API
-  - Supports any OpenAI-compatible API endpoint
-  - Single implementation replaces old provider-specific agents (`OpenAIAgent`, `AnthropicAgent`, etc.)
-  - Configure via `base_url` parameter (OpenAI, Anthropic, xAI, local models, etc.)
+- Any object with a `model_name` attribute and `get_response(message: str) -> str` method is considered an agent.
+  - Optional helpers (`reset`, `add_to_history`, `get_history`, `initialize`) are supported when present.
+- `DemoAgent`: Random choice agent (no LLM, for testing).
+- `HumanAgent`: Console input for human players.
+- `LLMAgent`: Unified LLM agent using ChatCompletion API.
+  - Supports any OpenAI-compatible API endpoint.
+  - Single implementation replaces old provider-specific agents (`OpenAIAgent`, `AnthropicAgent`, etc.).
+  - Configure via `base_url` parameter (OpenAI, Anthropic, xAI, local models, etc.).
+- `AgentType`: Convenience union type covering the built-in agents.
 
 **Factory Functions:**
 
-- `create_agent(config: PlayerConfig) -> BaseAgent`: Creates agent from player config
-- `load_players_config(yaml_path: Path) -> PlayersConfig`: Loads and validates YAML config
+- `create_agent(config: PlayerConfig) -> AgentType`: Creates agent from player config.
+- `load_players_config(yaml_path: Path) -> PlayersConfig`: Loads and validates YAML config.
 
-**Key Design Principle**: The agent interface is intentionally minimal. All LLM providers that support OpenAI's ChatCompletion API format can use the same `LLMAgent` class - just change the `base_url` and `api_key_env`. Future instances should maintain this abstraction.
+**Key Design Principle**: The agent protocol stays intentionally minimal. Providers that implement OpenAI's ChatCompletion API can reuse the same `LLMAgent` class by just adjusting `base_url` and `api_key_env`. Future contributions should avoid reintroducing deep inheritance hierarchies.
 
 ### Configuration System
 
@@ -256,7 +255,7 @@ All agent implementations are consolidated in a single file with a simplified ar
 ```
 src/llm_werewolf/
 ├── ai/                  # AI agent implementations
-│   ├── agents.py        # All agent implementations (BaseAgent, DemoAgent, HumanAgent, LLMAgent)
+│   ├── agents.py        # All agent implementations (DemoAgent, HumanAgent, LLMAgent, helpers)
 │   └── message.py       # Message formatting utilities
 ├── config/              # Game configurations
 │   ├── game_config.py   # GameConfig Pydantic model
@@ -429,11 +428,11 @@ No code changes needed! Just configure in YAML:
 
 **For Non-Compatible APIs (Rare):**
 
-1. Create new agent class in `ai/agents.py` inheriting from `BaseAgent`
-2. Implement only `get_response(message: str) -> str`
-3. Update `create_agent()` factory function to handle new model type
-4. Update `.env.example` with required environment variables
-5. Optionally create dependency group in `pyproject.toml` under `[dependency-groups]`
+1. Create a new agent class in `ai/agents.py` (or another module) that exposes `model_name` and `get_response(message: str) -> str`.
+2. Optionally implement `reset`, `add_to_history`, and `get_history` if the provider benefits from conversation memory.
+3. Update `create_agent()` so your new `model` value maps to the custom agent.
+4. Update `.env.example` with required environment variables.
+5. Optionally create a dependency group in `pyproject.toml` under `[dependency-groups]`.
 
 ### When Adding New Roles
 

@@ -1,5 +1,4 @@
 from llm_werewolf.ai.agents import (
-    BaseAgent,
     DemoAgent,
     HumanAgent,
     LLMAgent,
@@ -10,12 +9,14 @@ from llm_werewolf.ai.agents import (
 )
 from llm_werewolf.ai.message import GameMessage, MessageBuilder, MessageType
 
+AgentType = DemoAgent | HumanAgent | LLMAgent
+
 __all__ = [
     # Agent classes
-    "BaseAgent",
     "DemoAgent",
     "HumanAgent",
     "LLMAgent",
+    "AgentType",
     # Configuration classes
     "PlayerConfig",
     "PlayersConfig",

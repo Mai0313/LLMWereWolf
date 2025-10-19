@@ -117,11 +117,11 @@ class Witch(Role):
 
         actions = []
         # Decide whether to use save potion
+        # Note: Actual potion state is updated in Action.execute(), not here
         if self.has_save_potion and game_state.werewolf_target:
             target = game_state.get_player(game_state.werewolf_target)
             if target and random.random() < 0.5:  # noqa: S311
                 actions.append(WitchSaveAction(self.player, target, game_state))
-                self.has_save_potion = False
                 return actions
 
         # Decide whether to use poison potion
@@ -132,7 +132,6 @@ class Witch(Role):
             if possible_targets and random.random() < 0.5:  # noqa: S311
                 target = random.choice(possible_targets)  # noqa: S311
                 actions.append(WitchPoisonAction(self.player, target, game_state))
-                self.has_poison_potion = False
 
         return actions
 
@@ -205,7 +204,7 @@ class Guard(Role):
         # In a real implementation, the agent would choose the target.
         # For now, we'll randomly choose one.
         target = random.choice(possible_targets)  # noqa: S311
-        self.last_protected = target.player_id
+        # Note: last_protected is updated in GuardProtectAction.execute()
         return [GuardProtectAction(self.player, target, game_state)]
 
 
@@ -271,6 +270,11 @@ class Knight(Role):
     they die. If not, the Knight dies.
     """
 
+    def __init__(self, player: "Player") -> None:
+        """Initialize the Knight role."""
+        super().__init__(player)
+        self.has_dueled = False
+
     def get_night_actions(self, game_state: "GameState") -> list["Action"]:
         """Knight has no night actions."""
         return []
@@ -326,6 +330,11 @@ class Cupid(Role):
     On the first night, chooses two players to become lovers.
     Lovers win together or die together.
     """
+
+    def __init__(self, player: "Player") -> None:
+        """Initialize the Cupid role."""
+        super().__init__(player)
+        self.has_linked = False
 
     def get_night_actions(self, game_state: "GameState") -> list["Action"]:
         """Get the night actions for the Cupid role."""

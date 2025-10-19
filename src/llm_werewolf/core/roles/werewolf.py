@@ -5,6 +5,7 @@ from llm_werewolf.core.actions import Action, WerewolfKillAction
 from llm_werewolf.core.roles.base import Camp, Role, RoleConfig, ActionPriority
 
 if TYPE_CHECKING:
+    from llm_werewolf.core.player import Player
     from llm_werewolf.core.game_state import GameState
 
 
@@ -122,6 +123,11 @@ class WolfBeauty(Role):
     A werewolf who charms a player each night. If the Wolf Beauty dies,
     the charmed player dies too.
     """
+
+    def __init__(self, player: "Player") -> None:
+        """Initialize the Wolf Beauty role."""
+        super().__init__(player)
+        self.charmed_player: str | None = None
 
     def get_night_actions(self, game_state: "GameState") -> list["Action"]:
         """Get the night actions for the Wolf Beauty role."""

@@ -1,4 +1,13 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from llm_werewolf.core.roles.base import Camp, Role, RoleConfig, ActionPriority
+
+if TYPE_CHECKING:
+    from llm_werewolf.core.player import Player
+    from llm_werewolf.core.actions import Action
+    from llm_werewolf.core.game_state import GameState
 
 
 class Thief(Role):
@@ -8,11 +17,20 @@ class Thief(Role):
     The role they choose becomes their actual role for the game.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, player: Player) -> None:
         """Initialize the Thief role."""
-        super().__init__()
+        super().__init__(player)
         self.available_roles: list[Role] = []
         self.has_chosen = False
+
+    def get_night_actions(self, game_state: GameState) -> list[Action]:
+        """Get the night actions for the Thief role.
+
+        Note: Thief logic should be implemented to allow choosing a role.
+        Currently returns empty list as this is a complex mechanic.
+        """
+        # TODO: Implement Thief role selection logic
+        return []
 
     def get_config(self) -> RoleConfig:
         """Get configuration for the Thief role."""
@@ -38,11 +56,18 @@ class Lover(Role):
     Lovers win together and die together.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, player: Player) -> None:
         """Initialize the Lover role."""
-        super().__init__()
+        super().__init__(player)
         self.partner_id: str | None = None
         self.original_role: Role | None = None
+
+    def get_night_actions(self, game_state: GameState) -> list[Action]:
+        """Get the night actions for the Lover role.
+
+        Lovers have no special night actions.
+        """
+        return []
 
     def get_config(self) -> RoleConfig:
         """Get configuration for the Lover role.
@@ -71,6 +96,17 @@ class WhiteLoverWolf(Role):
     When a werewolf and a villager become lovers, they form a unique alliance.
     This is a dynamic role that represents the conflicted state.
     """
+
+    def __init__(self, player: Player) -> None:
+        """Initialize the White Lover Wolf role."""
+        super().__init__(player)
+
+    def get_night_actions(self, game_state: GameState) -> list[Action]:
+        """Get the night actions for the White Lover Wolf role.
+
+        This role has no special night actions.
+        """
+        return []
 
     def get_config(self) -> RoleConfig:
         """Get configuration for the White Lover Wolf role."""

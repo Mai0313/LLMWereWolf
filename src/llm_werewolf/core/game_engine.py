@@ -1,8 +1,6 @@
 import random
 from typing import TYPE_CHECKING
 
-from rich.console import Console
-
 from llm_werewolf.core.events import Event, EventType, EventLogger
 from llm_werewolf.core.player import Player
 from llm_werewolf.core.actions import Action, VoteAction
@@ -15,9 +13,6 @@ if TYPE_CHECKING:
 
     from llm_werewolf.ai import AgentType
     from llm_werewolf.core.roles.base import Role
-
-
-console = Console()
 
 
 class GameEngine:
@@ -34,12 +29,8 @@ class GameEngine:
         self.event_logger = EventLogger()
         self.victory_checker: VictoryChecker | None = None
 
-        # Callback for UI updates
-        self.on_event: Callable[[Event], None] = self.print_event
-
-    def print_event(self, event: Event) -> None:
-        prefix = f"[回合 {event.round_number}][{event.phase.upper()}]"
-        console.print(f"{prefix} {event.message}")
+        # Callback for UI updates (default: no-op, should be set by UI layer)
+        self.on_event: Callable[[Event], None] = lambda event: None
 
     def setup_game(self, players: list[tuple[str, str, "AgentType"]], roles: list["Role"]) -> None:
         """Initialize the game with players and roles.
@@ -304,6 +295,43 @@ class GameEngine:
                             f"{eliminated.name} was voted out",
                             data={"player_id": eliminated_id, "role": eliminated.get_role_name()},
                         )
+
+                        # Check if lover dies
+                        if eliminated.is_lover() and eliminated.lover_partner_id:
+                            partner = self.game_state.get_player(eliminated.lover_partner_id)
+                            if partner and partner.is_alive():
+                                partner.kill()
+                                self.game_state.day_deaths.add(partner.player_id)
+                                messages.append(f"{partner.name} died of heartbreak (lover)!")
+                                self._log_event(
+                                    EventType.LOVER_DIED,
+                                    f"{partner.name} died of heartbreak",
+                                    data={"player_id": partner.player_id},
+                                )
+
+                        # Check if Wolf Beauty dies and charm triggers
+                        from llm_werewolf.core.roles.werewolf import WolfBeauty
+
+                        if (
+                            isinstance(eliminated.role, WolfBeauty)
+                            and eliminated.role.charmed_player
+                        ):
+                            charmed = self.game_state.get_player(eliminated.role.charmed_player)
+                            if charmed and charmed.is_alive():
+                                charmed.kill()
+                                self.game_state.day_deaths.add(charmed.player_id)
+                                messages.append(
+                                    f"{charmed.name} died from Wolf Beauty's charm "
+                                    f"(Wolf Beauty {eliminated.name} was eliminated)!"
+                                )
+                                self._log_event(
+                                    EventType.PLAYER_DIED,
+                                    f"{charmed.name} died from Wolf Beauty's charm",
+                                    data={
+                                        "player_id": charmed.player_id,
+                                        "reason": "wolf_beauty_charm",
+                                    },
+                                )
             else:
                 messages.append("Vote tied. No one is eliminated.")
         else:
@@ -387,6 +415,42 @@ class GameEngine:
                     f"{target.name} was poisoned by witch",
                     data={"player_id": target.player_id},
                 )
+
+                # Check if lover dies
+                if target.is_lover() and target.lover_partner_id:
+                    partner = self.game_state.get_player(target.lover_partner_id)
+                    if partner and partner.is_alive():
+                        partner.kill()
+                        self.game_state.night_deaths.add(partner.player_id)
+                        messages.append(f"{partner.name} died of heartbreak (lover)!")
+                        self._log_event(
+                            EventType.LOVER_DIED,
+                            f"{partner.name} died of heartbreak",
+                            data={"player_id": partner.player_id},
+                        )
+
+        # Check for Wolf Beauty charm deaths
+        from llm_werewolf.core.roles.werewolf import WolfBeauty
+
+        for player in self.game_state.players:
+            if (
+                isinstance(player.role, WolfBeauty)
+                and not player.is_alive()
+                and player.role.charmed_player
+            ):
+                charmed = self.game_state.get_player(player.role.charmed_player)
+                if charmed and charmed.is_alive():
+                    charmed.kill()
+                    self.game_state.night_deaths.add(charmed.player_id)
+                    messages.append(
+                        f"{charmed.name} died from Wolf Beauty's charm "
+                        f"(Wolf Beauty {player.name} died)!"
+                    )
+                    self._log_event(
+                        EventType.PLAYER_DIED,
+                        f"{charmed.name} died from Wolf Beauty's charm",
+                        data={"player_id": charmed.player_id, "reason": "wolf_beauty_charm"},
+                    )
 
         return messages
 

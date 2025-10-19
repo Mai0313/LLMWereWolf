@@ -2,8 +2,6 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from pydantic import Field, BaseModel
-
 if TYPE_CHECKING:
     from llm_werewolf.core.player import Player
     from llm_werewolf.core.game_state import GameState
@@ -33,15 +31,6 @@ class ActionType(str, Enum):
     # Special actions
     THIEF_CHOOSE = "thief_choose"
     MAGICIAN_SWAP = "magician_swap"
-
-
-class ActionData(BaseModel):
-    """Data for an action."""
-
-    action_type: ActionType = Field(..., description="Type of action")
-    actor_id: str = Field(..., description="ID of the player performing the action")
-    target_ids: list[str] = Field(default_factory=list, description="IDs of target players")
-    metadata: dict = Field(default_factory=dict, description="Additional action data")
 
 
 class Action(ABC):
@@ -137,6 +126,11 @@ class WitchSaveAction(Action):
 
         if not isinstance(self.actor.role, Witch):
             return False
+
+        # Witch can only save the werewolf target
+        if self.game_state.werewolf_target != self.target.player_id:
+            return False
+
         return self.actor.is_alive() and self.actor.role.has_save_potion
 
     def execute(self) -> list[str]:
@@ -400,7 +394,7 @@ class RavenMarkAction(Action):
     def execute(self) -> list[str]:
         """Execute the raven mark."""
         # Mark player - they will count as 2 votes against them
-        # This would need to be tracked in game_state
+        self.game_state.raven_marked = self.target.player_id
         return [f"Raven marks {self.target.name}"]
 
 

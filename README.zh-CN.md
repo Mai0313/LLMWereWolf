@@ -30,8 +30,8 @@
 
 ```bash
 # 复制仓库
-git clone <repository-url>
-cd Werewolf
+git clone https://github.com/Mai0313/LLMWereWolf.git
+cd LLMWereWolf
 
 # 安装基础依赖
 uv sync

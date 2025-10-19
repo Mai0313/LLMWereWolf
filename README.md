@@ -30,8 +30,8 @@ Other Languages: [English](README.md) | [繁體中文](README.zh-TW.md) | [简�
 
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd Werewolf
+git clone https://github.com/Mai0313/LLMWereWolf.git
+cd LLMWereWolf
 
 # Install base dependencies
 uv sync

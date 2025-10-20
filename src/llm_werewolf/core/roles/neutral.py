@@ -21,10 +21,23 @@ class Thief(Role):
     def get_night_actions(self, game_state: GameState) -> list[Action]:
         """Get the night actions for the Thief role.
 
-        Note: Thief logic should be implemented to allow choosing a role.
-        Currently returns empty list as this is a complex mechanic.
+        Note: Thief logic requires game setup to provide extra role cards.
+        Currently returns empty list as this requires significant game engine changes.
         """
-        # TODO: Implement Thief role selection logic
+        # NOTE: Full implementation requires:
+        # 1. Game setup must create 2 extra role cards not assigned to players
+        # 2. Store these extra roles in game_state.thief_available_roles
+        # 3. Create ThiefChooseAction to select and swap to chosen role
+        # 4. Update player.role to the chosen role
+        # 5. Handle role-specific initialization for the new role
+        #
+        # This is a complex mechanic that affects game initialization,
+        # so it's left as a stub for now to avoid breaking existing games.
+        if not self.player.is_alive() or self.has_chosen:
+            return []
+
+        # Simplified implementation: skip action for now
+        # TODO: Implement role selection from available_roles
         return []
 
     def get_config(self) -> RoleConfig:

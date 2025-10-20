@@ -1,5 +1,6 @@
 import random
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+from pathlib import Path
 
 from llm_werewolf.core.agent import BaseAgent
 from llm_werewolf.core.types import Camp, GamePhase
@@ -118,6 +119,10 @@ class GameEngine:
         # Process actions
         action_messages = self.process_actions(night_actions)
         messages.extend(action_messages)
+
+        # Resolve werewolf votes to determine kill target
+        werewolf_vote_messages = self._resolve_werewolf_votes()
+        messages.extend(werewolf_vote_messages)
 
         # Resolve night deaths
         death_messages = self.resolve_deaths()
@@ -339,6 +344,7 @@ class GameEngine:
                     else:
                         eliminated.kill()
                         self.game_state.day_deaths.add(eliminated_id)
+                        self.game_state.death_causes[eliminated_id] = "vote"
                         messages.append(
                             f"{eliminated.name} was eliminated by vote. "
                             f"They were a {eliminated.get_role_name()}."
@@ -485,6 +491,15 @@ class GameEngine:
 
             # Check if Hunter or AlphaWolf died
             if isinstance(player.role, (Hunter, AlphaWolf)):
+                # Check death cause - Hunter/AlphaWolf cannot shoot if poisoned by Witch
+                death_cause = self.game_state.death_causes.get(player_id)
+                if death_cause == "witch_poison":
+                    messages.append(
+                        f"{player.name} was poisoned by the Witch and cannot use their death ability."
+                    )
+                    self.game_state.death_abilities_used.add(player_id)
+                    continue
+
                 # Mark as used to prevent duplicate triggers
                 self.game_state.death_abilities_used.add(player_id)
 
@@ -559,6 +574,9 @@ class GameEngine:
             target = self.game_state.get_player(self.game_state.werewolf_target)
             if target:
                 messages.extend(self._handle_werewolf_kill(target))
+                # Record death cause if killed
+                if not target.is_alive() and target.player_id not in self.game_state.death_causes:
+                    self.game_state.death_causes[target.player_id] = "werewolf"
 
         # Witch poison
         if self.game_state.witch_poison_target:
@@ -566,6 +584,7 @@ class GameEngine:
             if target and target.is_alive():
                 target.kill()
                 self.game_state.night_deaths.add(target.player_id)
+                self.game_state.death_causes[target.player_id] = "witch_poison"
 
                 self._log_event(
                     EventType.WITCH_POISONED,
@@ -643,6 +662,40 @@ class GameEngine:
 
         return False
 
+    def _resolve_werewolf_votes(self) -> list[str]:
+        """Resolve werewolf voting to determine kill target.
+
+        Returns:
+            list[str]: Messages describing the voting result.
+        """
+        if not self.game_state:
+            return []
+
+        messages: list[str] = []
+
+        if not self.game_state.werewolf_votes:
+            return messages
+
+        # Count votes
+        vote_counts: dict[str, int] = {}
+        for target_id in self.game_state.werewolf_votes.values():
+            vote_counts[target_id] = vote_counts.get(target_id, 0) + 1
+
+        # Find player with most votes
+        max_votes = max(vote_counts.values())
+        candidates = [pid for pid, count in vote_counts.items() if count == max_votes]
+
+        # If there's a tie, randomly select one (or use first werewolf's vote as tiebreaker)
+        if candidates:
+            selected_target_id = random.choice(candidates)  # noqa: S311
+            self.game_state.werewolf_target = selected_target_id
+
+            target = self.game_state.get_player(selected_target_id)
+            if target:
+                messages.append(f"Werewolves have chosen their target: {target.name}")
+
+        return messages
+
     def process_actions(self, actions: list) -> list[str]:
         """Process a list of actions.
 
@@ -660,6 +713,7 @@ class GameEngine:
         def get_action_priority(action: Action) -> int:
             priority_map = {
                 "GuardProtectAction": 0,
+                "WerewolfVoteAction": 1,
                 "WerewolfKillAction": 1,
                 "WitchSaveAction": 2,
                 "WitchPoisonAction": 3,
@@ -793,3 +847,39 @@ class GameEngine:
                 self.game_state.next_phase()
 
         return phase_messages
+
+    def save_game(self, file_path: str | Path) -> None:
+        """Save the current game state to a file.
+
+        Args:
+            file_path: Path to save the game state.
+
+        Raises:
+            RuntimeError: If game is not initialized.
+        """
+        if not self.game_state:
+            msg = "Game not initialized"
+            raise RuntimeError(msg)
+
+        from llm_werewolf.core.serialization import save_game_state
+
+        save_game_state(self.game_state, file_path)
+
+    def load_game(
+        self, file_path: str | Path, agent_factory: dict[str, Any] | None = None
+    ) -> None:
+        """Load a game state from a file.
+
+        Args:
+            file_path: Path to load the game state from.
+            agent_factory: Optional dictionary mapping player_id to agent instances.
+                          If not provided, players will have no agents.
+
+        Note:
+            Agents cannot be serialized, so they must be recreated manually.
+            Pass a dictionary mapping player_id to agent instances to restore agents.
+        """
+        from llm_werewolf.core.serialization import load_game_state
+
+        self.game_state = load_game_state(file_path, agent_factory)
+        self.victory_checker = VictoryChecker(self.game_state)

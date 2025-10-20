@@ -10,6 +10,7 @@ from llm_werewolf.core.actions import (
     WitchSaveAction,
     WitchPoisonAction,
     GuardProtectAction,
+    GraveyardKeeperCheckAction,
 )
 from llm_werewolf.core.game_state import GameState
 from llm_werewolf.core.roles.base import Role
@@ -370,9 +371,28 @@ class Magician(Role):
     Once per game, can swap two players' roles at night.
     """
 
+    def __init__(self, player: Player) -> None:
+        """Initialize the Magician role."""
+        super().__init__(player)
+        self.has_swapped = False
+
     def get_night_actions(self, game_state: GameState) -> list["Action"]:
         """Get the night actions for the Magician role."""
-        # TODO: Implement magician logic
+        # NOTE: Full implementation requires a MagicianSwapAction and game engine support
+        # for swapping roles between players. This is a complex operation that affects
+        # player.role and all role-specific state.
+        #
+        # For now, this is left as a stub to avoid breaking the game.
+        # To fully implement:
+        # 1. Create MagicianSwapAction in actions.py
+        # 2. Add logic to swap roles between two players
+        # 3. Handle role-specific state transfer
+        # 4. Update serialization to save swap state
+        if not self.player.is_alive() or self.has_swapped:
+            return []
+
+        # Simplified implementation: skip action for now
+        # TODO: Implement multi-target selection for swapping
         return []
 
     def get_config(self) -> RoleConfig:
@@ -517,7 +537,33 @@ class GraveyardKeeper(Role):
 
     def get_night_actions(self, game_state: GameState) -> list["Action"]:
         """Get the night actions for the GraveyardKeeper role."""
-        # TODO: Implement GraveyardKeeper logic
+        if not self.player.is_alive():
+            return []
+
+        # Get all dead players
+        dead_players = game_state.get_dead_players()
+
+        if not dead_players:
+            return []
+
+        # Get target from AI agent
+        if self.player.agent:
+            target = ActionSelector.get_target_from_agent(
+                agent=self.player.agent,
+                role_name="Graveyard Keeper",
+                action_description="Choose a dead player to check",
+                possible_targets=dead_players,
+                allow_skip=True,
+                additional_context=(
+                    "You can check the identity of one dead player tonight. "
+                    "This will reveal their role and camp."
+                ),
+                fallback_random=False,
+            )
+
+            if target:
+                return [GraveyardKeeperCheckAction(self.player, target, game_state)]
+
         return []
 
     def get_config(self) -> RoleConfig:

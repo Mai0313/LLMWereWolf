@@ -134,6 +134,16 @@ class Role(ABC):
         """
         if self.disabled:
             return False
+
+        # Check if player is blocked by Nightmare Wolf
+        if (
+            hasattr(game_state, "nightmare_blocked")
+            and game_state.nightmare_blocked
+            and self.player
+            and self.player.player_id == game_state.nightmare_blocked
+        ):
+            return False
+
         return self.config.can_act_night
 
     def validate_action(self, actor: Player, target: Player | None, action_data: dict) -> bool:

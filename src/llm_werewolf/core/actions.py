@@ -51,8 +51,36 @@ class Action(ABC):
         pass
 
 
+class WerewolfVoteAction(Action):
+    """Action for a werewolf to vote for a kill target."""
+
+    def __init__(self, actor: Player, target: Player, game_state: GameState) -> None:
+        """Initialize the werewolf vote action.
+
+        Args:
+            actor: The werewolf casting the vote.
+            target: The target player to vote for.
+            game_state: The current game state.
+        """
+        super().__init__(actor, game_state)
+        self.target = target
+
+    def get_action_type(self) -> ActionType:
+        """Get the action type."""
+        return ActionType.WEREWOLF_KILL
+
+    def validate(self) -> bool:
+        """Validate the vote action."""
+        return self.actor.is_alive() and self.target.is_alive()
+
+    def execute(self) -> list[str]:
+        """Execute the werewolf vote."""
+        self.game_state.werewolf_votes[self.actor.player_id] = self.target.player_id
+        return []  # Don't reveal individual votes
+
+
 class WerewolfKillAction(Action):
-    """Action for werewolves to kill a player."""
+    """Action for werewolves to kill a player (legacy - kept for compatibility)."""
 
     def __init__(self, actor: Player, target: Player, game_state: GameState) -> None:
         """Initialize the werewolf kill action.
@@ -414,8 +442,18 @@ class WhiteWolfKillAction(Action):
 
     def execute(self) -> list[str]:
         """Execute the white wolf kill."""
+        # Check if target is protected by Guardian Wolf
+        if (
+            hasattr(self.game_state, "guardian_wolf_protected")
+            and self.game_state.guardian_wolf_protected == self.target.player_id
+        ):
+            return [
+                f"White Wolf attempts to kill {self.target.name}, but they are protected by Guardian Wolf!"
+            ]
+
         self.target.kill()
         self.game_state.night_deaths.add(self.target.player_id)
+        self.game_state.death_causes[self.target.player_id] = "white_wolf"
         return [f"White Wolf kills werewolf {self.target.name}"]
 
 
@@ -458,6 +496,97 @@ class WolfBeautyCharmAction(Action):
             self.actor.role.charmed_player = self.target.player_id
 
         return [f"Wolf Beauty charms {self.target.name}"]
+
+
+class GuardianWolfProtectAction(Action):
+    """Action for Guardian Wolf to protect a werewolf."""
+
+    def __init__(self, actor: Player, target: Player, game_state: GameState) -> None:
+        """Initialize the guardian wolf protect action.
+
+        Args:
+            actor: The guardian wolf performing the action.
+            target: The werewolf to protect.
+            game_state: The current game state.
+        """
+        super().__init__(actor, game_state)
+        self.target = target
+
+    def get_action_type(self) -> ActionType:
+        """Get the action type."""
+        return ActionType.GUARD_PROTECT
+
+    def validate(self) -> bool:
+        """Validate the guardian wolf protect."""
+        return (
+            self.actor.is_alive()
+            and self.target.is_alive()
+            and self.target.get_camp() == "werewolf"
+        )
+
+    def execute(self) -> list[str]:
+        """Execute the guardian wolf protect."""
+        self.game_state.guardian_wolf_protected = self.target.player_id
+        return [f"Guardian Wolf protects {self.target.name}"]
+
+
+class NightmareWolfBlockAction(Action):
+    """Action for Nightmare Wolf to block a player's ability."""
+
+    def __init__(self, actor: Player, target: Player, game_state: GameState) -> None:
+        """Initialize the nightmare wolf block action.
+
+        Args:
+            actor: The nightmare wolf performing the action.
+            target: The player to block.
+            game_state: The current game state.
+        """
+        super().__init__(actor, game_state)
+        self.target = target
+
+    def get_action_type(self) -> ActionType:
+        """Get the action type."""
+        return ActionType.NIGHTMARE_BLOCK
+
+    def validate(self) -> bool:
+        """Validate the nightmare wolf block."""
+        return self.actor.is_alive() and self.target.is_alive()
+
+    def execute(self) -> list[str]:
+        """Execute the nightmare wolf block."""
+        self.game_state.nightmare_blocked = self.target.player_id
+        return [f"Nightmare Wolf blocks {self.target.name}"]
+
+
+class GraveyardKeeperCheckAction(Action):
+    """Action for Graveyard Keeper to check a dead player."""
+
+    def __init__(self, actor: Player, target: Player, game_state: GameState) -> None:
+        """Initialize the graveyard keeper check action.
+
+        Args:
+            actor: The graveyard keeper performing the action.
+            target: The dead player to check.
+            game_state: The current game state.
+        """
+        super().__init__(actor, game_state)
+        self.target = target
+
+    def get_action_type(self) -> ActionType:
+        """Get the action type."""
+        return ActionType.SEER_CHECK
+
+    def validate(self) -> bool:
+        """Validate the graveyard keeper check."""
+        return self.actor.is_alive() and not self.target.is_alive()
+
+    def execute(self) -> list[str]:
+        """Execute the graveyard keeper check."""
+        camp = self.target.get_camp()
+        role_name = self.target.get_role_name()
+        return [
+            f"Graveyard Keeper checks {self.target.name}: They were a {role_name} ({camp} camp)"
+        ]
 
 
 class KnightDuelAction(Action):

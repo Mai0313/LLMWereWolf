@@ -10,7 +10,7 @@ from llm_werewolf.core.actions import (
     WitchSaveAction,
     WitchPoisonAction,
     GuardProtectAction,
-    WerewolfKillAction,
+    WerewolfVoteAction,
 )
 from llm_werewolf.core.game_state import GameState
 
@@ -75,7 +75,8 @@ def test_werewolf_get_night_actions():
     ):
         actions = werewolf_player.role.get_night_actions(game_state)
         assert len(actions) == 1
-        assert isinstance(actions[0], WerewolfKillAction)
+        # Now using WerewolfVoteAction instead of WerewolfKillAction (voting mechanism)
+        assert isinstance(actions[0], WerewolfVoteAction)
         assert actions[0].target == villager_player
 
 

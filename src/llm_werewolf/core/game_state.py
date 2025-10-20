@@ -28,14 +28,18 @@ class GameState:
         self.night_deaths: set[str] = set()  # Player IDs who died this night
         self.day_deaths: set[str] = set()  # Player IDs who died this day
         self.death_abilities_used: set[str] = set()  # Player IDs who already used death ability
+        self.death_causes: dict[str, str] = {}
 
         # Night action tracking
         self.werewolf_target: str | None = None
+        self.werewolf_votes: dict[str, str] = {}  # werewolf_id -> target_id for voting
         self.witch_save_used = False
         self.witch_poison_used = False
         self.witch_saved_target: str | None = None
         self.witch_poison_target: str | None = None
         self.guard_protected: str | None = None
+        self.guardian_wolf_protected: str | None = None  # Werewolf protected by Guardian Wolf
+        self.nightmare_blocked: str | None = None  # Player blocked by Nightmare Wolf
         self.seer_checked: dict[int, str] = {}  # round -> player_id
 
         # Voting tracking
@@ -49,6 +53,7 @@ class GameState:
         self.night_deaths.clear()
         self.day_deaths.clear()
         self.death_abilities_used.clear()
+        self.death_causes.clear()
 
     def get_phase(self) -> GamePhase:
         """Get the current game phase.
@@ -87,9 +92,12 @@ class GameState:
             self.day_deaths.clear()
             self.votes.clear()
             self.werewolf_target = None
+            self.werewolf_votes.clear()
             self.witch_saved_target = None
             self.witch_poison_target = None
             self.guard_protected = None
+            self.guardian_wolf_protected = None
+            self.nightmare_blocked = None
             self.raven_marked = None
 
         return self.phase

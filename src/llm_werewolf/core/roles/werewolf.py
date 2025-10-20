@@ -7,7 +7,7 @@ from llm_werewolf.core.actions import (
     WolfBeautyCharmAction,
 )
 from llm_werewolf.core.roles.base import Camp, Role, RoleConfig, ActionPriority
-from llm_werewolf.ai.action_selector import ActionSelector
+from llm_werewolf.core.action_selector import ActionSelector
 
 if TYPE_CHECKING:
     from llm_werewolf.core.player import Player

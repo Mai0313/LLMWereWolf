@@ -70,7 +70,7 @@ def test_werewolf_get_night_actions():
     game_state = GameState(players)
 
     with patch(
-        "llm_werewolf.ai.action_selector.ActionSelector.get_target_from_agent",
+        "llm_werewolf.core.action_selector.ActionSelector.get_target_from_agent",
         return_value=villager_player,
     ):
         actions = werewolf_player.role.get_night_actions(game_state)
@@ -87,7 +87,7 @@ def test_seer_get_night_actions():
     game_state = GameState(players)
 
     with patch(
-        "llm_werewolf.ai.action_selector.ActionSelector.get_target_from_agent",
+        "llm_werewolf.core.action_selector.ActionSelector.get_target_from_agent",
         return_value=villager_player,
     ):
         actions = seer_player.role.get_night_actions(game_state)
@@ -104,7 +104,7 @@ def test_witch_get_night_actions_save():
     game_state = GameState(players)
     game_state.werewolf_target = "p2"
 
-    with patch("llm_werewolf.ai.action_selector.ActionSelector.parse_yes_no", return_value=True):
+    with patch("llm_werewolf.core.action_selector.ActionSelector.parse_yes_no", return_value=True):
         actions = witch_player.role.get_night_actions(game_state)
         assert len(actions) == 1
         assert isinstance(actions[0], WitchSaveAction)
@@ -135,7 +135,7 @@ def test_guard_get_night_actions():
     game_state = GameState(players)
 
     with patch(
-        "llm_werewolf.ai.action_selector.ActionSelector.get_target_from_agent",
+        "llm_werewolf.core.action_selector.ActionSelector.get_target_from_agent",
         return_value=villager_player,
     ):
         actions = guard_player.role.get_night_actions(game_state)

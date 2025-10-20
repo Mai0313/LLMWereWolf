@@ -1,11 +1,7 @@
-from typing import TYPE_CHECKING
-
 from pydantic import Field, BaseModel
 
+from llm_werewolf.core.player import Player
 from llm_werewolf.core.game_state import GameState
-
-if TYPE_CHECKING:
-    from llm_werewolf.core.player import Player
 
 
 class VictoryResult(BaseModel):
@@ -151,7 +147,7 @@ class VictoryChecker:
         """
         return self.check_victory().has_winner
 
-    def get_winning_players(self) -> list["Player"]:
+    def get_winning_players(self) -> list[Player]:
         """Get the list of winning players.
 
         Returns:
@@ -167,7 +163,7 @@ class VictoryChecker:
             if self.game_state.get_player(player_id) is not None
         ]
 
-    def get_losing_players(self) -> list["Player"]:
+    def get_losing_players(self) -> list[Player]:
         """Get the list of losing players.
 
         Returns:

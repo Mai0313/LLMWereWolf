@@ -1,11 +1,8 @@
 import re
 import random
-from typing import TYPE_CHECKING
 
 from llm_werewolf.core.agent import BaseAgent
-
-if TYPE_CHECKING:
-    from llm_werewolf.core.player import Player
+from llm_werewolf.core.player import Player
 
 
 class ActionSelector:
@@ -15,7 +12,7 @@ class ActionSelector:
     def build_target_selection_prompt(
         role_name: str,
         action_description: str,
-        possible_targets: list["Player"],
+        possible_targets: list[Player],
         allow_skip: bool = False,
         additional_context: str = "",
     ) -> str:
@@ -54,8 +51,8 @@ class ActionSelector:
 
     @staticmethod
     def parse_target_selection(
-        response: str, possible_targets: list["Player"], allow_skip: bool = False
-    ) -> "Player | None":
+        response: str, possible_targets: list[Player], allow_skip: bool = False
+    ) -> Player | None:
         """Parse AI response to extract selected target.
 
         Args:
@@ -126,7 +123,7 @@ class ActionSelector:
     def build_multi_target_prompt(
         role_name: str,
         action_description: str,
-        possible_targets: list["Player"],
+        possible_targets: list[Player],
         num_targets: int,
         additional_context: str = "",
     ) -> str:
@@ -168,8 +165,8 @@ class ActionSelector:
 
     @staticmethod
     def parse_multi_target_selection(
-        response: str, possible_targets: list["Player"], num_targets: int
-    ) -> list["Player"] | None:
+        response: str, possible_targets: list[Player], num_targets: int
+    ) -> list[Player] | None:
         """Parse multi-target selection response.
 
         Args:
@@ -206,11 +203,11 @@ class ActionSelector:
         agent: BaseAgent,
         role_name: str,
         action_description: str,
-        possible_targets: list["Player"],
+        possible_targets: list[Player],
         allow_skip: bool = False,
         additional_context: str = "",
         fallback_random: bool = True,
-    ) -> "Player | None":
+    ) -> Player | None:
         """Get a target selection from an AI agent.
 
         Args:

@@ -1,5 +1,3 @@
-"""Core game configuration."""
-
 from pydantic import Field, BaseModel, field_validator
 
 

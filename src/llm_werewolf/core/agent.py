@@ -1,9 +1,3 @@
-"""Base Agent and Implementations.
-
-This module defines the base agent class and provides implementations
-for human and demo agents. This keeps the core game logic independent of AI.
-"""
-
 import random
 
 from pydantic import Field, BaseModel

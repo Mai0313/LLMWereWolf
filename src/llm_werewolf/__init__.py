@@ -1,5 +1,5 @@
-from importlib.metadata import version
 from pathlib import Path
+from importlib.metadata import version
 
 from llm_werewolf.core import GameEngine
 

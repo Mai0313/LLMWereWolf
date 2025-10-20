@@ -1,12 +1,7 @@
-"""Role registry for managing role types and creation."""
-
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from llm_werewolf.core.roles.base import Role
+from llm_werewolf.core.roles.base import Role
 
 
-def get_role_map() -> dict[str, type["Role"]]:
+def get_role_map() -> dict[str, type[Role]]:
     """Get the mapping of role names to role classes.
 
     Returns:
@@ -109,7 +104,7 @@ def validate_role_names(role_names: list[str]) -> None:
         raise ValueError(msg)
 
 
-def create_roles(role_names: list[str]) -> list[type["Role"]]:
+def create_roles(role_names: list[str]) -> list[type[Role]]:
     """Create Role classes list from role names.
 
     Args:

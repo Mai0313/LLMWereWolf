@@ -1,5 +1,3 @@
-"""Official game presets with balanced role combinations."""
-
 from llm_werewolf.core.config.game_config import GameConfig
 
 # 6-player preset (beginner friendly)

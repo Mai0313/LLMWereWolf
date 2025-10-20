@@ -1,17 +1,14 @@
-from typing import TYPE_CHECKING
-
+from llm_werewolf.core.types import Camp, RoleConfig, ActionPriority
+from llm_werewolf.core.player import Player
 from llm_werewolf.core.actions import (
     Action,
     WerewolfKillAction,
     WhiteWolfKillAction,
     WolfBeautyCharmAction,
 )
-from llm_werewolf.core.roles.base import Camp, Role, RoleConfig, ActionPriority
+from llm_werewolf.core.game_state import GameState
+from llm_werewolf.core.roles.base import Role
 from llm_werewolf.core.action_selector import ActionSelector
-
-if TYPE_CHECKING:
-    from llm_werewolf.core.player import Player
-    from llm_werewolf.core.game_state import GameState
 
 
 class Werewolf(Role):
@@ -36,7 +33,7 @@ class Werewolf(Role):
             can_act_day=False,
         )
 
-    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+    def get_night_actions(self, game_state: GameState) -> list["Action"]:
         """Get the night actions for the Werewolf role."""
         # In a real game, werewolves would need to coordinate.
         # For now, we'll have one werewolf act.
@@ -89,7 +86,7 @@ class AlphaWolf(Role):
     can take another player down with them.
     """
 
-    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+    def get_night_actions(self, game_state: GameState) -> list["Action"]:
         """Alpha Wolf has no special night actions beyond the standard werewolf kill."""
         return []
 
@@ -116,7 +113,7 @@ class WhiteWolf(Role):
     This makes the white wolf a lone wolf trying to be the last werewolf standing.
     """
 
-    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+    def get_night_actions(self, game_state: GameState) -> list["Action"]:
         """Get the night actions for the White Wolf role."""
         # Can only kill every other night (odd rounds)
         if game_state.round_number % 2 == 0:
@@ -178,12 +175,12 @@ class WolfBeauty(Role):
     the charmed player dies too.
     """
 
-    def __init__(self, player: "Player") -> None:
+    def __init__(self, player: Player) -> None:
         """Initialize the Wolf Beauty role."""
         super().__init__(player)
         self.charmed_player: str | None = None
 
-    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+    def get_night_actions(self, game_state: GameState) -> list["Action"]:
         """Get the night actions for the Wolf Beauty role."""
         if not self.player.is_alive():
             return []
@@ -239,7 +236,7 @@ class GuardianWolf(Role):
     A werewolf who can protect one werewolf from elimination each night.
     """
 
-    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+    def get_night_actions(self, game_state: GameState) -> list["Action"]:
         """Get the night actions for the Guardian Wolf role."""
         # TODO: Implement Guardian Wolf logic
         return []
@@ -266,7 +263,7 @@ class HiddenWolf(Role):
     A werewolf who appears as a villager when checked by the Seer.
     """
 
-    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+    def get_night_actions(self, game_state: GameState) -> list["Action"]:
         """Hidden Wolf has no special night actions beyond the standard werewolf kill."""
         return []
 
@@ -293,7 +290,7 @@ class BloodMoonApostle(Role):
     Once per game, can turn into a real werewolf.
     """
 
-    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+    def get_night_actions(self, game_state: GameState) -> list["Action"]:
         """Get the night actions for the Blood Moon Apostle role."""
         # TODO: Implement Blood Moon Apostle logic
         return []
@@ -322,7 +319,7 @@ class NightmareWolf(Role):
     A werewolf who can block a player from using their ability for one night.
     """
 
-    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+    def get_night_actions(self, game_state: GameState) -> list["Action"]:
         """Get the night actions for the Nightmare Wolf role."""
         # TODO: Implement Nightmare Wolf logic
         return []

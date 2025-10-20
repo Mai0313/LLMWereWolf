@@ -1,35 +1,12 @@
-from enum import Enum
+from __future__ import annotations
 
-from pydantic import Field, BaseModel
+from typing import TYPE_CHECKING
 
-from llm_werewolf.core.agent import BaseAgent
-from llm_werewolf.core.roles.base import Role
+from llm_werewolf.core.types import PlayerInfo, PlayerStatus
 
-
-class PlayerStatus(str, Enum):
-    """Enum representing special statuses a player can have."""
-
-    ALIVE = "alive"
-    DEAD = "dead"
-    PROTECTED = "protected"  # Protected by Guard
-    POISONED = "poisoned"  # Poisoned by Witch
-    SAVED = "saved"  # Saved by Witch
-    CHARMED = "charmed"  # Charmed by Wolf Beauty
-    BLOCKED = "blocked"  # Blocked by Nightmare Wolf
-    MARKED = "marked"  # Marked by Raven
-    REVEALED = "revealed"  # Idiot revealed
-    NO_VOTE = "no_vote"  # Lost voting rights (Idiot)
-    LOVER = "lover"  # Is in love
-
-
-class PlayerInfo(BaseModel):
-    """Public information about a player."""
-
-    player_id: str = Field(..., description="Unique player identifier")
-    name: str = Field(..., description="Player name")
-    is_alive: bool = Field(default=True, description="Whether player is alive")
-    statuses: set[PlayerStatus] = Field(default_factory=set, description="Current player statuses")
-    ai_model: str = Field(default="unknown", description="AI model name")
+if TYPE_CHECKING:
+    from llm_werewolf.core.agent import BaseAgent
+    from llm_werewolf.core.roles.base import Role
 
 
 class Player:

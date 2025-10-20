@@ -1,54 +1,19 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from enum import Enum
 from typing import TYPE_CHECKING
 
-from pydantic import Field, BaseModel
-
 if TYPE_CHECKING:
+    from llm_werewolf.core.types import Camp, RoleConfig, ActionPriority
     from llm_werewolf.core.player import Player
     from llm_werewolf.core.actions import Action
     from llm_werewolf.core.game_state import GameState
 
 
-class Camp(str, Enum):
-    """Enum representing the different camps in the game."""
-
-    WEREWOLF = "werewolf"
-    VILLAGER = "villager"
-    NEUTRAL = "neutral"
-
-
-class ActionPriority(int, Enum):
-    """Enum representing the priority order of night actions."""
-
-    # Higher number = earlier execution
-    CUPID = 100  # Cupid acts first (only on night 1)
-    THIEF = 95  # Thief chooses role (only on night 1)
-    GUARD = 90  # Guard protects someone
-    WEREWOLF = 80  # Werewolves kill
-    WHITE_WOLF = 75  # White wolf kills another wolf
-    WITCH = 70  # Witch uses potions
-    SEER = 60  # Seer checks someone
-    GRAVEYARD_KEEPER = 50  # Graveyard keeper checks if dead
-    RAVEN = 40  # Raven marks someone for extra vote
-
-
-class RoleConfig(BaseModel):
-    """Configuration for a role."""
-
-    name: str = Field(..., description="Name of the role")
-    camp: Camp = Field(..., description="Camp this role belongs to")
-    description: str = Field(..., description="Description of the role's abilities")
-    priority: ActionPriority | None = Field(None, description="Night action priority")
-    can_act_night: bool = Field(default=False, description="Can perform night actions")
-    can_act_day: bool = Field(default=False, description="Can perform day actions")
-    max_uses: int | None = Field(None, description="Max times ability can be used")
-
-
 class Role(ABC):
     """Abstract base class for all roles in the Werewolf game."""
 
-    def __init__(self, player: "Player") -> None:
+    def __init__(self, player: Player) -> None:
         """Initialize the role."""
         self.player = player
         self.ability_uses = 0
@@ -100,7 +65,7 @@ class Role(ABC):
         """
         return self.config.priority
 
-    def can_act_tonight(self, player: "Player", round_number: int) -> bool:
+    def can_act_tonight(self, player: Player, round_number: int) -> bool:
         """Check if this role can perform an action tonight.
 
         Args:
@@ -121,7 +86,7 @@ class Role(ABC):
 
         return not (self.config.max_uses is not None and self.ability_uses >= self.config.max_uses)
 
-    def can_act_today(self, player: "Player") -> bool:
+    def can_act_today(self, player: Player) -> bool:
         """Check if this role can perform an action today.
 
         Args:
@@ -135,7 +100,7 @@ class Role(ABC):
 
         return player.is_alive()
 
-    def get_action_prompt(self, player: "Player", game_state: object) -> str:
+    def get_action_prompt(self, player: Player, game_state: object) -> str:
         """Get the prompt for the AI agent when this role needs to act.
 
         Args:
@@ -148,7 +113,7 @@ class Role(ABC):
         return f"You are {player.name}, a {self.name}. {self.description}"
 
     @abstractmethod
-    def get_night_actions(self, game_state: "GameState") -> list["Action"]:
+    def get_night_actions(self, game_state: GameState) -> list[Action]:
         """Get the night actions for this role.
 
         Args:
@@ -158,7 +123,7 @@ class Role(ABC):
             list[Action]: A list of actions to perform.
         """
 
-    def has_night_action(self, game_state: "GameState") -> bool:
+    def has_night_action(self, game_state: GameState) -> bool:
         """Check if the role has a night action.
 
         Args:
@@ -171,7 +136,7 @@ class Role(ABC):
             return False
         return self.config.can_act_night
 
-    def validate_action(self, actor: "Player", target: "Player | None", action_data: dict) -> bool:
+    def validate_action(self, actor: Player, target: Player | None, action_data: dict) -> bool:
         """Validate if an action is legal.
 
         Args:

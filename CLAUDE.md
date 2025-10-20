@@ -278,7 +278,7 @@ from llm_werewolf.core.roles.villager import NewRole
 
 return {
     # ... existing roles ...
-    "NewRole": NewRole,
+    "NewRole": NewRole
 }
 
 # If it's a werewolf role, also update get_werewolf_roles()

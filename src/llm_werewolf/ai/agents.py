@@ -96,9 +96,9 @@ class DemoAgent(BaseModel):
         """Return a string representation of the LLMAgent instance.
 
         Returns:
-            str: A string in the format "DemoAgent(model={self.model_name})".
+            str: A string in the format self.model_name.
         """
-        return f"DemoAgent(model={self.model_name})"
+        return self.model_name
 
 
 class HumanAgent(BaseModel):
@@ -120,9 +120,9 @@ class HumanAgent(BaseModel):
         """Return a string representation of the LLMAgent instance.
 
         Returns:
-            str: A string in the format "HumanAgent(model={self.model_name})".
+            str: A string in the format self.model_name.
         """
-        return f"HumanAgent(model={self.model_name})"
+        return self.model_name
 
 
 class LLMAgent(BaseModel):
@@ -170,9 +170,9 @@ class LLMAgent(BaseModel):
         """Return a string representation of the LLMAgent instance.
 
         Returns:
-            str: A string in the format "LLMAgent(model=<model_name>)".
+            str: A string in the format self.model_name.
         """
-        return f"LLMAgent(model={self.model_name})"
+        return self.model_name
 
 
 # ============================================================================

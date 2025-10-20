@@ -561,7 +561,7 @@ make help
 make clean
 
 # Run code formatting (pre-commit)
-make format
+make fmt
 
 # Run all tests
 make test

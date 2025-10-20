@@ -561,7 +561,7 @@ make help
 make clean
 
 # 执行代码格式化（pre-commit）
-make format
+make fmt
 
 # 执行所有测试
 make test

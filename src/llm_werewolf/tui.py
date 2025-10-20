@@ -1,6 +1,8 @@
 from pathlib import Path
 
 import logfire
+
+logfire.configure(send_to_logfire=False)
 from rich.console import Console
 
 from llm_werewolf.ui import run_tui
@@ -19,7 +21,6 @@ def main(config: str, debug: bool = False) -> None:
         config: Path to the YAML configuration file
         debug: Show debug panel (default: False)
     """
-    logfire.configure()
     config_path = Path(config)
     players_config = load_config(config_path=config_path)
 

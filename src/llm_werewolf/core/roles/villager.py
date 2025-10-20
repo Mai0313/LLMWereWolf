@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+import logfire
+
 from llm_werewolf.core.actions import (
     Action,
     CupidLinkAction,
@@ -156,9 +158,12 @@ class Witch(Role):
                     if use_save:
                         actions.append(WitchSaveAction(self.player, target, game_state))
                         return actions  # Can't use both potions same night
-                except Exception:
-                    # Silently skip if AI fails to respond
-                    pass
+                except Exception as e:
+                    logfire.error(
+                        "Witch failed to respond for save potion decision",
+                        error=str(e),
+                        player=self.player.name,
+                    )
 
         # Ask about poison potion
         if self.has_poison_potion and self.player.agent:
@@ -433,9 +438,12 @@ class Cupid(Role):
 
                 if selected and len(selected) == 2:
                     return [CupidLinkAction(self.player, selected[0], selected[1], game_state)]
-            except Exception:
-                # Silently skip if AI fails to respond
-                pass
+            except Exception as e:
+                logfire.error(
+                    "Cupid failed to respond for lover selection",
+                    error=str(e),
+                    player=self.player.name,
+                )
 
         return []
 

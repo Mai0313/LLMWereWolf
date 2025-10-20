@@ -1,7 +1,11 @@
-from llm_werewolf.core.player import Player
+from typing import TYPE_CHECKING
+
 from llm_werewolf.core.actions import Action
 from llm_werewolf.core.game_state import GameState
 from llm_werewolf.core.roles.base import Camp, Role, RoleConfig, ActionPriority
+
+if TYPE_CHECKING:
+    from llm_werewolf.core.player import Player
 
 
 class Thief(Role):
@@ -11,7 +15,7 @@ class Thief(Role):
     The role they choose becomes their actual role for the game.
     """
 
-    def __init__(self, player: Player) -> None:
+    def __init__(self, player: "Player") -> None:
         """Initialize the Thief role."""
         super().__init__(player)
         self.available_roles: list[Role] = []
@@ -50,7 +54,7 @@ class Lover(Role):
     Lovers win together and die together.
     """
 
-    def __init__(self, player: Player) -> None:
+    def __init__(self, player: "Player") -> None:
         """Initialize the Lover role."""
         super().__init__(player)
         self.partner_id: str | None = None
@@ -91,7 +95,7 @@ class WhiteLoverWolf(Role):
     This is a dynamic role that represents the conflicted state.
     """
 
-    def __init__(self, player: Player) -> None:
+    def __init__(self, player: "Player") -> None:
         """Initialize the White Lover Wolf role."""
         super().__init__(player)
 

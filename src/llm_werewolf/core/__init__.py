@@ -1,6 +1,5 @@
 from llm_werewolf.core.actions import (
     Action,
-    ActionData,
     ActionType,
     GuardProtectAction,
     HunterShootAction,
@@ -29,7 +28,6 @@ __all__ = [
     "PlayerStatus",
     # Actions
     "Action",
-    "ActionData",
     "ActionType",
     "WerewolfKillAction",
     "WitchSaveAction",

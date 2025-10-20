@@ -205,11 +205,11 @@ class SeerCheckAction(Action):
 
     def execute(self) -> list[str]:
         """Execute the seer check."""
+        from llm_werewolf.core.roles.werewolf import HiddenWolf
+
         result = self.target.get_camp()
 
         # Hidden wolf appears as villager
-        from llm_werewolf.core.roles.werewolf import HiddenWolf
-
         if isinstance(self.target.role, HiddenWolf):
             result = "villager"
 

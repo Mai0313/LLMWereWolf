@@ -1,18 +1,20 @@
 import random
 from typing import TYPE_CHECKING
 
+from llm_werewolf.ai import AgentType
 from llm_werewolf.core.events import Event, EventType, EventLogger
 from llm_werewolf.core.player import Player
 from llm_werewolf.core.actions import Action, VoteAction
 from llm_werewolf.core.victory import VictoryChecker
 from llm_werewolf.core.game_state import GamePhase, GameState
+from llm_werewolf.core.roles.base import Camp, Role
+from llm_werewolf.ai.action_selector import ActionSelector
 from llm_werewolf.config.game_config import GameConfig
+from llm_werewolf.core.roles.villager import Elder, Idiot, Hunter
+from llm_werewolf.core.roles.werewolf import AlphaWolf, WolfBeauty
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-
-    from llm_werewolf.ai import AgentType
-    from llm_werewolf.core.roles.base import Role
 
 
 class GameEngine:
@@ -32,7 +34,7 @@ class GameEngine:
         # Callback for UI updates (default: no-op, should be set by UI layer)
         self.on_event: Callable[[Event], None] = lambda event: None
 
-    def setup_game(self, players: list[tuple[str, str, "AgentType"]], roles: list["Role"]) -> None:
+    def setup_game(self, players: list[tuple[str, str, AgentType]], roles: list["Role"]) -> None:
         """Initialize the game with players and roles.
 
         Args:
@@ -295,8 +297,6 @@ class GameEngine:
 
             # Get vote from AI agent
             if player.agent:
-                from llm_werewolf.ai.action_selector import ActionSelector
-
                 # Build context for voting
                 context = self._build_voting_context(player)
 
@@ -329,8 +329,6 @@ class GameEngine:
                 eliminated = self.game_state.get_player(eliminated_id)
                 if eliminated:
                     # Check if Idiot
-                    from llm_werewolf.core.roles.villager import Idiot
-
                     if isinstance(eliminated.role, Idiot) and not eliminated.role.revealed:
                         eliminated.role.revealed = True
                         eliminated.disable_voting()
@@ -352,8 +350,6 @@ class GameEngine:
                         )
 
                         # Check if Elder was voted out - disable all villager abilities
-                        from llm_werewolf.core.roles.villager import Elder
-
                         if isinstance(eliminated.role, Elder):
                             self._handle_elder_penalty()
                             messages.append(
@@ -375,8 +371,6 @@ class GameEngine:
                                 )
 
                         # Check if Wolf Beauty dies and charm triggers
-                        from llm_werewolf.core.roles.werewolf import WolfBeauty
-
                         if (
                             isinstance(eliminated.role, WolfBeauty)
                             and eliminated.role.charmed_player
@@ -430,8 +424,6 @@ class GameEngine:
             messages.append(f"{target.name} was protected by the guard!")
         else:
             # Check if Elder with 2 lives
-            from llm_werewolf.core.roles.villager import Elder
-
             if isinstance(target.role, Elder) and target.role.lives > 1:
                 target.role.lives -= 1
                 messages.append(f"{target.name} was attacked but survived (Elder)!")
@@ -460,8 +452,6 @@ class GameEngine:
         if not self.game_state:
             return
 
-        from llm_werewolf.core.roles.base import Camp
-
         for player in self.game_state.players:
             if player.get_camp() == Camp.VILLAGER.value and player.is_alive():
                 player.role.disabled = True
@@ -480,10 +470,6 @@ class GameEngine:
         """
         if not self.game_state:
             return []
-
-        from llm_werewolf.ai.action_selector import ActionSelector
-        from llm_werewolf.core.roles.villager import Hunter
-        from llm_werewolf.core.roles.werewolf import AlphaWolf
 
         messages = []
         all_deaths = self.game_state.night_deaths | self.game_state.day_deaths
@@ -521,8 +507,6 @@ class GameEngine:
                     )
                 else:
                     # Fallback to random
-                    import random
-
                     target = random.choice(possible_targets)  # noqa: S311
 
                 if target and target.is_alive():
@@ -602,8 +586,6 @@ class GameEngine:
                         )
 
         # Check for Wolf Beauty charm deaths
-        from llm_werewolf.core.roles.werewolf import WolfBeauty
-
         for player in self.game_state.players:
             if (
                 isinstance(player.role, WolfBeauty)

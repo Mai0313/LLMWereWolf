@@ -10,6 +10,7 @@ from llm_werewolf.core.actions import (
     GuardProtectAction,
 )
 from llm_werewolf.core.roles.base import Camp, Role, RoleConfig, ActionPriority
+from llm_werewolf.ai.action_selector import ActionSelector
 
 if TYPE_CHECKING:
     from llm_werewolf.core.player import Player
@@ -66,8 +67,6 @@ class Seer(Role):
 
     def get_night_actions(self, game_state: "GameState") -> list["Action"]:
         """Get the night actions for the Seer role."""
-        from llm_werewolf.ai.action_selector import ActionSelector
-
         if not self.player.is_alive():
             return []
 
@@ -135,8 +134,6 @@ class Witch(Role):
 
     def get_night_actions(self, game_state: "GameState") -> list["Action"]:
         """Get the night actions for the Witch role."""
-        from llm_werewolf.ai.action_selector import ActionSelector
-
         if not self.player.is_alive():
             return []
 
@@ -242,8 +239,6 @@ class Guard(Role):
 
     def get_night_actions(self, game_state: "GameState") -> list["Action"]:
         """Get the night actions for the Guard role."""
-        from llm_werewolf.ai.action_selector import ActionSelector
-
         if not self.player.is_alive():
             return []
 
@@ -409,8 +404,6 @@ class Cupid(Role):
 
     def get_night_actions(self, game_state: "GameState") -> list["Action"]:
         """Get the night actions for the Cupid role."""
-        from llm_werewolf.ai.action_selector import ActionSelector
-
         if game_state.round_number != 1:
             return []
 
@@ -472,8 +465,6 @@ class Raven(Role):
 
     def get_night_actions(self, game_state: "GameState") -> list["Action"]:
         """Get the night actions for the Raven role."""
-        from llm_werewolf.ai.action_selector import ActionSelector
-
         if not self.player.is_alive():
             return []
 

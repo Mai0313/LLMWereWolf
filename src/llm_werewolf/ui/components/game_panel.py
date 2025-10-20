@@ -1,8 +1,10 @@
+from io import StringIO
 from typing import Any
 
 from rich.text import Text
 from rich.panel import Panel
 from rich.table import Table
+from rich.console import Console
 from textual.widgets import Static
 
 from llm_werewolf.core.game_state import GameState
@@ -67,10 +69,6 @@ class GamePanel(Static):
         )
 
         # Render stats table to string
-        from io import StringIO
-
-        from rich.console import Console
-
         console = Console(file=StringIO(), width=40)
         console.print(stats_table)
         stats_content = console.file.getvalue()

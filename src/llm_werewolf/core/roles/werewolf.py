@@ -1,7 +1,13 @@
 from typing import TYPE_CHECKING
 
-from llm_werewolf.core.actions import Action, WerewolfKillAction
+from llm_werewolf.core.actions import (
+    Action,
+    WerewolfKillAction,
+    WhiteWolfKillAction,
+    WolfBeautyCharmAction,
+)
 from llm_werewolf.core.roles.base import Camp, Role, RoleConfig, ActionPriority
+from llm_werewolf.ai.action_selector import ActionSelector
 
 if TYPE_CHECKING:
     from llm_werewolf.core.player import Player
@@ -32,8 +38,6 @@ class Werewolf(Role):
 
     def get_night_actions(self, game_state: "GameState") -> list["Action"]:
         """Get the night actions for the Werewolf role."""
-        from llm_werewolf.ai.action_selector import ActionSelector
-
         # In a real game, werewolves would need to coordinate.
         # For now, we'll have one werewolf act.
         # Let's find the first alive werewolf to act.
@@ -114,9 +118,6 @@ class WhiteWolf(Role):
 
     def get_night_actions(self, game_state: "GameState") -> list["Action"]:
         """Get the night actions for the White Wolf role."""
-        from llm_werewolf.core.actions import WhiteWolfKillAction
-        from llm_werewolf.ai.action_selector import ActionSelector
-
         # Can only kill every other night (odd rounds)
         if game_state.round_number % 2 == 0:
             return []
@@ -184,9 +185,6 @@ class WolfBeauty(Role):
 
     def get_night_actions(self, game_state: "GameState") -> list["Action"]:
         """Get the night actions for the Wolf Beauty role."""
-        from llm_werewolf.core.actions import WolfBeautyCharmAction
-        from llm_werewolf.ai.action_selector import ActionSelector
-
         if not self.player.is_alive():
             return []
 

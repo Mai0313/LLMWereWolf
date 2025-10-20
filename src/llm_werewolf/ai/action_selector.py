@@ -4,10 +4,12 @@ This module provides utilities for getting structured action decisions from AI a
 """
 
 import re
+import random
 from typing import TYPE_CHECKING
 
+from llm_werewolf.ai import AgentType
+
 if TYPE_CHECKING:
-    from llm_werewolf.ai.agents import AgentType
     from llm_werewolf.core.player import Player
 
 
@@ -206,7 +208,7 @@ class ActionSelector:
 
     @staticmethod
     def get_target_from_agent(
-        agent: "AgentType",
+        agent: AgentType,
         role_name: str,
         action_description: str,
         possible_targets: list["Player"],
@@ -228,8 +230,6 @@ class ActionSelector:
         Returns:
             Player | None: Selected target, or None if skipped.
         """
-        import random
-
         if not possible_targets:
             return None
 

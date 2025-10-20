@@ -3,7 +3,8 @@
 import pytest
 from pydantic import ValidationError
 
-from llm_werewolf.config import PRESET_6_PLAYERS, GameConfig, get_preset, get_preset_by_name
+from llm_werewolf.core.config import PRESET_6_PLAYERS, GameConfig, get_preset, get_preset_by_name
+from llm_werewolf.core.role_registry import create_roles
 
 
 def test_valid_game_config():
@@ -57,7 +58,7 @@ def test_no_werewolf():
 def test_config_to_role_list():
     """Test converting config to role instances."""
     config = PRESET_6_PLAYERS
-    roles = config.to_role_list()
+    roles = create_roles(config.role_names)
 
     assert len(roles) == 6
     assert all(hasattr(role, "name") for role in roles)

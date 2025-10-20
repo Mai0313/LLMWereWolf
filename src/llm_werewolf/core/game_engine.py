@@ -2,6 +2,7 @@ import random
 from typing import TYPE_CHECKING
 
 from llm_werewolf.ai import AgentType
+from llm_werewolf.core.config import GameConfig
 from llm_werewolf.core.events import Event, EventType, EventLogger
 from llm_werewolf.core.player import Player
 from llm_werewolf.core.actions import Action, VoteAction
@@ -9,7 +10,6 @@ from llm_werewolf.core.victory import VictoryChecker
 from llm_werewolf.core.game_state import GamePhase, GameState
 from llm_werewolf.core.roles.base import Camp, Role
 from llm_werewolf.ai.action_selector import ActionSelector
-from llm_werewolf.config.game_config import GameConfig
 from llm_werewolf.core.roles.villager import Elder, Idiot, Hunter
 from llm_werewolf.core.roles.werewolf import AlphaWolf, WolfBeauty
 

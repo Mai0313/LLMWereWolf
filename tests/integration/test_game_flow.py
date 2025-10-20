@@ -2,7 +2,8 @@
 
 from llm_werewolf.ai import DemoAgent
 from llm_werewolf.core import GameEngine
-from llm_werewolf.config import PRESET_6_PLAYERS
+from llm_werewolf.core.config import PRESET_6_PLAYERS
+from llm_werewolf.core.role_registry import create_roles
 
 
 def test_game_initialization():
@@ -16,7 +17,7 @@ def test_game_initialization():
         players.append((f"p{i}", f"Player{i}", DemoAgent()))
 
     # Get roles
-    roles = config.to_role_list()
+    roles = create_roles(config.role_names)
 
     # Setup game
     engine.setup_game(players, roles)
@@ -31,7 +32,7 @@ def test_game_state_initialization():
     engine = GameEngine(config)
 
     players = [(f"p{i}", f"Player{i}", DemoAgent()) for i in range(config.num_players)]
-    roles = config.to_role_list()
+    roles = create_roles(config.role_names)
 
     engine.setup_game(players, roles)
 
@@ -46,7 +47,7 @@ def test_role_assignment():
     engine = GameEngine(config)
 
     players = [(f"p{i}", f"Player{i}", DemoAgent()) for i in range(config.num_players)]
-    roles = config.to_role_list()
+    roles = create_roles(config.role_names)
 
     engine.setup_game(players, roles)
 
@@ -66,7 +67,7 @@ def test_victory_checker():
     engine = GameEngine(config)
 
     players = [(f"p{i}", f"Player{i}", DemoAgent()) for i in range(config.num_players)]
-    roles = config.to_role_list()
+    roles = create_roles(config.role_names)
 
     engine.setup_game(players, roles)
 

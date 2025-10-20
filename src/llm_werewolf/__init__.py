@@ -2,13 +2,14 @@ from importlib.metadata import version
 from pathlib import Path
 
 from llm_werewolf.ai import AgentType, DemoAgent, GameMessage, MessageBuilder
-from llm_werewolf.config import GameConfig, get_preset
 from llm_werewolf.core import (
+    GameConfig,
     GameEngine,
     GamePhase,
     GameState,
     Player,
     VictoryChecker,
+    get_preset,
 )
 from llm_werewolf.core.roles import Camp, Role
 

@@ -7,7 +7,7 @@ from rich.panel import Panel
 from rich.table import Table
 from textual.widgets import Static
 
-from llm_werewolf.config.game_config import GameConfig
+from llm_werewolf.core.config import GameConfig
 
 
 class DebugPanel(Static):

@@ -5,7 +5,9 @@ from rich.console import Console
 
 from llm_werewolf.ui import run_tui
 from llm_werewolf.core import GameEngine
-from llm_werewolf.config import load_config, get_preset_by_name, create_agent_from_player_config
+from llm_werewolf.ai.agents import load_config, create_agent
+from llm_werewolf.core.config import get_preset_by_name
+from llm_werewolf.core.role_registry import create_roles
 
 console = Console()
 
@@ -32,12 +34,12 @@ def main(config: str, debug: bool = False) -> None:
         raise ValueError
 
     players = [
-        (f"player_{idx + 1}", player_cfg.name, create_agent_from_player_config(player_cfg))
+        (f"player_{idx + 1}", player_cfg.name, create_agent(player_cfg))
         for idx, player_cfg in enumerate(players_config.players)
     ]
 
     engine = GameEngine(game_config)
-    engine.setup_game(players, game_config.to_role_list())
+    engine.setup_game(players, create_roles(game_config.role_names))
     logfire.info(
         "tui_started", config_path=str(config_path), preset=players_config.preset, show_debug=debug
     )

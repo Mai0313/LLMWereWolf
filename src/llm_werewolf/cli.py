@@ -4,8 +4,10 @@ import logfire
 from rich.console import Console
 
 from llm_werewolf.core import GameEngine
-from llm_werewolf.config import load_config, get_preset_by_name, create_agent_from_player_config
+from llm_werewolf.ai.agents import load_config, create_agent
+from llm_werewolf.core.config import get_preset_by_name
 from llm_werewolf.core.events import Event
+from llm_werewolf.core.role_registry import create_roles
 
 console = Console()
 
@@ -31,7 +33,7 @@ def main(config: str) -> None:
         raise ValueError
 
     players = [
-        (f"player_{idx + 1}", player_cfg.name, create_agent_from_player_config(player_cfg))
+        (f"player_{idx + 1}", player_cfg.name, create_agent(player_cfg))
         for idx, player_cfg in enumerate(players_config.players)
     ]
 
@@ -43,7 +45,7 @@ def main(config: str) -> None:
         console.print(f"{prefix} {event.message}")
 
     engine.on_event = print_event
-    engine.setup_game(players, game_config.to_role_list())
+    engine.setup_game(players, create_roles(game_config.role_names))
     logfire.info("game_created", config_path=str(config_path), preset=players_config.preset)
 
     console.print(f"[green]已載入設定檔: {config_path.resolve()}[/green]")

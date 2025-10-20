@@ -2,7 +2,7 @@ import re
 import random
 from typing import TYPE_CHECKING
 
-from llm_werewolf.ai import AgentType
+from llm_werewolf.core.agent import BaseAgent
 
 if TYPE_CHECKING:
     from llm_werewolf.core.player import Player
@@ -203,7 +203,7 @@ class ActionSelector:
 
     @staticmethod
     def get_target_from_agent(
-        agent: AgentType,
+        agent: BaseAgent,
         role_name: str,
         action_description: str,
         possible_targets: list["Player"],

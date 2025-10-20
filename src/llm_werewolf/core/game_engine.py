@@ -1,7 +1,7 @@
 import random
 from typing import TYPE_CHECKING
 
-from llm_werewolf.ai import AgentType
+from llm_werewolf.core.agent import BaseAgent
 from llm_werewolf.core.config import GameConfig
 from llm_werewolf.core.events import Event, EventType, EventLogger
 from llm_werewolf.core.player import Player
@@ -9,9 +9,9 @@ from llm_werewolf.core.actions import Action, VoteAction
 from llm_werewolf.core.victory import VictoryChecker
 from llm_werewolf.core.game_state import GamePhase, GameState
 from llm_werewolf.core.roles.base import Camp, Role
-from llm_werewolf.core.action_selector import ActionSelector
 from llm_werewolf.core.roles.villager import Elder, Idiot, Hunter
 from llm_werewolf.core.roles.werewolf import AlphaWolf, WolfBeauty
+from llm_werewolf.core.action_selector import ActionSelector
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -34,7 +34,7 @@ class GameEngine:
         # Callback for UI updates (default: no-op, should be set by UI layer)
         self.on_event: Callable[[Event], None] = lambda event: None
 
-    def setup_game(self, players: list[tuple[str, str, AgentType]], roles: list["Role"]) -> None:
+    def setup_game(self, players: list[tuple[str, str, BaseAgent]], roles: list["Role"]) -> None:
         """Initialize the game with players and roles.
 
         Args:

@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from llm_werewolf.ai import DemoAgent
+from llm_werewolf.core.agent import DemoAgent
 from llm_werewolf.core.roles import Camp, Seer, Guard, Witch, Villager, Werewolf
 from llm_werewolf.core.player import Player
 from llm_werewolf.core.actions import (

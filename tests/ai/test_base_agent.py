@@ -1,6 +1,7 @@
 """Tests for simplified AI agents."""
 
-from llm_werewolf.ai import LLMAgent, DemoAgent
+from llm_werewolf.ai import LLMAgent
+from llm_werewolf.core.agent import DemoAgent
 
 
 def test_demo_agent_response():
@@ -14,10 +15,9 @@ def test_demo_agent_response():
 
 
 def test_demo_agent_repr():
-    """Demo agent repr includes the model name."""
+    """Demo agent repr returns the model name."""
     agent = DemoAgent()
-    assert "DemoAgent" in repr(agent)
-    assert "demo" in repr(agent)
+    assert repr(agent) == "demo"
 
 
 def test_llm_agent_history_helpers():

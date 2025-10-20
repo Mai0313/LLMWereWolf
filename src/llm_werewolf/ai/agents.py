@@ -1,15 +1,13 @@
 import os
-import random
 from pathlib import Path
 from functools import cached_property
 
 import yaml
 from openai import OpenAI
 from pydantic import Field, BaseModel, ConfigDict, computed_field, field_validator
-from rich.console import Console
 from pydantic_core.core_schema import ValidationInfo
 
-console = Console()
+from llm_werewolf.core.agent import BaseAgent, DemoAgent, HumanAgent
 
 # ============================================================================
 # Player Configuration Models
@@ -74,58 +72,11 @@ class PlayersConfig(BaseModel):
 
 
 # ============================================================================
-# Agent Implementations
+# LLM Agent Implementation
 # ============================================================================
 
 
-class DemoAgent(BaseModel):
-    model_name: str = Field(default="demo")
-
-    def get_response(self, message: str) -> str:
-        """Return a canned response."""
-        responses = [
-            "I agree.",
-            "I'm not sure about that.",
-            "Let me think about it.",
-            "That's interesting.",
-            "I have my suspicions.",
-        ]
-        return random.choice(responses)  # noqa: S311
-
-    def __repr__(self) -> str:
-        """Return a string representation of the LLMAgent instance.
-
-        Returns:
-            str: A string in the format self.model_name.
-        """
-        return self.model_name
-
-
-class HumanAgent(BaseModel):
-    model_name: str = Field(default="human")
-
-    def get_response(self, message: str) -> str:
-        """Get response from human input.
-
-        Args:
-            message: The prompt message.
-
-        Returns:
-            str: Human's response.
-        """
-        console.print(f"\n{message}")
-        return input("Your response: ")
-
-    def __repr__(self) -> str:
-        """Return a string representation of the LLMAgent instance.
-
-        Returns:
-            str: A string in the format self.model_name.
-        """
-        return self.model_name
-
-
-class LLMAgent(BaseModel):
+class LLMAgent(BaseAgent):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     model_name: str
@@ -166,34 +117,20 @@ class LLMAgent(BaseModel):
     def get_history(self) -> list[dict[str, str]]:
         return self.chat_history.copy()
 
-    def __repr__(self) -> str:
-        """Return a string representation of the LLMAgent instance.
-
-        Returns:
-            str: A string in the format self.model_name.
-        """
-        return self.model_name
-
-
-# ============================================================================
-# Type Aliases
-# ============================================================================
-
-AgentType = DemoAgent | HumanAgent | LLMAgent
 
 # ============================================================================
 # Factory Functions
 # ============================================================================
 
 
-def create_agent(config: PlayerConfig) -> AgentType:
+def create_agent(config: PlayerConfig) -> DemoAgent | HumanAgent | LLMAgent:
     """Create an agent instance from player configuration.
 
     Args:
         config: Player configuration.
 
     Returns:
-        LLMAgent | DemoAgent | HumanAgent: Created agent instance.
+        DemoAgent | HumanAgent | LLMAgent: Created agent instance.
 
     Raises:
         ValueError: If configuration is invalid or API key is missing.

@@ -7,40 +7,33 @@ from pydantic import Field, BaseModel, ConfigDict
 class EventType(str, Enum):
     """Enum representing different types of game events."""
 
-    # Game flow events
     GAME_STARTED = "game_started"
     GAME_ENDED = "game_ended"
     PHASE_CHANGED = "phase_changed"
     ROUND_STARTED = "round_started"
 
-    # Player events
     PLAYER_DIED = "player_died"
     PLAYER_REVIVED = "player_revived"
     ROLE_REVEALED = "role_revealed"
 
-    # Action events
     WEREWOLF_KILLED = "werewolf_killed"
     WITCH_SAVED = "witch_saved"
     WITCH_POISONED = "witch_poisoned"
     SEER_CHECKED = "seer_checked"
     GUARD_PROTECTED = "guard_protected"
 
-    # Voting events
     VOTE_CAST = "vote_cast"
     VOTE_RESULT = "vote_result"
     PLAYER_ELIMINATED = "player_eliminated"
 
-    # Special events
     LOVERS_LINKED = "lovers_linked"
     LOVER_DIED = "lover_died"
     HUNTER_REVENGE = "hunter_revenge"
     KNIGHT_DUEL = "knight_duel"
 
-    # Communication events
     PLAYER_SPEECH = "player_speech"
     PLAYER_DISCUSSION = "player_discussion"
 
-    # System events
     MESSAGE = "message"
     ERROR = "error"
 

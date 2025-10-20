@@ -1,6 +1,5 @@
 from llm_werewolf.core.config.game_config import GameConfig
 
-# 6-player preset (beginner friendly)
 PRESET_6_PLAYERS = GameConfig(
     num_players=6,
     role_names=["Werewolf", "Werewolf", "Seer", "Witch", "Villager", "Villager"],
@@ -9,7 +8,6 @@ PRESET_6_PLAYERS = GameConfig(
     vote_timeout=45,
 )
 
-# 9-player preset (standard game)
 PRESET_9_PLAYERS = GameConfig(
     num_players=9,
     role_names=[
@@ -28,7 +26,6 @@ PRESET_9_PLAYERS = GameConfig(
     vote_timeout=60,
 )
 
-# 12-player preset (advanced game with more roles)
 PRESET_12_PLAYERS = GameConfig(
     num_players=12,
     role_names=[
@@ -50,7 +47,6 @@ PRESET_12_PLAYERS = GameConfig(
     vote_timeout=60,
 )
 
-# 15-player preset (full game with complex roles)
 PRESET_15_PLAYERS = GameConfig(
     num_players=15,
     role_names=[
@@ -75,7 +71,6 @@ PRESET_15_PLAYERS = GameConfig(
     vote_timeout=90,
 )
 
-# Expert preset with many special roles
 PRESET_EXPERT = GameConfig(
     num_players=12,
     role_names=[
@@ -97,7 +92,6 @@ PRESET_EXPERT = GameConfig(
     vote_timeout=60,
 )
 
-# Chaos preset with unusual role combinations
 PRESET_CHAOS = GameConfig(
     num_players=10,
     role_names=[
@@ -140,7 +134,6 @@ def get_preset(num_players: int) -> GameConfig:
     if num_players in presets:
         return presets[num_players]
 
-    # Try to scale an existing preset
     if num_players < 6:
         msg = "Minimum 6 players required"
         raise ValueError(msg)
@@ -148,7 +141,6 @@ def get_preset(num_players: int) -> GameConfig:
         msg = "Maximum 20 players supported"
         raise ValueError(msg)
 
-    # For other counts, recommend closest preset
     closest = min(presets.keys(), key=lambda x: abs(x - num_players))
     msg = (
         f"No preset for {num_players} players. "

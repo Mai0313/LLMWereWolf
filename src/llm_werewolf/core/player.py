@@ -39,7 +39,6 @@ class Player:
         self.statuses: set[PlayerStatus] = {PlayerStatus.ALIVE}
         self.lover_partner_id: str | None = None
 
-        # Vote tracking
         self.can_vote_flag = True
 
     def is_alive(self) -> bool:

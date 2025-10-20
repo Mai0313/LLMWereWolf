@@ -1,9 +1,7 @@
 from rich.style import Style
 
-# Color scheme for different camps
 CAMP_COLORS = {"werewolf": "red", "villager": "green", "neutral": "yellow"}
 
-# Status colors
 STATUS_COLORS = {
     "alive": "green",
     "dead": "grey50",
@@ -13,7 +11,6 @@ STATUS_COLORS = {
     "marked": "orange1",
 }
 
-# Phase colors
 PHASE_COLORS = {
     "setup": "cyan",
     "night": "blue",
@@ -22,7 +19,6 @@ PHASE_COLORS = {
     "ended": "red",
 }
 
-# Styles for Rich text
 STYLE_WEREWOLF = Style(color="red", bold=True)
 STYLE_VILLAGER = Style(color="green", bold=True)
 STYLE_NEUTRAL = Style(color="yellow", bold=True)
@@ -32,7 +28,6 @@ STYLE_ERROR = Style(color="red", bold=True)
 STYLE_SUCCESS = Style(color="green", bold=True)
 STYLE_WARNING = Style(color="yellow")
 
-# CSS for Textual components
 TUI_CSS = """
 Screen {
     background: $surface;

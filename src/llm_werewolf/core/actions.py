@@ -132,7 +132,6 @@ class WitchSaveAction(Action):
         if not isinstance(self.actor.role, Witch):
             return False
 
-        # Witch can only save the werewolf target
         if self.game_state.werewolf_target != self.target.player_id:
             return False
 
@@ -214,7 +213,6 @@ class SeerCheckAction(Action):
 
         result = self.target.get_camp()
 
-        # Hidden wolf appears as villager
         if isinstance(self.target.role, HiddenWolf):
             result = "villager"
 
@@ -247,7 +245,6 @@ class GuardProtectAction(Action):
         if not isinstance(self.actor.role, Guard):
             return False
 
-        # Cannot protect the same player twice in a row
         if self.actor.role.last_protected == self.target.player_id:
             return False
 
@@ -350,7 +347,6 @@ class CupidLinkAction(Action):
         if not isinstance(self.actor.role, Cupid):
             return False
 
-        # Can only link on first night and hasn't linked yet
         if self.actor.role.has_linked:
             return False
 
@@ -398,7 +394,6 @@ class RavenMarkAction(Action):
 
     def execute(self) -> list[str]:
         """Execute the raven mark."""
-        # Mark player - they will count as 2 votes against them
         self.game_state.raven_marked = self.target.player_id
         return [f"Raven marks {self.target.name}"]
 
@@ -428,11 +423,9 @@ class WhiteWolfKillAction(Action):
         if not isinstance(self.actor.role, WhiteWolf):
             return False
 
-        # White wolf can only kill every other night
         if self.game_state.round_number % 2 == 0:
             return False
 
-        # Target must be a werewolf
         return (
             self.actor.is_alive()
             and self.target.is_alive()
@@ -442,7 +435,6 @@ class WhiteWolfKillAction(Action):
 
     def execute(self) -> list[str]:
         """Execute the white wolf kill."""
-        # Check if target is protected by Guardian Wolf
         if (
             hasattr(self.game_state, "guardian_wolf_protected")
             and self.game_state.guardian_wolf_protected == self.target.player_id
@@ -482,7 +474,6 @@ class WolfBeautyCharmAction(Action):
         if not isinstance(self.actor.role, WolfBeauty):
             return False
 
-        # Can only charm if not already charmed
         if self.actor.role.charmed_player:
             return False
 
@@ -614,7 +605,6 @@ class KnightDuelAction(Action):
         if not isinstance(self.actor.role, Knight):
             return False
 
-        # Can only duel if not already used
         if self.actor.role.has_dueled:
             return False
 
@@ -626,7 +616,6 @@ class KnightDuelAction(Action):
 
         messages = []
 
-        # If target is werewolf, they die; if not, knight dies
         if self.target.get_camp() == "werewolf":
             self.target.kill()
             self.game_state.day_deaths.add(self.target.player_id)

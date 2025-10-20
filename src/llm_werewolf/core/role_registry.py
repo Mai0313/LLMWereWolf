@@ -33,7 +33,6 @@ def get_role_map() -> dict[str, type[Role]]:
     )
 
     return {
-        # Werewolf roles
         "Werewolf": Werewolf,
         "AlphaWolf": AlphaWolf,
         "WhiteWolf": WhiteWolf,
@@ -42,7 +41,6 @@ def get_role_map() -> dict[str, type[Role]]:
         "HiddenWolf": HiddenWolf,
         "BloodMoonApostle": BloodMoonApostle,
         "NightmareWolf": NightmareWolf,
-        # Villager roles
         "Villager": Villager,
         "Seer": Seer,
         "Witch": Witch,
@@ -55,7 +53,6 @@ def get_role_map() -> dict[str, type[Role]]:
         "Cupid": Cupid,
         "Raven": Raven,
         "GraveyardKeeper": GraveyardKeeper,
-        # Neutral roles
         "Thief": Thief,
         "Lover": Lover,
     }
@@ -91,13 +88,11 @@ def validate_role_names(role_names: list[str]) -> None:
     role_map = get_role_map()
     werewolf_roles = get_werewolf_roles()
 
-    # Check all roles are valid
     for role_name in role_names:
         if role_name not in role_map:
             msg = f"Unknown role: {role_name}"
             raise ValueError(msg)
 
-    # Check for at least one werewolf
     werewolf_count = sum(1 for role in role_names if role in werewolf_roles)
     if werewolf_count == 0:
         msg = "At least one werewolf role is required"

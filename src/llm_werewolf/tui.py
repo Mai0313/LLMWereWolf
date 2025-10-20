@@ -53,7 +53,6 @@ def main(config: str, debug: bool = False) -> None:
     )
 
     try:
-        # Use show_debug from command line flag, or fall back to config
         show_debug = debug or players_config.show_debug
         run_tui(engine, show_debug)
     except KeyboardInterrupt:

@@ -30,22 +30,18 @@ class VictoryChecker:
         Returns:
             VictoryResult: The victory check result.
         """
-        # Check for lover victory first (highest priority)
         lover_result = self.check_lover_victory()
         if lover_result.has_winner:
             return lover_result
 
-        # Check werewolf victory
         werewolf_result = self.check_werewolf_victory()
         if werewolf_result.has_winner:
             return werewolf_result
 
-        # Check villager victory
         villager_result = self.check_villager_victory()
         if villager_result.has_winner:
             return villager_result
 
-        # No winner yet
         return VictoryResult(has_winner=False, reason="Game continues")
 
     def check_werewolf_victory(self) -> VictoryResult:
@@ -105,10 +101,8 @@ class VictoryChecker:
         """
         alive_players = self.game_state.get_alive_players()
 
-        # Find all lovers
         lovers = [p for p in alive_players if p.is_lover()]
 
-        # Lovers win if only they remain and both are alive
         if len(lovers) == 2 and len(alive_players) == 2:
             lover_ids = [p.player_id for p in lovers]
             return VictoryResult(
@@ -128,7 +122,6 @@ class VictoryChecker:
         Returns:
             VictoryResult: The victory check result.
         """
-        # Placeholder for future special victory conditions
         return VictoryResult(has_winner=False, reason="No special victory")
 
     def get_winner(self) -> VictoryResult:

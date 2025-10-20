@@ -135,7 +135,6 @@ class Role(ABC):
         if self.disabled:
             return False
 
-        # Check if player is blocked by Nightmare Wolf
         if (
             hasattr(game_state, "nightmare_blocked")
             and game_state.nightmare_blocked

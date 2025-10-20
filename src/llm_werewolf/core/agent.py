@@ -6,11 +6,6 @@ from rich.console import Console
 console = Console()
 
 
-# ============================================================================
-# Base Agent Class
-# ============================================================================
-
-
 class BaseAgent(BaseModel):
     """Base class for all agents.
 
@@ -41,11 +36,6 @@ class BaseAgent(BaseModel):
             str: The model name.
         """
         return self.model_name
-
-
-# ============================================================================
-# Agent Implementations
-# ============================================================================
 
 
 class DemoAgent(BaseAgent):

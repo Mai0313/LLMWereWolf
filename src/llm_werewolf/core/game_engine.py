@@ -33,7 +33,6 @@ class GameEngine:
         self.event_logger = EventLogger()
         self.victory_checker: VictoryChecker | None = None
 
-        # Callback for UI updates (default: no-op, should be set by UI layer)
         self.on_event: Callable[[Event], None] = lambda event: None
 
     def setup_game(self, players: list[tuple[str, str, BaseAgent]], roles: list[Role]) -> None:
@@ -47,11 +46,9 @@ class GameEngine:
             msg = f"Number of players ({len(players)}) must match number of roles ({len(roles)})"
             raise ValueError(msg)
 
-        # Shuffle roles for random assignment
         shuffled_roles = roles.copy()
         random.shuffle(shuffled_roles)
 
-        # Create player objects
         player_objects = []
         for (player_id, name, agent), role_class in zip(players, shuffled_roles, strict=False):
             ai_model = getattr(agent, "model_name", "unknown") if agent else "human"
@@ -60,11 +57,9 @@ class GameEngine:
             )
             player_objects.append(player)
 
-        # Initialize game state
         self.game_state = GameState(player_objects)
         self.victory_checker = VictoryChecker(self.game_state)
 
-        # Log game start event
         self._log_event(
             EventType.GAME_STARTED,
             f"Game started with {len(player_objects)} players",
@@ -104,27 +99,20 @@ class GameEngine:
 
         messages.append(f"\n=== Night {self.game_state.round_number} ===")
 
-        # Get all players with night actions
         players_with_night_actions = self.game_state.get_players_with_night_actions()
 
-        # Get night actions from each player
         night_actions: list[Action] = []
         for player in players_with_night_actions:
-            # Here you would get the action from the player's agent
-            # For now, we'll use a placeholder
             action = player.role.get_night_actions(self.game_state)
             if action:
                 night_actions.extend(action)
 
-        # Process actions
         action_messages = self.process_actions(night_actions)
         messages.extend(action_messages)
 
-        # Resolve werewolf votes to determine kill target
         werewolf_vote_messages = self._resolve_werewolf_votes()
         messages.extend(werewolf_vote_messages)
 
-        # Resolve night deaths
         death_messages = self.resolve_deaths()
         messages.extend(death_messages)
 
@@ -151,7 +139,6 @@ class GameEngine:
 
         messages.append(f"\n=== Day {self.game_state.round_number} ===")
 
-        # Announce who died last night
         if self.game_state.night_deaths:
             for player_id in self.game_state.night_deaths:
                 player = self.game_state.get_player(player_id)
@@ -160,20 +147,16 @@ class GameEngine:
         else:
             messages.append("No one died last night.")
 
-        # Day discussion - players share thoughts and suspicions
         messages.append("\n--- Discussion Phase ---")
         alive_players = self.game_state.get_alive_players()
 
         for player in alive_players:
             if player.agent:
-                # Build context for the player
                 game_context = self._build_discussion_context(player)
 
-                # Get player's speech from their agent
                 try:
                     speech = player.agent.get_response(game_context)
 
-                    # Log the player's speech
                     self._log_event(
                         EventType.PLAYER_SPEECH,
                         f"{player.name}: {speech}",
@@ -208,7 +191,6 @@ class GameEngine:
             "",
         ]
 
-        # Add information about who died last night
         if self.game_state.night_deaths:
             deaths = [
                 self.game_state.get_player(pid).name
@@ -219,7 +201,6 @@ class GameEngine:
         else:
             context_parts.append("No one died last night.")
 
-        # Add alive players
         alive_players = [p.name for p in self.game_state.get_alive_players()]
         context_parts.append(f"\nAlive players: {', '.join(alive_players)}")
         context_parts.append("")
@@ -249,7 +230,6 @@ class GameEngine:
             "",
         ]
 
-        # Add information about who died
         if self.game_state.night_deaths:
             deaths = [
                 self.game_state.get_player(pid).name
@@ -260,12 +240,10 @@ class GameEngine:
         else:
             context_parts.append("No one died last night.")
 
-        # Add alive players
         alive_players = [p.name for p in self.game_state.get_alive_players()]
         context_parts.append(f"\nAlive players: {', '.join(alive_players)}")
         context_parts.append("")
 
-        # Add role-specific instructions
         context_parts.append(
             "Share your thoughts, suspicions, or information. "
             "Your goal is to help your team win while staying in character."
@@ -291,7 +269,6 @@ class GameEngine:
 
         messages.append("\n=== Voting Phase ===")
 
-        # Get votes from players
         vote_actions: list[Action] = []
         for player in self.game_state.get_alive_players():
             if not player.can_vote():
@@ -301,9 +278,7 @@ class GameEngine:
             if not possible_targets:
                 continue
 
-            # Get vote from AI agent
             if player.agent:
-                # Build context for voting
                 context = self._build_voting_context(player)
 
                 target_player = ActionSelector.get_target_from_agent(
@@ -318,15 +293,12 @@ class GameEngine:
                 if target_player:
                     vote_actions.append(VoteAction(player, target_player, self.game_state))
 
-        # Process votes
         vote_messages = self.process_actions(vote_actions)
         messages.extend(vote_messages)
 
-        # Get vote counts
         vote_counts = self.game_state.get_vote_counts()
 
         if vote_counts:
-            # Find player with most votes
             max_votes = max(vote_counts.values())
             candidates = [pid for pid, count in vote_counts.items() if count == max_votes]
 
@@ -334,7 +306,6 @@ class GameEngine:
                 eliminated_id = candidates[0]
                 eliminated = self.game_state.get_player(eliminated_id)
                 if eliminated:
-                    # Check if Idiot
                     if isinstance(eliminated.role, Idiot) and not eliminated.role.revealed:
                         eliminated.role.revealed = True
                         eliminated.disable_voting()
@@ -356,7 +327,6 @@ class GameEngine:
                             data={"player_id": eliminated_id, "role": eliminated.get_role_name()},
                         )
 
-                        # Check if Elder was voted out - disable all villager abilities
                         if isinstance(eliminated.role, Elder):
                             self._handle_elder_penalty()
                             messages.append(
@@ -364,7 +334,6 @@ class GameEngine:
                                 "All villagers lose their special abilities as punishment!"
                             )
 
-                        # Check if lover dies
                         if eliminated.is_lover() and eliminated.lover_partner_id:
                             partner = self.game_state.get_player(eliminated.lover_partner_id)
                             if partner and partner.is_alive():
@@ -377,7 +346,6 @@ class GameEngine:
                                     data={"player_id": partner.player_id},
                                 )
 
-                        # Check if Wolf Beauty dies and charm triggers
                         if (
                             isinstance(eliminated.role, WolfBeauty)
                             and eliminated.role.charmed_player
@@ -403,7 +371,6 @@ class GameEngine:
         else:
             messages.append("No votes cast.")
 
-        # Handle death abilities (Hunter, AlphaWolf) for players who died in voting
         death_ability_messages = self._handle_death_abilities()
         messages.extend(death_ability_messages)
 
@@ -423,14 +390,11 @@ class GameEngine:
 
         messages = []
 
-        # Check if saved by witch
         if self.game_state.witch_saved_target == target.player_id:
             messages.append(f"{target.name} was saved by the witch!")
-        # Check if protected by guard
         elif self.game_state.guard_protected == target.player_id:
             messages.append(f"{target.name} was protected by the guard!")
         else:
-            # Check if Elder with 2 lives
             if isinstance(target.role, Elder) and target.role.lives > 1:
                 target.role.lives -= 1
                 messages.append(f"{target.name} was attacked but survived (Elder)!")
@@ -444,7 +408,6 @@ class GameEngine:
                     data={"player_id": target.player_id},
                 )
 
-                # Check if lover dies
                 if target.is_lover() and target.lover_partner_id:
                     partner = self.game_state.get_player(target.lover_partner_id)
                     if partner and partner.is_alive():
@@ -482,16 +445,13 @@ class GameEngine:
         all_deaths = self.game_state.night_deaths | self.game_state.day_deaths
 
         for player_id in all_deaths:
-            # Skip if already used death ability
             if player_id in self.game_state.death_abilities_used:
                 continue
             player = self.game_state.get_player(player_id)
             if not player:
                 continue
 
-            # Check if Hunter or AlphaWolf died
             if isinstance(player.role, (Hunter, AlphaWolf)):
-                # Check death cause - Hunter/AlphaWolf cannot shoot if poisoned by Witch
                 death_cause = self.game_state.death_causes.get(player_id)
                 if death_cause == "witch_poison":
                     messages.append(
@@ -500,10 +460,8 @@ class GameEngine:
                     self.game_state.death_abilities_used.add(player_id)
                     continue
 
-                # Mark as used to prevent duplicate triggers
                 self.game_state.death_abilities_used.add(player_id)
 
-                # Get possible targets (alive players)
                 possible_targets = self.game_state.get_alive_players()
                 if not possible_targets:
                     continue
@@ -511,7 +469,6 @@ class GameEngine:
                 role_name = player.get_role_name()
                 messages.append(f"{player.name} ({role_name}) can shoot before dying!")
 
-                # Get target from AI agent
                 if player.agent:
                     target = ActionSelector.get_target_from_agent(
                         agent=player.agent,
@@ -522,12 +479,10 @@ class GameEngine:
                         additional_context=f"You ({player.name}) have been killed. You can take one player down with you.",
                     )
                 else:
-                    # Fallback to random
                     target = random.choice(possible_targets)  # noqa: S311
 
                 if target and target.is_alive():
                     target.kill()
-                    # Add to appropriate death set
                     if self.game_state.phase.value == "night":
                         self.game_state.night_deaths.add(target.player_id)
                     else:
@@ -545,7 +500,6 @@ class GameEngine:
                         },
                     )
 
-                    # Check for lover chain death
                     if target.is_lover() and target.lover_partner_id:
                         partner = self.game_state.get_player(target.lover_partner_id)
                         if partner and partner.is_alive():
@@ -569,16 +523,13 @@ class GameEngine:
 
         messages = []
 
-        # Werewolf kill
         if self.game_state.werewolf_target:
             target = self.game_state.get_player(self.game_state.werewolf_target)
             if target:
                 messages.extend(self._handle_werewolf_kill(target))
-                # Record death cause if killed
                 if not target.is_alive() and target.player_id not in self.game_state.death_causes:
                     self.game_state.death_causes[target.player_id] = "werewolf"
 
-        # Witch poison
         if self.game_state.witch_poison_target:
             target = self.game_state.get_player(self.game_state.witch_poison_target)
             if target and target.is_alive():
@@ -592,7 +543,6 @@ class GameEngine:
                     data={"player_id": target.player_id},
                 )
 
-                # Check if lover dies
                 if target.is_lover() and target.lover_partner_id:
                     partner = self.game_state.get_player(target.lover_partner_id)
                     if partner and partner.is_alive():
@@ -605,7 +555,6 @@ class GameEngine:
                             data={"player_id": partner.player_id},
                         )
 
-        # Check for Wolf Beauty charm deaths
         for player in self.game_state.players:
             if (
                 isinstance(player.role, WolfBeauty)
@@ -626,7 +575,6 @@ class GameEngine:
                         data={"player_id": charmed.player_id, "reason": "wolf_beauty_charm"},
                     )
 
-        # Handle death abilities (Hunter, AlphaWolf)
         death_ability_messages = self._handle_death_abilities()
         messages.extend(death_ability_messages)
 
@@ -676,16 +624,13 @@ class GameEngine:
         if not self.game_state.werewolf_votes:
             return messages
 
-        # Count votes
         vote_counts: dict[str, int] = {}
         for target_id in self.game_state.werewolf_votes.values():
             vote_counts[target_id] = vote_counts.get(target_id, 0) + 1
 
-        # Find player with most votes
         max_votes = max(vote_counts.values())
         candidates = [pid for pid, count in vote_counts.items() if count == max_votes]
 
-        # If there's a tie, randomly select one (or use first werewolf's vote as tiebreaker)
         if candidates:
             selected_target_id = random.choice(candidates)  # noqa: S311
             self.game_state.werewolf_target = selected_target_id
@@ -707,9 +652,6 @@ class GameEngine:
         """
         messages = []
 
-        # Sort actions by priority (if they have priority)
-        # For now, we can assume a predefined order or add priority to actions
-        # This is a simplified sorting, a more robust solution would be needed
         def get_action_priority(action: Action) -> int:
             priority_map = {
                 "GuardProtectAction": 0,
@@ -723,7 +665,6 @@ class GameEngine:
 
         sorted_actions = sorted(actions, key=get_action_priority)
 
-        # Execute each action
         for action in sorted_actions:
             if action.validate():
                 result_messages = action.execute()
@@ -741,30 +682,22 @@ class GameEngine:
             return "Game not initialized"
 
         while not self.check_victory():
-            # Reset deaths for the new round
             self.game_state.reset_deaths()
 
-            # Night phase
             self.run_night_phase()
 
-            # Check victory after night
             if self.check_victory():
                 break
 
-            # Day phase
             self.run_day_phase()
 
-            # Voting phase
             self.run_voting_phase()
 
-            # Check victory after voting
             if self.check_victory():
                 break
 
-            # Move to next round
             self.game_state.next_phase()
 
-        # Game ended
         if self.game_state.winner:
             return f"Game Over! {self.game_state.winner} camp wins!"
 
@@ -797,7 +730,6 @@ class GameEngine:
             visible_to=visible_to,
         )
 
-        # Notify UI or other listeners
         self.on_event(event)
 
     def get_game_state(self) -> GameState | None:
@@ -828,7 +760,6 @@ class GameEngine:
         current_phase = self.game_state.get_phase()
 
         if current_phase == GamePhase.SETUP:
-            # Transition from setup to first night phase
             self.game_state.next_phase()
             phase_messages = [
                 "Game initialized! Press 'n' to start the first night phase.",

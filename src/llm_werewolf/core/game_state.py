@@ -25,25 +25,23 @@ class GameState:
         self.round_number = 0
 
         self.event_history: list[Event] = []
-        self.night_deaths: set[str] = set()  # Player IDs who died this night
-        self.day_deaths: set[str] = set()  # Player IDs who died this day
-        self.death_abilities_used: set[str] = set()  # Player IDs who already used death ability
+        self.night_deaths: set[str] = set()
+        self.day_deaths: set[str] = set()
+        self.death_abilities_used: set[str] = set()
         self.death_causes: dict[str, str] = {}
 
-        # Night action tracking
         self.werewolf_target: str | None = None
-        self.werewolf_votes: dict[str, str] = {}  # werewolf_id -> target_id for voting
+        self.werewolf_votes: dict[str, str] = {}
         self.witch_save_used = False
         self.witch_poison_used = False
         self.witch_saved_target: str | None = None
         self.witch_poison_target: str | None = None
         self.guard_protected: str | None = None
-        self.guardian_wolf_protected: str | None = None  # Werewolf protected by Guardian Wolf
-        self.nightmare_blocked: str | None = None  # Player blocked by Nightmare Wolf
-        self.seer_checked: dict[int, str] = {}  # round -> player_id
+        self.guardian_wolf_protected: str | None = None
+        self.nightmare_blocked: str | None = None
+        self.seer_checked: dict[int, str] = {}
 
-        # Voting tracking
-        self.votes: dict[str, str] = {}  # voter_id -> target_id
+        self.votes: dict[str, str] = {}
         self.raven_marked: str | None = None
 
         self.winner: str | None = None
@@ -87,7 +85,6 @@ class GameState:
         elif self.phase == GamePhase.DAY_VOTING:
             self.phase = GamePhase.NIGHT
             self.round_number += 1
-            # Clear temporary data for new round
             self.night_deaths.clear()
             self.day_deaths.clear()
             self.votes.clear()
@@ -199,7 +196,6 @@ class GameState:
         for target_id in self.votes.values():
             vote_counts[target_id] = vote_counts.get(target_id, 0) + 1
 
-        # Add raven curse (extra vote)
         if self.raven_marked and self.raven_marked in vote_counts:
             vote_counts[self.raven_marked] += 1
         elif self.raven_marked:

@@ -8,10 +8,6 @@ from enum import Enum
 
 from pydantic import Field, BaseModel
 
-# ============================================================================
-# Enum Definitions
-# ============================================================================
-
 
 class Camp(str, Enum):
     """Enum representing the different camps in the game."""
@@ -24,26 +20,25 @@ class Camp(str, Enum):
 class ActionPriority(int, Enum):
     """Enum representing the priority order of night actions."""
 
-    # Higher number = earlier execution
-    CUPID = 100  # Cupid acts first (only on night 1)
-    THIEF = 95  # Thief chooses role (only on night 1)
-    GUARD = 90  # Guard protects someone
-    WEREWOLF = 80  # Werewolves kill
-    WHITE_WOLF = 75  # White wolf kills another wolf
-    WITCH = 70  # Witch uses potions
-    SEER = 60  # Seer checks someone
-    GRAVEYARD_KEEPER = 50  # Graveyard keeper checks if dead
-    RAVEN = 40  # Raven marks someone for extra vote
+    CUPID = 100
+    THIEF = 95
+    GUARD = 90
+    WEREWOLF = 80
+    WHITE_WOLF = 75
+    WITCH = 70
+    SEER = 60
+    GRAVEYARD_KEEPER = 50
+    RAVEN = 40
 
 
 class GamePhase(str, Enum):
     """Enum representing the different phases of the game."""
 
-    SETUP = "setup"  # Game initialization
-    NIGHT = "night"  # Night phase (role actions)
-    DAY_DISCUSSION = "day_discussion"  # Day phase (discussion)
-    DAY_VOTING = "day_voting"  # Day phase (voting)
-    ENDED = "ended"  # Game has ended
+    SETUP = "setup"
+    NIGHT = "night"
+    DAY_DISCUSSION = "day_discussion"
+    DAY_VOTING = "day_voting"
+    ENDED = "ended"
 
 
 class PlayerStatus(str, Enum):
@@ -51,21 +46,20 @@ class PlayerStatus(str, Enum):
 
     ALIVE = "alive"
     DEAD = "dead"
-    PROTECTED = "protected"  # Protected by Guard
-    POISONED = "poisoned"  # Poisoned by Witch
-    SAVED = "saved"  # Saved by Witch
-    CHARMED = "charmed"  # Charmed by Wolf Beauty
-    BLOCKED = "blocked"  # Blocked by Nightmare Wolf
-    MARKED = "marked"  # Marked by Raven
-    REVEALED = "revealed"  # Idiot revealed
-    NO_VOTE = "no_vote"  # Lost voting rights (Idiot)
-    LOVER = "lover"  # Is in love
+    PROTECTED = "protected"
+    POISONED = "poisoned"
+    SAVED = "saved"
+    CHARMED = "charmed"
+    BLOCKED = "blocked"
+    MARKED = "marked"
+    REVEALED = "revealed"
+    NO_VOTE = "no_vote"
+    LOVER = "lover"
 
 
 class ActionType(str, Enum):
     """Enum representing different types of actions."""
 
-    # Night actions
     WEREWOLF_KILL = "werewolf_kill"
     WITCH_SAVE = "witch_save"
     WITCH_POISON = "witch_poison"
@@ -77,20 +71,13 @@ class ActionType(str, Enum):
     WOLF_BEAUTY_CHARM = "wolf_beauty_charm"
     NIGHTMARE_BLOCK = "nightmare_block"
 
-    # Day actions
     VOTE = "vote"
     HUNTER_SHOOT = "hunter_shoot"
     KNIGHT_DUEL = "knight_duel"
     ALPHA_WOLF_SHOOT = "alpha_wolf_shoot"
 
-    # Special actions
     THIEF_CHOOSE = "thief_choose"
     MAGICIAN_SWAP = "magician_swap"
-
-
-# ============================================================================
-# Pydantic Data Models
-# ============================================================================
 
 
 class RoleConfig(BaseModel):

@@ -28,20 +28,16 @@ class PlayerSnapshot(BaseModel):
 class GameStateSnapshot(BaseModel):
     """Serializable snapshot of the game state."""
 
-    # Players
     players: list[PlayerSnapshot]
 
-    # Phase and round
     phase: str
     round_number: int
 
-    # Deaths
     night_deaths: list[str] = Field(default_factory=list)
     day_deaths: list[str] = Field(default_factory=list)
     death_abilities_used: list[str] = Field(default_factory=list)
     death_causes: dict[str, str] = Field(default_factory=dict)
 
-    # Night action tracking
     werewolf_target: str | None = None
     werewolf_votes: dict[str, str] = Field(default_factory=dict)
     witch_save_used: bool = False

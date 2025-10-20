@@ -9,10 +9,6 @@ from pydantic_core.core_schema import ValidationInfo
 
 from llm_werewolf.core.agent import BaseAgent, DemoAgent, HumanAgent
 
-# ============================================================================
-# Player Configuration Models
-# ============================================================================
-
 
 class PlayerConfig(BaseModel):
     """Configuration for a single player in the game.
@@ -71,11 +67,6 @@ class PlayersConfig(BaseModel):
         return v
 
 
-# ============================================================================
-# LLM Agent Implementation
-# ============================================================================
-
-
 class LLMAgent(BaseAgent):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -118,11 +109,6 @@ class LLMAgent(BaseAgent):
         return self.chat_history.copy()
 
 
-# ============================================================================
-# Factory Functions
-# ============================================================================
-
-
 def create_agent(config: PlayerConfig) -> DemoAgent | HumanAgent | LLMAgent:
     """Create an agent instance from player configuration.
 
@@ -143,7 +129,6 @@ def create_agent(config: PlayerConfig) -> DemoAgent | HumanAgent | LLMAgent:
     if model == "demo":
         return DemoAgent(model_name="demo")
 
-    # For LLM models
     api_key = None
     if config.api_key_env:
         api_key = os.getenv(config.api_key_env)

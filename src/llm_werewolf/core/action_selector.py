@@ -63,14 +63,12 @@ class ActionSelector:
         Returns:
             Player | None: The selected player, or None if skipped/invalid.
         """
-        # Extract number from response
         numbers = re.findall(r"\d+", response.strip())
         if not numbers:
             return None
 
         try:
             selection = int(numbers[0])
-            # Check if it's a valid selection
             if 1 <= selection <= len(possible_targets):
                 return possible_targets[selection - 1]
             if allow_skip and selection == len(possible_targets) + 1:
@@ -190,7 +188,6 @@ class ActionSelector:
                 else:
                     return None
 
-            # Check for duplicates
             if len(selected) != len({p.player_id for p in selected}):
                 return None
 
@@ -236,12 +233,10 @@ class ActionSelector:
             if target is not None or allow_skip:
                 return target
 
-            # If parsing failed and fallback is enabled
             if fallback_random:
                 return random.choice(possible_targets)  # noqa: S311
 
         except Exception:
-            # If agent fails and fallback is enabled
             if fallback_random:
                 return random.choice(possible_targets)  # noqa: S311
 

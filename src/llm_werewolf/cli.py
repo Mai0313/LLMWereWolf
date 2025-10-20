@@ -40,7 +40,6 @@ def main(config: str) -> None:
 
     engine = GameEngine(game_config)
 
-    # Set up console event callback
     def print_event(event: Event) -> None:
         prefix = f"[回合 {event.round_number}][{event.phase.upper()}]"
         console.print(f"{prefix} {event.message}")

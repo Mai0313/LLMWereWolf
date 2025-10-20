@@ -75,7 +75,6 @@ class WerewolfTUI(App):
         self.game_engine = game_engine
         self.show_debug_flag = show_debug
 
-        # Component references
         self.player_panel: PlayerPanel | None = None
         self.game_panel: GamePanel | None = None
         self.chat_panel: ChatPanel | None = None
@@ -90,12 +89,10 @@ class WerewolfTUI(App):
         yield Header(show_clock=True)
 
         with Horizontal():
-            # Left panel: Players
             with Vertical(id="left_panel"):
                 self.player_panel = PlayerPanel()
                 yield self.player_panel
 
-            # Middle panel: Game status (top) and Chat (bottom)
             with Vertical(id="middle_panel"):
                 self.game_panel = GamePanel()
                 yield self.game_panel
@@ -103,7 +100,6 @@ class WerewolfTUI(App):
                 self.chat_panel = ChatPanel()
                 yield self.chat_panel
 
-            # Right panel: Debug info
             if self.show_debug_flag:
                 with Vertical(id="right_panel"):
                     self.debug_panel = DebugPanel()
@@ -116,11 +112,9 @@ class WerewolfTUI(App):
         self.title = "🐺 Werewolf Game"
         self.sub_title = "AI-Powered Werewolf"
 
-        # Initialize with game engine if provided
         if self.game_engine and self.game_engine.game_state:
             self.update_game_state()
 
-            # Set up event callback
             self.game_engine.on_event = self.on_game_event
 
     def update_game_state(self) -> None:
@@ -140,11 +134,9 @@ class WerewolfTUI(App):
         Args:
             event: The game event.
         """
-        # Add event to chat panel
         if self.chat_panel:
             self.chat_panel.add_event(event)
 
-        # Update all panels
         self.update_game_state()
 
     def action_toggle_debug(self) -> None:

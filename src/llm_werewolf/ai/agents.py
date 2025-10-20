@@ -176,11 +176,17 @@ class LLMAgent(BaseModel):
 
 
 # ============================================================================
+# Type Aliases
+# ============================================================================
+
+AgentType = DemoAgent | HumanAgent | LLMAgent
+
+# ============================================================================
 # Factory Functions
 # ============================================================================
 
 
-def create_agent(config: PlayerConfig) -> LLMAgent | DemoAgent | HumanAgent:
+def create_agent(config: PlayerConfig) -> AgentType:
     """Create an agent instance from player configuration.
 
     Args:

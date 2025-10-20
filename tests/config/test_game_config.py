@@ -3,8 +3,9 @@
 import pytest
 from pydantic import ValidationError
 
-from llm_werewolf.core.config import PRESET_6_PLAYERS, GameConfig, get_preset, get_preset_by_name
+from llm_werewolf.core.config import GameConfig, get_preset, get_preset_by_name
 from llm_werewolf.core.role_registry import create_roles
+from llm_werewolf.core.config.presets import PRESET_6_PLAYERS
 
 
 def test_valid_game_config():

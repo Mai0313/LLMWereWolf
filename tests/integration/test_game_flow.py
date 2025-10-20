@@ -2,8 +2,8 @@
 
 from llm_werewolf.ai import DemoAgent
 from llm_werewolf.core import GameEngine
-from llm_werewolf.core.config import PRESET_6_PLAYERS
 from llm_werewolf.core.role_registry import create_roles
+from llm_werewolf.core.config.presets import PRESET_6_PLAYERS
 
 
 def test_game_initialization():

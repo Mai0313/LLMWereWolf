@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from llm_werewolf.ai import DemoAgent
 from llm_werewolf.core.roles import Camp, Seer, Guard, Witch, Villager, Werewolf
 from llm_werewolf.core.player import Player
 from llm_werewolf.core.actions import (
@@ -63,12 +64,15 @@ def test_role_string_representation():
 
 def test_werewolf_get_night_actions():
     """Test Werewolf get_night_actions method."""
-    werewolf_player = Player("p1", "Werewolf", Werewolf)
-    villager_player = Player("p2", "Villager", Villager)
+    werewolf_player = Player("p1", "Werewolf", Werewolf, agent=DemoAgent())
+    villager_player = Player("p2", "Villager", Villager, agent=DemoAgent())
     players = [werewolf_player, villager_player]
     game_state = GameState(players)
 
-    with patch("random.choice", return_value=villager_player):
+    with patch(
+        "llm_werewolf.ai.action_selector.ActionSelector.get_target_from_agent",
+        return_value=villager_player,
+    ):
         actions = werewolf_player.role.get_night_actions(game_state)
         assert len(actions) == 1
         assert isinstance(actions[0], WerewolfKillAction)
@@ -77,12 +81,15 @@ def test_werewolf_get_night_actions():
 
 def test_seer_get_night_actions():
     """Test Seer get_night_actions method."""
-    seer_player = Player("p1", "Seer", Seer)
-    villager_player = Player("p2", "Villager", Villager)
+    seer_player = Player("p1", "Seer", Seer, agent=DemoAgent())
+    villager_player = Player("p2", "Villager", Villager, agent=DemoAgent())
     players = [seer_player, villager_player]
     game_state = GameState(players)
 
-    with patch("random.choice", return_value=villager_player):
+    with patch(
+        "llm_werewolf.ai.action_selector.ActionSelector.get_target_from_agent",
+        return_value=villager_player,
+    ):
         actions = seer_player.role.get_night_actions(game_state)
         assert len(actions) == 1
         assert isinstance(actions[0], SeerCheckAction)
@@ -91,13 +98,13 @@ def test_seer_get_night_actions():
 
 def test_witch_get_night_actions_save():
     """Test Witch get_night_actions method for saving."""
-    witch_player = Player("p1", "Witch", Witch)
-    villager_player = Player("p2", "Villager", Villager)
+    witch_player = Player("p1", "Witch", Witch, agent=DemoAgent())
+    villager_player = Player("p2", "Villager", Villager, agent=DemoAgent())
     players = [witch_player, villager_player]
     game_state = GameState(players)
     game_state.werewolf_target = "p2"
 
-    with patch("random.choice", return_value=True):
+    with patch("llm_werewolf.ai.action_selector.ActionSelector.parse_yes_no", return_value=True):
         actions = witch_player.role.get_night_actions(game_state)
         assert len(actions) == 1
         assert isinstance(actions[0], WitchSaveAction)
@@ -122,12 +129,15 @@ def test_witch_get_night_actions_poison():
 
 def test_guard_get_night_actions():
     """Test Guard get_night_actions method."""
-    guard_player = Player("p1", "Guard", Guard)
-    villager_player = Player("p2", "Villager", Villager)
+    guard_player = Player("p1", "Guard", Guard, agent=DemoAgent())
+    villager_player = Player("p2", "Villager", Villager, agent=DemoAgent())
     players = [guard_player, villager_player]
     game_state = GameState(players)
 
-    with patch("random.choice", return_value=villager_player):
+    with patch(
+        "llm_werewolf.ai.action_selector.ActionSelector.get_target_from_agent",
+        return_value=villager_player,
+    ):
         actions = guard_player.role.get_night_actions(game_state)
         assert len(actions) == 1
         assert isinstance(actions[0], GuardProtectAction)

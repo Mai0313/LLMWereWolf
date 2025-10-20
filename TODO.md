@@ -28,6 +28,11 @@
 
 這部分應該要重新規劃
 
+## 請幫我使用 TypeAlias
+
+請幫我找一下 Codebase 中是否有類似這種 `AgentType = DemoAgent | HumanAgent | LLMAgent`
+我希望可以改成透過 `TypeAlias`, `Annotated` 最後再用 `PropertyInfo(discriminator="type")` 來處理
+
 ## 確認遊戲邏輯中 夜間行動 是如何完成的
 
 ## 更新規則

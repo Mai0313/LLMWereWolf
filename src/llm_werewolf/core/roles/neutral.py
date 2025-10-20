@@ -1,13 +1,7 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
+from llm_werewolf.core.player import Player
+from llm_werewolf.core.actions import Action
+from llm_werewolf.core.game_state import GameState
 from llm_werewolf.core.roles.base import Camp, Role, RoleConfig, ActionPriority
-
-if TYPE_CHECKING:
-    from llm_werewolf.core.player import Player
-    from llm_werewolf.core.actions import Action
-    from llm_werewolf.core.game_state import GameState
 
 
 class Thief(Role):

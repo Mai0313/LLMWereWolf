@@ -134,6 +134,7 @@ XAI_API_KEY=xai-...
 
 - **Thief**: Can choose a role from two extra role cards on the first night.
 - **Lover**: Linked by Cupid; if one dies, the other dies of a broken heart.
+- **WhiteLoverWolf**: A special werewolf variant that can form lover relationships.
 
 ## Configuration
 
@@ -245,9 +246,9 @@ If using a local model like Ollama, you can omit `api_key_env`:
 
 This project provides three built-in agent types:
 
-1. **LLMAgent**: Supports any LLM model with an OpenAI-compatible API.
-2. **HumanAgent**: Human player input via the terminal.
-3. **DemoAgent**: A simple agent for testing (random responses).
+1. **LLMAgent** (in `ai/agents.py`): Supports any LLM model with an OpenAI-compatible API.
+2. **HumanAgent** (in `core/agent.py`): Human player input via the terminal.
+3. **DemoAgent** (in `core/agent.py`): A simple agent for testing (random responses).
 
 ### Using Agents via YAML Configuration
 
@@ -258,9 +259,10 @@ The recommended way is to configure agents through a YAML file (see the [Configu
 If you need to create agents directly in Python code:
 
 ```python
-from llm_werewolf.ai import LLMAgent, HumanAgent, DemoAgent, create_agent, PlayerConfig
+from llm_werewolf.ai.agents import LLMAgent, PlayerConfig, create_agent
+from llm_werewolf.core.agent import HumanAgent, DemoAgent
 from llm_werewolf.core import GameEngine
-from llm_werewolf.config import get_preset_by_name
+from llm_werewolf.core.config import get_preset_by_name
 
 # Method 1: Directly create agent instances
 llm_agent = LLMAgent(
@@ -578,45 +580,48 @@ The project uses a modular architecture with clear responsibilities for each mod
 
 ```
 src/llm_werewolf/
-├── cli.py                 # Command-line entry point
+├── cli.py                 # Command-line entry point (console mode)
+├── tui.py                 # TUI entry point (interactive mode)
 ├── ai/                    # Agent system
-│   ├── agents.py         # LLM/Human/Demo agent implementations
-│   └── message.py        # Message processing
-├── config/               # Configuration system
-│   ├── game_config.py    # Game configuration model
-│   └── role_presets.py   # Role preset configurations
+│   └── agents.py         # LLM agent implementation and config models
 ├── core/                 # Core game logic
+│   ├── agent.py          # Base agent, HumanAgent, and DemoAgent
 │   ├── game_engine.py    # Game engine
 │   ├── game_state.py     # Game state management
 │   ├── player.py         # Player class
 │   ├── actions.py        # Action system
+│   ├── action_selector.py # Action selection logic
 │   ├── events.py         # Event system
 │   ├── victory.py        # Victory condition checking
+│   ├── types.py          # Type definitions
+│   ├── role_registry.py  # Role registration and validation
+│   ├── config/           # Configuration system
+│   │   ├── game_config.py    # Game configuration model
+│   │   └── presets.py        # Role preset configurations
 │   └── roles/            # Role implementations
 │       ├── base.py       # Base role class
 │       ├── werewolf.py   # Werewolf faction roles
 │       ├── villager.py   # Villager faction roles
 │       └── neutral.py    # Neutral roles
-├── ui/                   # User interface
-│   ├── tui_app.py        # TUI application
-│   ├── styles.py         # TUI styles
-│   └── components/       # TUI components
-│       ├── player_panel.py
-│       ├── game_panel.py
-│       ├── chat_panel.py
-│       └── debug_panel.py
-└── utils/                # Utility functions
-    └── validator.py      # Validation tools
+└── ui/                   # User interface
+    ├── tui_app.py        # TUI application
+    ├── styles.py         # TUI styles
+    └── components/       # TUI components
+        ├── player_panel.py
+        ├── game_panel.py
+        ├── chat_panel.py
+        └── debug_panel.py
 ```
 
 ### Module Descriptions
 
-- **cli.py**: Command-line interface, responsible for loading configurations and starting the game.
-- **ai/**: Agent system, implementing various AI agents and the human player interface.
-- **config/**: Configuration system, containing game parameters and role presets.
-- **core/**: Core game logic, including roles, players, game state, actions, and the event system.
-- **ui/**: Terminal user interface, based on the Textual framework.
-- **utils/**: General utility functions.
+- **cli.py**: Command-line interface for console mode, responsible for loading configurations and starting the game automatically.
+- **tui.py**: TUI entry point for interactive mode with terminal user interface.
+- **ai/**: LLM agent implementation and configuration models (PlayerConfig, PlayersConfig).
+- **core/agent.py**: Base agent protocol and built-in agents (HumanAgent, DemoAgent).
+- **core/config/**: Configuration system, containing game parameters and role presets.
+- **core/**: Core game logic, including roles, players, game state, actions, events, and victory checking.
+- **ui/**: Terminal user interface based on the Textual framework.
 
 ## System Requirements
 
@@ -666,7 +671,7 @@ You do not need to set `api_key_env`.
 You can customize the `GameConfig` to adjust the time limits for each phase:
 
 ```python
-from llm_werewolf.config import GameConfig
+from llm_werewolf.core.config import GameConfig
 
 config = GameConfig(
     num_players=9,
@@ -682,7 +687,7 @@ config = GameConfig(
 Create a custom `GameConfig` and specify the roles you want:
 
 ```python
-from llm_werewolf.config import GameConfig
+from llm_werewolf.core.config import GameConfig
 
 config = GameConfig(
     num_players=10,

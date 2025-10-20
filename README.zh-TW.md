@@ -134,6 +134,7 @@ XAI_API_KEY=xai-...
 
 - **盜賊 (Thief)**：第一晚可以從兩張額外角色卡中選擇一個
 - **戀人 (Lover)**：由丘比特連結，一人死亡另一人殉情
+- **白狼戀人 (WhiteLoverWolf)**：可以建立戀人關係的特殊狼人變體
 
 ## 配置
 
@@ -245,9 +246,9 @@ players:
 
 本專案提供三種內建代理類型：
 
-1. **LLMAgent**：支援任何 OpenAI 相容 API 的 LLM 模型
-2. **HumanAgent**：真人玩家透過終端輸入
-3. **DemoAgent**：測試用的簡單代理（隨機回應）
+1. **LLMAgent**（位於 `ai/agents.py`）：支援任何 OpenAI 相容 API 的 LLM 模型
+2. **HumanAgent**（位於 `core/agent.py`）：真人玩家透過終端輸入
+3. **DemoAgent**（位於 `core/agent.py`）：測試用的簡單代理（隨機回應）
 
 ### 透過 YAML 配置使用代理
 
@@ -258,9 +259,10 @@ players:
 如果需要在 Python 程式碼中直接建立代理：
 
 ```python
-from llm_werewolf.ai import LLMAgent, HumanAgent, DemoAgent, create_agent, PlayerConfig
+from llm_werewolf.ai.agents import LLMAgent, PlayerConfig, create_agent
+from llm_werewolf.core.agent import HumanAgent, DemoAgent
 from llm_werewolf.core import GameEngine
-from llm_werewolf.config import get_preset_by_name
+from llm_werewolf.core.config import get_preset_by_name
 
 # 方法 1：直接建立代理實例
 llm_agent = LLMAgent(
@@ -578,45 +580,48 @@ make gen-docs
 
 ```
 src/llm_werewolf/
-├── cli.py                 # 命令列入口
+├── cli.py                 # 命令列入口（主控台模式）
+├── tui.py                 # TUI 入口（互動模式）
 ├── ai/                    # 代理系統
-│   ├── agents.py         # LLM/Human/Demo 代理實作
-│   └── message.py        # 訊息處理
-├── config/               # 配置系統
-│   ├── game_config.py    # 遊戲配置模型
-│   └── role_presets.py   # 角色預設配置
+│   └── agents.py         # LLM 代理實作和配置模型
 ├── core/                 # 核心遊戲邏輯
+│   ├── agent.py          # 基礎代理、HumanAgent 和 DemoAgent
 │   ├── game_engine.py    # 遊戲引擎
 │   ├── game_state.py     # 遊戲狀態管理
 │   ├── player.py         # 玩家類
 │   ├── actions.py        # 動作系統
+│   ├── action_selector.py # 動作選擇邏輯
 │   ├── events.py         # 事件系統
 │   ├── victory.py        # 勝利條件檢查
+│   ├── types.py          # 類型定義
+│   ├── role_registry.py  # 角色註冊與驗證
+│   ├── config/           # 配置系統
+│   │   ├── game_config.py    # 遊戲配置模型
+│   │   └── presets.py        # 角色預設配置
 │   └── roles/            # 角色實作
 │       ├── base.py       # 角色基類
 │       ├── werewolf.py   # 狼人陣營角色
 │       ├── villager.py   # 村民陣營角色
 │       └── neutral.py    # 中立角色
-├── ui/                   # 使用者介面
-│   ├── tui_app.py        # TUI 應用程式
-│   ├── styles.py         # TUI 樣式
-│   └── components/       # TUI 元件
-│       ├── player_panel.py
-│       ├── game_panel.py
-│       ├── chat_panel.py
-│       └── debug_panel.py
-└── utils/                # 工具函數
-    └── validator.py      # 驗證工具
+└── ui/                   # 使用者介面
+    ├── tui_app.py        # TUI 應用程式
+    ├── styles.py         # TUI 樣式
+    └── components/       # TUI 元件
+        ├── player_panel.py
+        ├── game_panel.py
+        ├── chat_panel.py
+        └── debug_panel.py
 ```
 
 ### 模組說明
 
-- **cli.py**：命令列介面，負責載入配置並啟動遊戲
-- **ai/**：代理系統，實作各種 AI 代理和真人玩家介面
-- **config/**：配置系統，包含遊戲參數和角色預設
-- **core/**：遊戲核心邏輯，包含角色、玩家、遊戲狀態、動作和事件系統
-- **ui/**：終端使用者介面，基於 Textual 框架
-- **utils/**：通用工具函數
+- **cli.py**：主控台模式的命令列介面，負責載入配置並自動啟動遊戲
+- **tui.py**：互動模式的 TUI 入口，提供終端使用者介面
+- **ai/**：LLM 代理實作和配置模型（PlayerConfig、PlayersConfig）
+- **core/agent.py**：基礎代理協定和內建代理（HumanAgent、DemoAgent）
+- **core/config/**：配置系統，包含遊戲參數和角色預設
+- **core/**：遊戲核心邏輯，包含角色、玩家、遊戲狀態、動作、事件和勝利檢查
+- **ui/**：基於 Textual 框架的終端使用者介面
 
 ## 系統需求
 
@@ -666,7 +671,7 @@ src/llm_werewolf/
 您可以自訂 `GameConfig` 來調整各階段的時間限制：
 
 ```python
-from llm_werewolf.config import GameConfig
+from llm_werewolf.core.config import GameConfig
 
 config = GameConfig(
     num_players=9,
@@ -682,7 +687,7 @@ config = GameConfig(
 建立自訂的 `GameConfig`，指定您想要的角色：
 
 ```python
-from llm_werewolf.config import GameConfig
+from llm_werewolf.core.config import GameConfig
 
 config = GameConfig(
     num_players=10,

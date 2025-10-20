@@ -146,6 +146,14 @@ The engine coordinates all phases and uses `GameState` to track current state, d
 - `create_agent()` factory function creates agents from `PlayerConfig`
 - LLMAgent maintains chat_history for context across game phases
 
+**Action Selection** (src/llm_werewolf/ai/action_selector.py):
+
+- `ActionSelector` class provides structured prompts for AI decision-making
+- `build_target_selection_prompt()`: Creates formatted prompts for selecting targets
+- `parse_target_selection()`: Extracts player choices from AI responses
+- Handles optional "SKIP" actions for roles with conditional abilities
+- Used by night actions (Werewolf kills, Witch saves/poisons, Seer checks, etc.)
+
 **Player Management** (src/llm_werewolf/core/player.py):
 
 - `Player` class wraps agent, role, and state (alive, lover, voting ability)
@@ -155,9 +163,11 @@ The engine coordinates all phases and uses `GameState` to track current state, d
 **Configuration System** (src/llm_werewolf/core/config/):
 
 - `GameConfig` (game_config.py): Defines game rules, timeouts, role composition
-- `PlayersConfig` (agents.py): YAML-loaded player configurations
-- `presets.py`: Predefined configurations (6-players, 9-players, 12-players, expert, chaos)
+- `PlayerConfig` (imported from `llm_werewolf.ai`): Individual player configuration model
+- `PlayersConfig` (imported from `llm_werewolf.ai`): YAML-loaded player list configurations
+- `presets.py`: Predefined configurations (6-players, 9-players, 12-players, 15-players, expert, chaos)
 - Presets selected via `preset` field in YAML config
+- Access presets via `get_preset_by_name(preset_name)` function
 
 **Event System** (src/llm_werewolf/core/events.py):
 
@@ -336,6 +346,14 @@ return {
 - Use Pydantic models for configuration and data validation
 - Prefer composition over inheritance where possible
 
+## Logging and Observability
+
+- **Logfire Integration**: Project uses Pydantic Logfire for structured logging
+- Configuration in pyproject.toml under `[tool.logfire]`
+- Default: `send_to_logfire = false` (logs only to console for local development)
+- Logfire automatically logs errors in role actions and critical game events
+- Import and use: `import logfire` then `logfire.error()`, `logfire.info()`, etc.
+
 ## Recent Refactoring (October 2025)
 
 The codebase underwent significant restructuring:
@@ -344,5 +362,17 @@ The codebase underwent significant restructuring:
 2. **Role Registry Addition**: New centralized `role_registry.py` module manages all role-related lookups and validation
 3. **Import Path Updates**: Update imports to use `llm_werewolf.core.config` instead of `llm_werewolf.config`
 4. **File Renames**: `role_presets.py` renamed to `presets.py`
+5. **Agent Configuration**: `PlayerConfig` and `PlayersConfig` moved to `llm_werewolf.ai` module
 
 When working with older code examples or documentation, be aware of these path changes.
+
+**Correct import patterns:**
+
+```python
+# Correct (current)
+from llm_werewolf.core.config import GameConfig, get_preset_by_name
+from llm_werewolf.ai import PlayerConfig, PlayersConfig, create_agent
+
+# Incorrect (old)
+from llm_werewolf.config import GameConfig, get_preset_by_name
+```

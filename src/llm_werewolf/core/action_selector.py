@@ -1,8 +1,3 @@
-"""AI Action Selection System.
-
-This module provides utilities for getting structured action decisions from AI agents.
-"""
-
 import re
 import random
 from typing import TYPE_CHECKING

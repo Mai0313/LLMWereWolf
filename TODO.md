@@ -4,12 +4,10 @@
 
 - 狼人殺遊戲邏輯是否正確
 - 代碼是否需要優化, 例如是否有充分利用 `pydantic` 來實現更好的結構化和驗證
-- 遊戲邏輯是否與實際 進行遊戲的 代碼充分切開
-  - 遊戲規則 和 遊戲邏輯應該放在 `./src/llm_werewolf/core` 裡面, 遊戲實際運行則是放在 `./src/llm_werewolf/cli.py` 和 `./src/llm_werewolf/tui.py`
 - 狼人殺規則完整性, 部分特殊角色能力未實現, 詳情可以參考 `rule.md`
+- 保存/加載遊戲 - 使用 Pydantic 序列化 GameState
 - 重構複雜函數 - 將 run_voting_phase 拆分為更小的函數
 - 狼人協商機制 - 實現多隻狼人投票決定殺人目標
-- 保存/加載遊戲 - 使用 Pydantic 序列化 GameState
 
 當任務完成時 請務必記得透過 `uv run pre-commit run -a` 來確保代碼質量
 

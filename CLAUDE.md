@@ -120,6 +120,15 @@ The engine coordinates all phases and uses `GameState` to track current state, d
 - Roles implement `get_night_actions()` returning list of `Action` objects
 - Priority system (`ActionPriority` enum) ensures actions execute in correct order (e.g., Guard before Werewolf before Witch)
 
+**Role Registry** (src/llm_werewolf/core/role_registry.py):
+
+- Centralized role management system
+- `get_role_map()`: Returns mapping of role names to role classes
+- `get_werewolf_roles()`: Returns set of werewolf role names
+- `validate_role_names()`: Validates role configurations
+- `create_roles()`: Creates role class list from role names
+- Use this module when adding new roles or validating configurations
+
 **Action System** (src/llm_werewolf/core/actions.py):
 
 - Abstract `Action` base class with `validate()` and `execute()` methods
@@ -143,11 +152,11 @@ The engine coordinates all phases and uses `GameState` to track current state, d
 - Each player has unique player_id, name, role instance, and agent reference
 - Players are created with role assignments during `GameEngine.setup_game()`
 
-**Configuration System** (src/llm_werewolf/config/):
+**Configuration System** (src/llm_werewolf/core/config/):
 
 - `GameConfig` (game_config.py): Defines game rules, timeouts, role composition
 - `PlayersConfig` (agents.py): YAML-loaded player configurations
-- `role_presets.py`: Predefined configurations (6-players, 9-players, 12-players, expert, chaos)
+- `presets.py`: Predefined configurations (6-players, 9-players, 12-players, expert, chaos)
 - Presets selected via `preset` field in YAML config
 
 **Event System** (src/llm_werewolf/core/events.py):
@@ -237,8 +246,10 @@ XAI_API_KEY=xai-...
    - `get_config()`: Return `RoleConfig` with camp, priority, abilities
    - `get_night_actions(game_state)`: Return list of actions or empty list
 4. Create corresponding `Action` subclass in actions.py if needed
-5. Add role to `role_map` in `GameConfig.to_role_list()` (config/game_config.py)
-6. Add role name to werewolf_roles set in validation if werewolf faction
+5. **Add role to role registry** in `core/role_registry.py`:
+   - Import the role class in `get_role_map()`
+   - Add to the returned dictionary
+   - If werewolf role, add to `get_werewolf_roles()` set
 
 Example structure:
 
@@ -257,6 +268,20 @@ class NewRole(Role):
     def get_night_actions(self, game_state: GameState) -> list[Action]:
         # Return actions or empty list
         return []
+```
+
+Then update `role_registry.py`:
+
+```python
+# In get_role_map()
+from llm_werewolf.core.roles.villager import NewRole
+
+return {
+    # ... existing roles ...
+    "NewRole": NewRole,
+}
+
+# If it's a werewolf role, also update get_werewolf_roles()
 ```
 
 ## Testing Strategy
@@ -297,9 +322,10 @@ class NewRole(Role):
 - All player names must be unique (validated in PlayersConfig)
 - LLM models require both base_url and api_key_env fields
 - API keys loaded from environment variables, not directly in YAML
-- Role names in YAML are case-sensitive and must match role_map keys exactly
+- Role names in YAML are case-sensitive and must match role_map keys exactly in `role_registry.py`
 - Actions must be added to `get_action_priority()` map in game_engine.py for correct ordering
-- When adding werewolf roles, update werewolf_roles set in GameConfig validation
+- When adding werewolf roles, update BOTH `get_role_map()` AND `get_werewolf_roles()` in role_registry.py
+- Import paths: Config is now at `llm_werewolf.core.config`, not `llm_werewolf.config`
 
 ## Code Style
 
@@ -309,3 +335,14 @@ class NewRole(Role):
 - Line length: 99 characters
 - Use Pydantic models for configuration and data validation
 - Prefer composition over inheritance where possible
+
+## Recent Refactoring (October 2025)
+
+The codebase underwent significant restructuring:
+
+1. **Config Module Reorganization**: Config moved from `src/llm_werewolf/config/` to `src/llm_werewolf/core/config/`
+2. **Role Registry Addition**: New centralized `role_registry.py` module manages all role-related lookups and validation
+3. **Import Path Updates**: Update imports to use `llm_werewolf.core.config` instead of `llm_werewolf.config`
+4. **File Renames**: `role_presets.py` renamed to `presets.py`
+
+When working with older code examples or documentation, be aware of these path changes.

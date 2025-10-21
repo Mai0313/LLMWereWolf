@@ -79,6 +79,7 @@ YAML 設定檔選項：
 
 - `preset: <preset-name>` 指定角色預設配置（如 `6-players`、`9-players`、`12-players`、`15-players`、`expert`、`chaos`）
 - `show_debug: true` 顯示 TUI 除錯面板（可被命令列 `--debug` 參數覆蓋）
+- `language: <language-code>` 設定遊戲語言（如 `en-US`、`zh-TW`、`zh-CN`）。預設：`en-US`
 - `players: [...]` 定義玩家列表
 
 ### 環境配置
@@ -169,6 +170,7 @@ cp configs/players.yaml my-game.yaml
 ```yaml
 preset: 6-players        # 選擇預設配置
 show_debug: false        # 是否顯示除錯面板（TUI 模式適用）
+language: zh-TW          # 語言代碼（en-US, zh-TW, zh-CN）
 
 players:
   - name: GPT-4 偵探
@@ -229,6 +231,7 @@ players:
 
 - `preset`：必填，決定遊戲的角色配置和玩家數量
 - `show_debug`：選填，預設為 `false`，用於 TUI 模式顯示除錯面板
+- `language`：選填，預設為 `en-US`，設定遊戲語言（如 `en-US`、`zh-TW`、`zh-CN`）
 - `players`：必填，玩家列表，數量必須與 preset 的 `num_players` 一致
 
 **玩家配置欄位：**
@@ -614,11 +617,15 @@ src/llm_werewolf/
 │   ├── action_selector.py # 動作選擇邏輯
 │   ├── events.py         # 事件系統
 │   ├── victory.py        # 勝利條件檢查
-│   ├── types.py          # 類型定義
+│   ├── serialization.py  # 序列化工具
 │   ├── role_registry.py  # 角色註冊與驗證
 │   ├── config/           # 配置系統
 │   │   ├── game_config.py    # 遊戲配置模型
 │   │   └── presets.py        # 角色預設配置
+│   ├── types/            # 類型定義
+│   │   ├── enums.py      # 列舉（陣營、階段、狀態等）
+│   │   ├── models.py     # 資料模型
+│   │   └── protocols.py  # 協議定義
 │   └── roles/            # 角色實作
 │       ├── base.py       # 角色基類
 │       ├── werewolf.py   # 狼人陣營角色
@@ -641,6 +648,7 @@ src/llm_werewolf/
 - **ai/**：LLM 代理實作和配置模型（PlayerConfig、PlayersConfig）
 - **core/agent.py**：基礎代理協定和內建代理（HumanAgent、DemoAgent）
 - **core/config/**：配置系統，包含遊戲參數和角色預設
+- **core/types/**：類型定義，包含列舉、資料模型和協議定義
 - **core/**：遊戲核心邏輯，包含角色、玩家、遊戲狀態、動作、事件和勝利檢查
 - **ui/**：基於 Textual 框架的終端使用者介面
 

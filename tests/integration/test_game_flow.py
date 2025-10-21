@@ -15,10 +15,10 @@ def test_game_initialization() -> None:
         players.append((f"p{i}", f"Player{i}", DemoAgent()))
 
     # Get roles
-    roles = create_roles(config.role_names)
+    roles = create_roles(role_names=config.role_names)
 
     # Setup game
-    engine.setup_game(players, roles)
+    engine.setup_game(players=players, roles=roles)
 
     assert engine.game_state is not None
     assert len(engine.game_state.players) == 6
@@ -30,9 +30,9 @@ def test_game_state_initialization() -> None:
     engine = GameEngine(config)
 
     players = [(f"p{i}", f"Player{i}", DemoAgent()) for i in range(config.num_players)]
-    roles = create_roles(config.role_names)
+    roles = create_roles(role_names=config.role_names)
 
-    engine.setup_game(players, roles)
+    engine.setup_game(players=players, roles=roles)
 
     assert engine.game_state.phase.value == "setup"
     assert engine.game_state.round_number == 0
@@ -45,9 +45,9 @@ def test_role_assignment() -> None:
     engine = GameEngine(config)
 
     players = [(f"p{i}", f"Player{i}", DemoAgent()) for i in range(config.num_players)]
-    roles = create_roles(config.role_names)
+    roles = create_roles(role_names=config.role_names)
 
-    engine.setup_game(players, roles)
+    engine.setup_game(players=players, roles=roles)
 
     role_assignments = engine.assign_roles()
     assert len(role_assignments) == 6
@@ -65,9 +65,9 @@ def test_victory_checker() -> None:
     engine = GameEngine(config)
 
     players = [(f"p{i}", f"Player{i}", DemoAgent()) for i in range(config.num_players)]
-    roles = create_roles(config.role_names)
+    roles = create_roles(role_names=config.role_names)
 
-    engine.setup_game(players, roles)
+    engine.setup_game(players=players, roles=roles)
 
     # Initially no winner
     assert not engine.check_victory()

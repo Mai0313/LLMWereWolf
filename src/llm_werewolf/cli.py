@@ -34,9 +34,10 @@ def main(config: str) -> None:
         (f"player_{idx + 1}", player_cfg.name, create_agent(player_cfg))
         for idx, player_cfg in enumerate(players_config.players)
     ]
+    roles = create_roles(role_names=game_config.role_names)
 
     engine = GameEngine(game_config)
-    engine.setup_game(players, create_roles(game_config.role_names))
+    engine.setup_game(players=players, roles=roles)
     logfire.info("game_created", config_path=str(config_path), preset=players_config.preset)
 
     console.print(f"[green]已載入設定檔: {config_path.resolve()}[/green]")

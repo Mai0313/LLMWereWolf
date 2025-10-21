@@ -79,6 +79,7 @@ YAML Configuration File Options:
 
 - `preset: <preset-name>`: Specifies the role preset configuration (e.g., `6-players`, `9-players`, `12-players`, `15-players`, `expert`, `chaos`).
 - `show_debug: true`: Shows the TUI debug panel (can be overridden by the `--debug` command-line argument).
+- `language: <language-code>`: Sets the game language (e.g., `en-US`, `zh-TW`, `zh-CN`). Default: `en-US`.
 - `players: [...]`: Defines the list of players.
 
 ### Environment Configuration
@@ -169,6 +170,7 @@ Example `my-game.yaml`:
 ```yaml
 preset: 6-players        # Choose a preset configuration
 show_debug: false        # Whether to show the debug panel (for TUI mode)
+language: en-US          # Language code (en-US, zh-TW, zh-CN)
 
 players:
   - name: GPT-4 Detective
@@ -229,6 +231,7 @@ players:
 
 - `preset`: Required, determines the game's role configuration and number of players.
 - `show_debug`: Optional, defaults to `false`, used to show the debug panel in TUI mode.
+- `language`: Optional, defaults to `en-US`, sets the game language (e.g., `en-US`, `zh-TW`, `zh-CN`).
 - `players`: Required, list of players, the number must match `num_players` in the preset.
 
 **Player Configuration Fields:**
@@ -614,11 +617,15 @@ src/llm_werewolf/
 │   ├── action_selector.py # Action selection logic
 │   ├── events.py         # Event system
 │   ├── victory.py        # Victory condition checking
-│   ├── types.py          # Type definitions
+│   ├── serialization.py  # Serialization utilities
 │   ├── role_registry.py  # Role registration and validation
 │   ├── config/           # Configuration system
 │   │   ├── game_config.py    # Game configuration model
 │   │   └── presets.py        # Role preset configurations
+│   ├── types/            # Type definitions
+│   │   ├── enums.py      # Enums (Camp, Phase, Status, etc.)
+│   │   ├── models.py     # Data models
+│   │   └── protocols.py  # Protocol definitions
 │   └── roles/            # Role implementations
 │       ├── base.py       # Base role class
 │       ├── werewolf.py   # Werewolf faction roles
@@ -641,6 +648,7 @@ src/llm_werewolf/
 - **ai/**: LLM agent implementation and configuration models (PlayerConfig, PlayersConfig).
 - **core/agent.py**: Base agent protocol and built-in agents (HumanAgent, DemoAgent).
 - **core/config/**: Configuration system, containing game parameters and role presets.
+- **core/types/**: Type definitions including enums, data models, and protocol definitions.
 - **core/**: Core game logic, including roles, players, game state, actions, events, and victory checking.
 - **ui/**: Terminal user interface based on the Textual framework.
 

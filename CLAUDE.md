@@ -158,6 +158,115 @@ Night actions execute in order defined by `ActionPriority` enum (0=highest prior
 - `EventType` enum defines all event types (GAME_STARTED, PLAYER_DIED, ROLE_ACTION, etc.)
 - Console mode prints events directly; TUI displays them in ChatPanel
 
+## Avoiding Circular Imports
+
+**Important**: This codebase follows strict principles to avoid circular import dependencies through proper architecture design, not through workarounds.
+
+### The Right Way: Protocol-Based Architecture
+
+All type definitions are centralized in `core/types/`:
+
+- **`types/enums.py`**: All enum types (Camp, GamePhase, ActionType, etc.)
+- **`types/models.py`**: Data models (Event, PlayerInfo, RoleConfig, VictoryResult, etc.)
+- **`types/protocols.py`**: Protocol definitions for structural typing (PlayerProtocol, RoleProtocol, GameStateProtocol, ActionProtocol, AgentProtocol)
+
+Other modules import from `types/` and use Protocols to define interfaces without creating circular dependencies.
+
+### What NOT to Do
+
+**❌ Do NOT use `TYPE_CHECKING` to hide circular imports:**
+
+```python
+# BAD: This only hides the problem, doesn't solve it
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from llm_werewolf.core.player import Player
+
+
+def process_player(player: "Player") -> None:  # String annotation
+    pass
+```
+
+**❌ Do NOT use string annotations (forward references) to avoid imports:**
+
+```python
+# BAD: String annotations mask circular dependency issues
+def get_players(self) -> "list[Player]":
+    pass
+```
+
+**❌ Do NOT import concrete classes inside functions:**
+
+```python
+# BAD: Function-level imports are a code smell
+def validate(self) -> bool:
+    from llm_werewolf.core.roles.villager import Witch
+
+    return isinstance(self.actor.role, Witch)
+```
+
+### The Correct Approach
+
+**✅ Use Protocols for type hints:**
+
+```python
+# GOOD: Import Protocol at module level
+from llm_werewolf.core.types import PlayerProtocol
+
+
+def process_player(player: PlayerProtocol) -> None:
+    pass
+```
+
+**✅ Check role behavior by attributes or name:**
+
+```python
+# GOOD: Check by attribute existence
+if hasattr(self.actor.role, "has_save_potion"):
+    self.actor.role.has_save_potion = False
+
+# GOOD: Check by role name
+if self.target.role.name == "HiddenWolf":
+    result = "villager"
+```
+
+**✅ Import concrete classes only where actually needed:**
+
+```python
+# GOOD: Import concrete class in implementation file
+from llm_werewolf.core.player import Player
+from llm_werewolf.core.game_state import GameState
+
+
+# Use Protocols in type hints for parameters
+def setup_game(self, players: list[AgentProtocol], roles: list[RoleProtocol]) -> None:
+    # Create concrete instances inside the function
+    player = Player(player_id=id, name=name, role=role, agent=agent)
+```
+
+### Architecture Rules
+
+1. **Types layer** (`core/types/`): Contains all shared types, enums, models, and protocols. No dependencies on other core modules.
+
+2. **Data layer** (`core/player.py`, `core/game_state.py`): Implements core data structures. Only imports from types layer.
+
+3. **Logic layer** (`core/roles/`, `core/actions/`, `core/engine/`): Implements game logic. Imports from types and data layers. Uses Protocols for cross-module dependencies.
+
+4. **Always verify**: After refactoring, verify no circular imports exist:
+
+   ```bash
+   uv run python -c "from llm_werewolf.core import player, game_state, roles, actions, engine; print('✅ No circular imports!')"
+   ```
+
+### Benefits of This Approach
+
+- ✅ No hidden dependencies through `TYPE_CHECKING`
+- ✅ Clear architectural layers
+- ✅ Better IDE support and type checking
+- ✅ Easier to test and maintain
+- ✅ No runtime surprises from circular imports
+
 ## Key Implementation Details
 
 ### Discussion Context Management

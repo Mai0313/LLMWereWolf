@@ -173,29 +173,29 @@ show_debug: false        # 是否显示调试面板（TUI 模式适用）
 language: zh-CN          # 语言代码（en-US, zh-TW, zh-CN）
 
 players:
-  - name: GPT-4 侦探
+  - name: GPT-4o 侦探
     model: gpt-4o
     base_url: https://api.openai.com/v1
     api_key_env: OPENAI_API_KEY
     temperature: 0.7
-    max_tokens: 500
+    max_tokens:
 
-  - name: GPT-4.1 玩家
-    model: gpt-4.1
+  - name: GPT-4o-mini 玩家
+    model: gpt-4o-mini
     base_url: https://api.openai.com/v1
     api_key_env: OPENAI_API_KEY
     temperature: 0.7
-    max_tokens: 500
+    max_tokens:
 
-  - name: GPT-5 分析师
-    model: gpt-5-chat
+  - name: GPT-4 分析师
+    model: gpt-4
     base_url: https://api.openai.com/v1
     api_key_env: OPENAI_API_KEY
     temperature: 0.7
-    max_tokens: 500
+    max_tokens:
 
   - name: Claude Sonnet
-    model: claude-sonnet-4-5-20250929
+    model: claude-sonnet-4-20250514
     base_url: https://api.anthropic.com/v1
     api_key_env: ANTHROPIC_API_KEY
     temperature: 0.7
@@ -240,11 +240,12 @@ players:
 - `model`：模型类型
   - `human`：真人玩家（通过终端输入）
   - `demo`：测试用简单代理（随机回应）
-  - LLM 模型名称：如 `gpt-4o`、`gpt-4.1`、`gpt-5-chat`、`claude-sonnet-4-5-20250929`、`claude-haiku-4-5-20251001`、`deepseek-reasoner`、`llama3`
+  - LLM 模型名称：如 `gpt-4o`、`gpt-4o-mini`、`claude-sonnet-4-20250514`、`claude-haiku-4-20250514`、`deepseek-reasoner`、`llama3` 或任何 OpenAI 兼容模型
 - `base_url`：API 端点（LLM 模型必填）
 - `api_key_env`：环境变量名称（有验证的端点必填）
 - `temperature`：选填，默认 0.7
-- `max_tokens`：选填，默认 500
+- `max_tokens`：选填，默认 `null`（无限制）
+- `reasoning_effort`：选填，支持推理的模型的推理努力等级（如 "low"、"medium"、"high"）
 
 **支持的模型类型：**
 
@@ -417,12 +418,16 @@ src/llm_werewolf/
 │   ├── game_engine.py    # 游戏引擎
 │   ├── game_state.py     # 游戏状态管理
 │   ├── player.py         # 玩家类
-│   ├── actions.py        # 动作系统
 │   ├── action_selector.py # 动作选择逻辑
 │   ├── events.py         # 事件系统
 │   ├── victory.py        # 胜利条件检查
 │   ├── serialization.py  # 序列化工具
 │   ├── role_registry.py  # 角色注册与验证
+│   ├── actions/          # 动作系统
+│   │   ├── base.py       # 基础动作类
+│   │   ├── common.py     # 通用动作
+│   │   ├── villager.py   # 村民阵营动作
+│   │   └── werewolf.py   # 狼人阵营动作
 │   ├── config/           # 配置系统
 │   │   ├── game_config.py    # 游戏配置模型
 │   │   └── presets.py        # 角色预设配置
@@ -451,9 +456,10 @@ src/llm_werewolf/
 - **tui.py**：交互模式的 TUI 入口，提供终端用户界面
 - **ai/**：LLM 代理实现和配置模型（PlayerConfig、PlayersConfig）
 - **core/agent.py**：基础代理协议和内置代理（HumanAgent、DemoAgent）
+- **core/actions/**：动作系统，包含基础类和阵营特定动作
 - **core/config/**：配置系统，包含游戏参数和角色预设
 - **core/types/**：类型定义，包含枚举、数据模型和协议定义
-- **core/**：游戏核心逻辑，包含角色、玩家、游戏状态、动作、事件和胜利检查
+- **core/**：游戏核心逻辑，包含角色、玩家、游戏状态、动作选择、事件和胜利检查
 - **ui/**：基于 Textual 框架的终端用户界面
 
 ## 系统需求

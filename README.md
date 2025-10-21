@@ -173,29 +173,29 @@ show_debug: false        # Whether to show the debug panel (for TUI mode)
 language: en-US          # Language code (en-US, zh-TW, zh-CN)
 
 players:
-  - name: GPT-4 Detective
+  - name: GPT-4o Detective
     model: gpt-4o
     base_url: https://api.openai.com/v1
     api_key_env: OPENAI_API_KEY
     temperature: 0.7
-    max_tokens: 500
+    max_tokens:
 
-  - name: GPT-4.1 Player
-    model: gpt-4.1
+  - name: GPT-4o-mini Player
+    model: gpt-4o-mini
     base_url: https://api.openai.com/v1
     api_key_env: OPENAI_API_KEY
     temperature: 0.7
-    max_tokens: 500
+    max_tokens:
 
-  - name: GPT-5 Analyst
-    model: gpt-5-chat
+  - name: GPT-4 Analyst
+    model: gpt-4
     base_url: https://api.openai.com/v1
     api_key_env: OPENAI_API_KEY
     temperature: 0.7
-    max_tokens: 500
+    max_tokens:
 
   - name: Claude Sonnet
-    model: claude-sonnet-4-5-20250929
+    model: claude-sonnet-4-20250514
     base_url: https://api.anthropic.com/v1
     api_key_env: ANTHROPIC_API_KEY
     temperature: 0.7
@@ -240,11 +240,12 @@ players:
 - `model`: Model type.
   - `human`: Human player (input via terminal).
   - `demo`: Simple agent for testing (random responses).
-  - LLM model name: e.g., `gpt-4o`, `gpt-4.1`, `gpt-5-chat`, `claude-sonnet-4-5-20250929`, `claude-haiku-4-5-20251001`, `deepseek-reasoner`, `llama3`.
+  - LLM model name: e.g., `gpt-4o`, `gpt-4o-mini`, `claude-sonnet-4-20250514`, `claude-haiku-4-20250514`, `deepseek-reasoner`, `llama3`, or any OpenAI-compatible model.
 - `base_url`: API endpoint (required for LLM models).
 - `api_key_env`: Environment variable name (required for authenticated endpoints).
 - `temperature`: Optional, defaults to 0.7.
-- `max_tokens`: Optional, defaults to 500.
+- `max_tokens`: Optional, defaults to `null` (no limit).
+- `reasoning_effort`: Optional, reasoning effort level for models that support it (e.g., "low", "medium", "high").
 
 **Supported Model Types:**
 
@@ -417,12 +418,16 @@ src/llm_werewolf/
 │   ├── game_engine.py    # Game engine
 │   ├── game_state.py     # Game state management
 │   ├── player.py         # Player class
-│   ├── actions.py        # Action system
 │   ├── action_selector.py # Action selection logic
 │   ├── events.py         # Event system
 │   ├── victory.py        # Victory condition checking
 │   ├── serialization.py  # Serialization utilities
 │   ├── role_registry.py  # Role registration and validation
+│   ├── actions/          # Action system
+│   │   ├── base.py       # Base action class
+│   │   ├── common.py     # Common actions
+│   │   ├── villager.py   # Villager faction actions
+│   │   └── werewolf.py   # Werewolf faction actions
 │   ├── config/           # Configuration system
 │   │   ├── game_config.py    # Game configuration model
 │   │   └── presets.py        # Role preset configurations
@@ -451,9 +456,10 @@ src/llm_werewolf/
 - **tui.py**: TUI entry point for interactive mode with terminal user interface.
 - **ai/**: LLM agent implementation and configuration models (PlayerConfig, PlayersConfig).
 - **core/agent.py**: Base agent protocol and built-in agents (HumanAgent, DemoAgent).
+- **core/actions/**: Action system with base classes and faction-specific actions.
 - **core/config/**: Configuration system, containing game parameters and role presets.
 - **core/types/**: Type definitions including enums, data models, and protocol definitions.
-- **core/**: Core game logic, including roles, players, game state, actions, events, and victory checking.
+- **core/**: Core game logic, including roles, players, game state, action selection, events, and victory checking.
 - **ui/**: Terminal user interface based on the Textual framework.
 
 ## System Requirements

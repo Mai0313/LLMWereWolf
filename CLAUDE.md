@@ -19,6 +19,7 @@ pytest                                     # Run all tests
 pytest tests/core/test_player.py          # Run specific test file
 pytest -k test_name                       # Run specific test by name
 pytest -vv                                # Verbose output
+make test                                  # Alias for pytest
 
 # Linting and formatting
 pre-commit run -a                         # Run all pre-commit hooks
@@ -27,6 +28,9 @@ make fmt                                  # Alias for pre-commit
 # Generate documentation
 make gen-docs                             # Generate API docs from source
 uv run ./scripts/gen_docs.py --source ./src --output ./docs/Reference gen_docs
+
+# Clean build artifacts
+make clean                                # Remove generated files, cache, etc.
 ```
 
 ### Running the Game
@@ -77,6 +81,15 @@ The game follows a modular architecture with clear separation of concerns:
 - Day Discussion: All living players discuss via their agents
 - Day Voting: Players vote; highest vote count is eliminated
 - Victory Check: After each phase, checks for faction victory or lover victory
+
+**Action System:**
+The action system (`core/actions/`) separates action logic from role definitions:
+
+- `BaseAction` (`actions/base.py`): Base class for all actions with validation and execution
+- `CommonActions` (`actions/common.py`): Shared actions like voting and discussion
+- `VillagerActions` (`actions/villager.py`): Villager faction-specific actions
+- `WerewolfActions` (`actions/werewolf.py`): Werewolf faction-specific actions
+- Actions are created and executed through role's `perform_action()` method
 
 **Agent System:**
 The agent system is designed for extensibility:

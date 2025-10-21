@@ -55,9 +55,6 @@ uv run llm-werewolf-tui configs/demo.yaml
 # Use LLM player configuration (requires setting API keys first)
 uv run llm-werewolf-tui configs/players.yaml
 
-# Show the debug panel
-uv run llm-werewolf-tui configs/demo.yaml --debug
-
 # If the package is installed globally
 llm-werewolf-tui configs/demo.yaml
 
@@ -78,7 +75,6 @@ uv run werewolf configs/demo.yaml
 YAML Configuration File Options:
 
 - `preset: <preset-name>`: Specifies the role preset configuration (e.g., `6-players`, `9-players`, `12-players`, `15-players`, `expert`, `chaos`).
-- `show_debug: true`: Shows the TUI debug panel (can be overridden by the `--debug` command-line argument).
 - `language: <language-code>`: Sets the game language (e.g., `en-US`, `zh-TW`, `zh-CN`). Default: `en-US`.
 - `players: [...]`: Defines the list of players.
 
@@ -169,7 +165,6 @@ Example `my-game.yaml`:
 
 ```yaml
 preset: 6-players        # Choose a preset configuration
-show_debug: false        # Whether to show the debug panel (for TUI mode)
 language: en-US          # Language code (en-US, zh-TW, zh-CN)
 
 players:
@@ -230,7 +225,6 @@ players:
 **Configuration Description:**
 
 - `preset`: Required, determines the game's role configuration and number of players.
-- `show_debug`: Optional, defaults to `false`, used to show the debug panel in TUI mode.
 - `language`: Optional, defaults to `en-US`, sets the game language (e.g., `en-US`, `zh-TW`, `zh-CN`).
 - `players`: Required, list of players, the number must match `num_players` in the preset.
 
@@ -363,21 +357,9 @@ A scrollable event log showing all events and dialogue in the game:
 
 Events are color-coded by importance for quick identification of key information.
 
-#### Debug Panel (Right, Optional)
-
-Toggle with the 'd' key, contains:
-
-- Session ID
-- Configuration file source
-- Player count and type statistics
-- Role assignments
-- Time limit settings
-- Error tracking
-
 ### TUI Controls
 
 - **q**: Quit the game.
-- **d**: Toggle the debug panel display (or use the `--debug` argument to open it by default).
 - **n**: Manually proceed to the next step (for debugging).
 - **Mouse Wheel**: Scroll through the chat history.
 - **Arrow Keys**: Move between focusable components.

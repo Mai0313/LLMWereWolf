@@ -39,7 +39,6 @@ make clean                                # Remove generated files, cache, etc.
 # TUI Mode (Interactive Terminal Interface)
 uv run llm-werewolf-tui configs/demo.yaml           # Demo agents (no API key needed)
 uv run llm-werewolf-tui configs/players.yaml        # LLM agents (requires API keys)
-uv run llm-werewolf-tui configs/demo.yaml --debug   # Show debug panel
 
 # Console Mode (Auto-play with text logs)
 uv run llm-werewolf configs/demo.yaml
@@ -141,8 +140,8 @@ Night actions execute in order defined by `ActionPriority` enum (0=highest prior
   - `PlayerPanel`: Shows all players with status indicators (alive/dead/protected/lover/poisoned)
   - `GamePanel`: Displays round, phase, faction counts, and vote tallies
   - `ChatPanel`: Scrollable event log with colored messages
-  - `DebugPanel`: Session info, config details, role assignments (toggle with 'd' key)
 - Event-driven: `GameEngine.on_event` callback pushes events to TUI in real-time
+- Footer displays session ID and uptime
 
 **Event System:**
 

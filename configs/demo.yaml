@@ -1,5 +1,5 @@
 preset: 9-players
-show_debug: false
+show_debug: true
 language: zh-TW
 
 players:

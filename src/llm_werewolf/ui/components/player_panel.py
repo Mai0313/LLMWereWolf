@@ -29,6 +29,9 @@ class PlayerPanel(Static):
             self.update("No game in progress")
             return
 
+        # Check if there are any human players in the game
+        has_human_player = any(p.ai_model == "human" for p in self.game_state.players)
+
         table = Table(title="Players", show_header=True, header_style="bold magenta")
         table.add_column("Name", style="cyan", no_wrap=True)
         table.add_column("Model", style="blue")
@@ -44,8 +47,13 @@ class PlayerPanel(Static):
                 status_icon = "✗"
                 status_style = "red"
 
-            # Show role only if dead (or for debugging)
-            role_display = player.get_role_name() if not player.is_alive() else "?"
+            # Role display logic:
+            # - If there's a human player: hide roles (show "?") unless dead
+            # - If no human player: show all roles (spectator/testing mode)
+            if has_human_player:
+                role_display = player.get_role_name() if not player.is_alive() else "?"
+            else:
+                role_display = player.get_role_name()
 
             # Add special status indicators
             status_text = status_icon

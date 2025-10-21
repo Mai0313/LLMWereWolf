@@ -55,9 +55,6 @@ uv run llm-werewolf-tui configs/demo.yaml
 # 使用 LLM 玩家配置（需先設定 API 金鑰）
 uv run llm-werewolf-tui configs/players.yaml
 
-# 顯示除錯面板
-uv run llm-werewolf-tui configs/demo.yaml --debug
-
 # 若已全域安裝套件
 llm-werewolf-tui configs/demo.yaml
 
@@ -78,7 +75,6 @@ uv run werewolf configs/demo.yaml
 YAML 設定檔選項：
 
 - `preset: <preset-name>` 指定角色預設配置（如 `6-players`、`9-players`、`12-players`、`15-players`、`expert`、`chaos`）
-- `show_debug: true` 顯示 TUI 除錯面板（可被命令列 `--debug` 參數覆蓋）
 - `language: <language-code>` 設定遊戲語言（如 `en-US`、`zh-TW`、`zh-CN`）。預設：`en-US`
 - `players: [...]` 定義玩家列表
 
@@ -169,7 +165,6 @@ cp configs/players.yaml my-game.yaml
 
 ```yaml
 preset: 6-players        # 選擇預設配置
-show_debug: false        # 是否顯示除錯面板（TUI 模式適用）
 language: zh-TW          # 語言代碼（en-US, zh-TW, zh-CN）
 
 players:
@@ -230,7 +225,6 @@ players:
 **配置說明：**
 
 - `preset`：必填，決定遊戲的角色配置和玩家數量
-- `show_debug`：選填，預設為 `false`，用於 TUI 模式顯示除錯面板
 - `language`：選填，預設為 `en-US`，設定遊戲語言（如 `en-US`、`zh-TW`、`zh-CN`）
 - `players`：必填，玩家列表，數量必須與 preset 的 `num_players` 一致
 
@@ -363,21 +357,9 @@ TUI (Terminal User Interface) 提供現代化終端介面的即時遊戲視覺�
 
 事件根據重要性進行顏色編碼，便於快速識別關鍵資訊。
 
-#### 除錯面板（右側，可選）
-
-按 'd' 鍵切換顯示，包含：
-
-- 會話 ID
-- 配置檔案來源
-- 玩家數量與類型統計
-- 角色分配
-- 時間限制設定
-- 錯誤追蹤
-
 ### TUI 控制
 
 - **q**：退出遊戲
-- **d**：切換除錯面板顯示/隱藏（或使用 `--debug` 參數預設開啟）
 - **n**：手動進入下一步（除錯用）
 - **滑鼠滾輪**：捲動對話歷史
 - **方向鍵**：在可聚焦元件間移動
@@ -447,7 +429,6 @@ src/llm_werewolf/
         ├── player_panel.py
         ├── game_panel.py
         ├── chat_panel.py
-        └── debug_panel.py
 ```
 
 ### 模組說明

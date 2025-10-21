@@ -9,12 +9,11 @@ from llm_werewolf.core.config import get_preset_by_name
 from llm_werewolf.core.role_registry import create_roles
 
 
-def main(config: str, debug: bool = False) -> None:
+def main(config: str) -> None:
     """Run Werewolf game with TUI interface.
 
     Args:
         config: Path to the YAML configuration file
-        debug: Show debug panel (default: False)
     """
     config_path = Path(config)
     players_config = load_config(config_path=config_path)
@@ -37,13 +36,10 @@ def main(config: str, debug: bool = False) -> None:
 
     engine = GameEngine(game_config, language=players_config.language)
     engine.setup_game(players=players, roles=roles)
-    logfire.info(
-        "tui_started", config_path=str(config_path), preset=players_config.preset, show_debug=debug
-    )
+    logfire.info("tui_started", config_path=str(config_path), preset=players_config.preset)
 
     try:
-        show_debug = debug or players_config.show_debug
-        run_tui(engine, show_debug)
+        run_tui(engine)
     except KeyboardInterrupt:
         logfire.info(
             "tui_aborted_by_user", config_path=str(config_path), preset=players_config.preset

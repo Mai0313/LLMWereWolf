@@ -1,4 +1,6 @@
+import uuid
 from typing import ClassVar
+from datetime import datetime
 
 from textual.app import App, ComposeResult
 from textual.widgets import Footer, Header
@@ -6,7 +8,7 @@ from textual.containers import Vertical, Horizontal
 
 from llm_werewolf.core.engine import GameEngine
 from llm_werewolf.core.events import Event
-from llm_werewolf.ui.components import ChatPanel, GamePanel, DebugPanel, PlayerPanel
+from llm_werewolf.ui.components import ChatPanel, GamePanel, PlayerPanel
 
 
 class WerewolfTUI(App):
@@ -18,17 +20,12 @@ class WerewolfTUI(App):
     }
 
     #left_panel {
-        width: 30%;
+        width: 3fr;
         height: 100%;
     }
 
     #middle_panel {
-        width: 45%;
-        height: 100%;
-    }
-
-    #right_panel {
-        width: 25%;
+        width: 5fr;
         height: 100%;
     }
 
@@ -49,36 +46,28 @@ class WerewolfTUI(App):
         border: solid $success;
         background: $panel;
     }
-
-    DebugPanel {
-        height: 100%;
-        border: solid $accent;
-        background: $panel;
-    }
     """
 
     BINDINGS: ClassVar = [
         ("q", "quit", "Quit"),
         ("ctrl+c", "quit", "Quit"),
-        ("d", "toggle_debug", "Toggle Debug"),
         ("n", "next_step", "Next Step"),
     ]
 
-    def __init__(self, game_engine: GameEngine | None = None, show_debug: bool = True) -> None:
+    def __init__(self, game_engine: GameEngine | None = None) -> None:
         """Initialize the TUI application.
 
         Args:
             game_engine: The game engine to display.
-            show_debug: Whether to show the debug panel.
         """
         super().__init__()
         self.game_engine = game_engine
-        self.show_debug_flag = show_debug
+        self.session_id = str(uuid.uuid4())[:8]
+        self.start_time = datetime.now()
 
         self.player_panel: PlayerPanel | None = None
         self.game_panel: GamePanel | None = None
         self.chat_panel: ChatPanel | None = None
-        self.debug_panel: DebugPanel | None = None
 
     def compose(self) -> ComposeResult:
         """Compose the TUI layout.
@@ -100,22 +89,28 @@ class WerewolfTUI(App):
                 self.chat_panel = ChatPanel()
                 yield self.chat_panel
 
-            if self.show_debug_flag:
-                with Vertical(id="right_panel"):
-                    self.debug_panel = DebugPanel()
-                    yield self.debug_panel
-
         yield Footer()
 
     def on_mount(self) -> None:
         """Called when the app is mounted."""
         self.title = "🐺 Werewolf Game"
-        self.sub_title = "AI-Powered Werewolf"
+        self.sub_title = f"AI-Powered Werewolf | Session: {self.session_id}"
 
         if self.game_engine and self.game_engine.game_state:
             self.update_game_state()
 
             self.game_engine.on_event = self.on_game_event
+
+        # Update footer with uptime every second
+        self.set_interval(1.0, self.update_footer)
+
+    def update_footer(self) -> None:
+        """Update the footer with current uptime."""
+        uptime = datetime.now() - self.start_time
+        hours, remainder = divmod(int(uptime.total_seconds()), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        uptime_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+        self.sub_title = f"AI-Powered Werewolf | Session: {self.session_id} | Uptime: {uptime_str}"
 
     def update_game_state(self) -> None:
         """Update all panels with current game state."""
@@ -139,11 +134,6 @@ class WerewolfTUI(App):
 
         self.update_game_state()
 
-    def action_toggle_debug(self) -> None:
-        """Toggle the debug panel visibility."""
-        if self.debug_panel:
-            self.debug_panel.visible = not self.debug_panel.visible
-
     def action_next_step(self) -> None:
         """Advance the game by one step."""
         if self.game_engine:
@@ -162,23 +152,20 @@ class WerewolfTUI(App):
             self.chat_panel.add_system_message(message)
 
     def add_error(self, error: str) -> None:
-        """Add an error to the debug panel.
+        """Add an error message to the chat.
 
         Args:
             error: The error message.
         """
-        if self.debug_panel:
-            self.debug_panel.add_error(error)
         if self.chat_panel:
             self.chat_panel.add_system_message(f"ERROR: {error}")
 
 
-def run_tui(game_engine: GameEngine, show_debug: bool = True) -> None:
+def run_tui(game_engine: GameEngine) -> None:
     """Run the TUI application.
 
     Args:
         game_engine: The game engine to display.
-        show_debug: Whether to show the debug panel.
     """
-    app = WerewolfTUI(game_engine=game_engine, show_debug=show_debug)
+    app = WerewolfTUI(game_engine=game_engine)
     app.run()

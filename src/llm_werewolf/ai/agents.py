@@ -111,7 +111,6 @@ class PlayersConfig(BaseModel):
         description="Optional preset name for roles.",
         examples=["6-players", "9-players", "12-players", "15-players"],
     )
-    show_debug: bool = Field(default=False, description="Show the debug panel in TUI mode")
     language: str = Field(
         default="en-US",
         title="Language",

@@ -266,122 +266,15 @@ players:
 
 ## 代理系統
 
-### 內建代理類型
+### 代理類型
 
 本專案提供三種內建代理類型：
 
-1. **LLMAgent**（位於 `ai/agents.py`）：支援任何 OpenAI 相容 API 的 LLM 模型
-2. **HumanAgent**（位於 `core/agent.py`）：真人玩家透過終端輸入
-3. **DemoAgent**（位於 `core/agent.py`）：測試用的簡單代理（隨機回應）
+1. **LLMAgent**：支援任何 OpenAI 相容 API 的 LLM 模型（GPT-4、Claude、DeepSeek、Grok、本地模型等）
+2. **HumanAgent**：真人玩家透過終端輸入
+3. **DemoAgent**：測試用的簡單代理（隨機回應）
 
-### 透過 YAML 配置使用代理
-
-推薦方式是透過 YAML 配置檔案來設定代理（參見[配置](#%E9%85%8D%E7%BD%AE)章節）。
-
-### 程式化使用代理
-
-如果需要在 Python 程式碼中直接建立代理：
-
-```python
-from llm_werewolf.ai.agents import LLMAgent, PlayerConfig, create_agent
-from llm_werewolf.core.agent import HumanAgent, DemoAgent
-from llm_werewolf.core import GameEngine
-from llm_werewolf.core.config import get_preset_by_name
-
-# 方法 1：直接建立代理實例
-llm_agent = LLMAgent(
-    model_name="gpt-4o",
-    api_key="your-api-key",
-    base_url="https://api.openai.com/v1",
-    temperature=0.7,
-    max_tokens=500,
-)
-
-human_agent = HumanAgent(model_name="human")
-demo_agent = DemoAgent(model_name="demo")
-
-# 方法 2：從配置物件建立（自動從環境變數載入 API 金鑰）
-player_config = PlayerConfig(
-    name="GPT-4 玩家",
-    model="gpt-4o",
-    base_url="https://api.openai.com/v1",
-    api_key_env="OPENAI_API_KEY",
-    temperature=0.7,
-    max_tokens=500,
-)
-agent = create_agent(player_config)
-
-# 設定遊戲
-game_config = get_preset_by_name("9-players")
-engine = GameEngine(game_config)
-
-players = [
-    ("player_1", "GPT-4 玩家", llm_agent),
-    ("player_2", "真人玩家", human_agent),
-    ("player_3", "測試機器人", demo_agent),
-    # ... 更多玩家
-]
-
-roles = game_config.to_role_list()
-engine.setup_game(players, roles)
-result = engine.play_game()
-```
-
-### 支援的 LLM 提供商
-
-由於使用 OpenAI 相容 API，以下提供商都可以使用：
-
-- **OpenAI**：GPT-4、GPT-4o、GPT-4.1、GPT-5-Chat、GPT-3.5-turbo 等
-- **Anthropic**：Claude Sonnet 4.5、Claude Haiku 4.5、Claude 3.5 Sonnet、Claude 3 Opus、Claude 3 Haiku 等
-- **DeepSeek**：DeepSeek-Reasoner、DeepSeek-Chat 等
-- **xAI**：Grok 系列模型
-- **本地模型**：Ollama、LM Studio、vLLM 等
-- **其他相容 API**：任何支援 OpenAI Chat Completions 格式的服務
-
-### 實作自訂代理
-
-要整合自訂 LLM 提供商，只需實作簡單的代理協議：
-
-```python
-class MyCustomAgent:
-    """自訂代理實作範例。"""
-
-    def __init__(self, client: YourLLMClient) -> None:
-        self.client = client
-        self.model_name = "my-custom-model"
-        self._history: list[dict[str, str]] = []
-
-    def get_response(self, message: str) -> str:
-        """獲取 LLM 回應。
-
-        Args:
-            message: 使用者訊息或遊戲提示
-
-        Returns:
-            str: LLM 的回應
-        """
-        self._history.append({"role": "user", "content": message})
-        reply = self.client.generate(message, history=self._history)
-        self._history.append({"role": "assistant", "content": reply})
-        return reply
-
-    def reset(self) -> None:
-        """可選：在新遊戲開始前清空對話歷史。"""
-        self._history.clear()
-```
-
-**必須實作的介面：**
-
-- `model_name` (屬性)：模型名稱字串
-- `get_response(message: str) -> str` (方法)：接收訊息並返回回應
-
-**可選實作的方法：**
-
-- `reset()`：清除代理的內部狀態（對話歷史等）
-- `add_to_history(role: str, content: str)`：手動新增對話歷史
-- `get_history() -> list[dict[str, str]]`：獲取對話歷史
-
-您可以直接將自訂代理傳入 `GameEngine.setup_game()`。
+所有代理都透過 YAML 配置檔案設定（參見[配置](#%E9%85%8D%E7%BD%AE)章節）。遊戲支援在同一局中混合使用不同類型的代理。
 
 ## TUI 介面
 
@@ -509,95 +402,6 @@ TUI (Terminal User Interface) 提供現代化終端介面的即時遊戲視覺�
 - **狼人陣營獲勝**：狼人數量 ≥ 村民數量
 - **戀人獲勝**：只剩下兩個戀人存活（戀人勝利優先於陣營勝利）
 
-## 開發
-
-### 開發環境設定
-
-```bash
-# 複製專案
-git clone https://github.com/Mai0313/LLMWereWolf.git
-cd LLMWereWolf
-
-# 安裝所有依賴（包含開發和測試依賴）
-uv sync --all-groups
-
-# 或選擇性安裝
-uv sync                     # 僅基礎依賴（已包含 LLM 支援）
-uv sync --group dev         # 開發依賴
-uv sync --group test        # 測試依賴
-uv sync --group docs        # 文件生成依賴
-```
-
-### 執行測試
-
-```bash
-# 執行所有測試
-uv run pytest
-
-# 執行並顯示覆蓋率
-uv run pytest --cov=src --cov-report=term-missing
-
-# 執行特定測試檔案
-uv run pytest tests/core/test_roles.py -v
-
-# 執行特定測試函數
-uv run pytest tests/core/test_roles.py::test_werewolf_role -v
-
-# 平行執行測試（更快）
-uv run pytest -n auto
-```
-
-### 程式碼品質
-
-```bash
-# 執行 Ruff linter 檢查
-uv run ruff check src/
-
-# 自動修復可修復的問題
-uv run ruff check --fix src/
-
-# 格式化程式碼
-uv run ruff format src/
-
-# 檢查類型（若有設定 mypy）
-uv run mypy src/
-```
-
-### 使用 Pre-commit
-
-專案包含 pre-commit 設定，自動在提交前檢查程式碼品質：
-
-```bash
-# 安裝 pre-commit hooks
-uv run pre-commit install
-
-# 手動執行所有 hooks
-uv run pre-commit run --all-files
-```
-
-### 使用 Makefile
-
-專案提供 Makefile 簡化常見操作：
-
-```bash
-# 查看所有可用命令
-make help
-
-# 清理自動生成的檔案
-make clean
-
-# 執行程式碼格式化（pre-commit）
-make fmt
-
-# 執行所有測試
-make test
-
-# 生成文件（需要先建立 docs 目錄）
-make gen-docs
-```
-
-**注意**：`gen-docs` 命令需要 `./scripts/gen_docs.py` 腳本和 docs 目錄。如果您的專案尚未設定文件系統，此命令可能無法使用。
-
 ## 專案架構
 
 專案採用模組化架構，各模組職責清晰：
@@ -695,45 +499,9 @@ src/llm_werewolf/
 
 不需要設定 `api_key_env`。
 
-### 遊戲太快或太慢怎麼辦？
+### 如何自訂遊戲設定？
 
-您可以自訂 `GameConfig` 來調整各階段的時間限制：
-
-```python
-from llm_werewolf.core.config import GameConfig
-
-config = GameConfig(
-    num_players=9,
-    role_names=[...],
-    night_timeout=90,  # 夜晚階段 90 秒
-    day_timeout=600,  # 白天討論 600 秒
-    vote_timeout=90,  # 投票階段 90 秒
-)
-```
-
-### 如何自訂角色組合？
-
-建立自訂的 `GameConfig`，指定您想要的角色：
-
-```python
-from llm_werewolf.core.config import GameConfig
-
-config = GameConfig(
-    num_players=10,
-    role_names=[
-        "Werewolf",
-        "AlphaWolf",
-        "WhiteWolf",
-        "Seer",
-        "Witch",
-        "Hunter",
-        "Guard",
-        "Villager",
-        "Villager",
-        "Villager",
-    ],
-)
-```
+遊戲使用在 YAML 檔案中定義的預設配置（如 `6-players`、`9-players` 等）。每個預設包含預定義的角色組合和時間限制。要調整設定，您可以修改預設配置或建立自訂配置。如需進階自訂，請參閱專案的配置系統 `src/llm_werewolf/core/config/`。
 
 ## 授權
 

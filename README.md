@@ -266,122 +266,15 @@ If using a local model like Ollama, you can omit `api_key_env`:
 
 ## Agent System
 
-### Built-in Agent Types
+### Agent Types
 
 This project provides three built-in agent types:
 
-1. **LLMAgent** (in `ai/agents.py`): Supports any LLM model with an OpenAI-compatible API.
-2. **HumanAgent** (in `core/agent.py`): Human player input via the terminal.
-3. **DemoAgent** (in `core/agent.py`): A simple agent for testing (random responses).
+1. **LLMAgent**: Supports any LLM model with an OpenAI-compatible API (GPT-4, Claude, DeepSeek, Grok, local models, etc.).
+2. **HumanAgent**: Human player input via the terminal.
+3. **DemoAgent**: A simple agent for testing (random responses).
 
-### Using Agents via YAML Configuration
-
-The recommended way is to configure agents through a YAML file (see the [Configuration](#configuration) section).
-
-### Programmatic Usage of Agents
-
-If you need to create agents directly in Python code:
-
-```python
-from llm_werewolf.ai.agents import LLMAgent, PlayerConfig, create_agent
-from llm_werewolf.core.agent import HumanAgent, DemoAgent
-from llm_werewolf.core import GameEngine
-from llm_werewolf.core.config import get_preset_by_name
-
-# Method 1: Directly create agent instances
-llm_agent = LLMAgent(
-    model_name="gpt-4o",
-    api_key="your-api-key",
-    base_url="https://api.openai.com/v1",
-    temperature=0.7,
-    max_tokens=500,
-)
-
-human_agent = HumanAgent(model_name="human")
-demo_agent = DemoAgent(model_name="demo")
-
-# Method 2: Create from a configuration object (automatically loads API key from environment variables)
-player_config = PlayerConfig(
-    name="GPT-4 Player",
-    model="gpt-4o",
-    base_url="https://api.openai.com/v1",
-    api_key_env="OPENAI_API_KEY",
-    temperature=0.7,
-    max_tokens=500,
-)
-agent = create_agent(player_config)
-
-# Set up the game
-game_config = get_preset_by_name("9-players")
-engine = GameEngine(game_config)
-
-players = [
-    ("player_1", "GPT-4 Player", llm_agent),
-    ("player_2", "Human Player", human_agent),
-    ("player_3", "Test Bot", demo_agent),
-    # ... more players
-]
-
-roles = game_config.to_role_list()
-engine.setup_game(players, roles)
-result = engine.play_game()
-```
-
-### Supported LLM Providers
-
-Since it uses an OpenAI-compatible API, the following providers can be used:
-
-- **OpenAI**: GPT-4, GPT-4o, GPT-4.1, GPT-5-Chat, GPT-3.5-turbo, etc.
-- **Anthropic**: Claude Sonnet 4.5, Claude Haiku 4.5, Claude 3.5 Sonnet, Claude 3 Opus, Claude 3 Haiku, etc.
-- **DeepSeek**: DeepSeek-Reasoner, DeepSeek-Chat, etc.
-- **xAI**: Grok series models.
-- **Local Models**: Ollama, LM Studio, vLLM, etc.
-- **Other Compatible APIs**: Any service that supports the OpenAI Chat Completions format.
-
-### Implementing a Custom Agent
-
-To integrate a custom LLM provider, you just need to implement a simple agent protocol:
-
-```python
-class MyCustomAgent:
-    """Example of a custom agent implementation."""
-
-    def __init__(self, client: YourLLMClient) -> None:
-        self.client = client
-        self.model_name = "my-custom-model"
-        self._history: list[dict[str, str]] = []
-
-    def get_response(self, message: str) -> str:
-        """Get a response from the LLM.
-
-        Args:
-            message: User message or game prompt.
-
-        Returns:
-            str: The LLM's response.
-        """
-        self._history.append({"role": "user", "content": message})
-        reply = self.client.generate(message, history=self._history)
-        self._history.append({"role": "assistant", "content": reply})
-        return reply
-
-    def reset(self) -> None:
-        """Optional: Clear the conversation history before a new game starts."""
-        self._history.clear()
-```
-
-**Required Interface:**
-
-- `model_name` (attribute): A string for the model name.
-- `get_response(message: str) -> str` (method): Receives a message and returns a response.
-
-**Optional Methods:**
-
-- `reset()`: Clears the agent's internal state (conversation history, etc.).
-- `add_to_history(role: str, content: str)`: Manually adds to the conversation history.
-- `get_history() -> list[dict[str, str]]`: Gets the conversation history.
-
-You can pass your custom agent directly into `GameEngine.setup_game()`.
+All agents are configured through YAML files (see the [Configuration](#configuration) section). The game supports mixing different agent types in a single game.
 
 ## TUI Interface
 
@@ -509,95 +402,6 @@ The game checks for victory conditions at the end of each phase:
 - **Werewolf Faction Wins**: The number of werewolves is greater than or equal to the number of villagers.
 - **Lovers Win**: Only the two lovers remain alive (lover victory takes precedence over faction victory).
 
-## Development
-
-### Development Environment Setup
-
-```bash
-# Clone the project
-git clone https://github.com/Mai0313/LLMWereWolf.git
-cd LLMWereWolf
-
-# Install all dependencies (including development and test dependencies)
-uv sync --all-groups
-
-# Or install selectively
-uv sync                     # Only base dependencies (LLM support included)
-uv sync --group dev         # Development dependencies
-uv sync --group test        # Test dependencies
-uv sync --group docs        # Documentation generation dependencies
-```
-
-### Running Tests
-
-```bash
-# Run all tests
-uv run pytest
-
-# Run and show coverage
-uv run pytest --cov=src --cov-report=term-missing
-
-# Run a specific test file
-uv run pytest tests/core/test_roles.py -v
-
-# Run a specific test function
-uv run pytest tests/core/test_roles.py::test_werewolf_role -v
-
-# Run tests in parallel (faster)
-uv run pytest -n auto
-```
-
-### Code Quality
-
-```bash
-# Run Ruff linter check
-uv run ruff check src/
-
-# Automatically fix fixable issues
-uv run ruff check --fix src/
-
-# Format the code
-uv run ruff format src/
-
-# Check types (if mypy is configured)
-uv run mypy src/
-```
-
-### Using Pre-commit
-
-The project includes a pre-commit configuration to automatically check code quality before committing:
-
-```bash
-# Install pre-commit hooks
-uv run pre-commit install
-
-# Manually run all hooks
-uv run pre-commit run --all-files
-```
-
-### Using Makefile
-
-The project provides a Makefile to simplify common operations:
-
-```bash
-# See all available commands
-make help
-
-# Clean auto-generated files
-make clean
-
-# Run code formatting (pre-commit)
-make fmt
-
-# Run all tests
-make test
-
-# Generate documentation (requires creating the docs directory first)
-make gen-docs
-```
-
-**Note**: The `gen-docs` command requires the `./scripts/gen_docs.py` script and the docs directory. This command may not work if your project's documentation system is not yet set up.
-
 ## Project Architecture
 
 The project uses a modular architecture with clear responsibilities for each module:
@@ -695,45 +499,9 @@ Make sure Ollama is running, then set it up in the YAML file:
 
 You do not need to set `api_key_env`.
 
-### What if the game is too fast or too slow?
+### How do I customize game settings?
 
-You can customize the `GameConfig` to adjust the time limits for each phase:
-
-```python
-from llm_werewolf.core.config import GameConfig
-
-config = GameConfig(
-    num_players=9,
-    role_names=[...],
-    night_timeout=90,  # 90 seconds for the night phase
-    day_timeout=600,  # 600 seconds for day discussion
-    vote_timeout=90,  # 90 seconds for the voting phase
-)
-```
-
-### How do I customize the role combination?
-
-Create a custom `GameConfig` and specify the roles you want:
-
-```python
-from llm_werewolf.core.config import GameConfig
-
-config = GameConfig(
-    num_players=10,
-    role_names=[
-        "Werewolf",
-        "AlphaWolf",
-        "WhiteWolf",
-        "Seer",
-        "Witch",
-        "Hunter",
-        "Guard",
-        "Villager",
-        "Villager",
-        "Villager",
-    ],
-)
-```
+The game uses preset configurations (like `6-players`, `9-players`, etc.) defined in the YAML file. Each preset includes predefined role combinations and time limits. To adjust settings, you can modify the preset configuration or create a custom one. For advanced customization, see the project's configuration system in `src/llm_werewolf/core/config/`.
 
 ## License
 

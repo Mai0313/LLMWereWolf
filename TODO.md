@@ -28,14 +28,6 @@
 我需要你參考真實的狼人殺規則與角色 與 我現在完成的規則與角色完成這份文件
 如果有缺少的規則或角色 請另外標註出來
 
-## 重構 LLMAgent 邏輯
-
-我現在想在 LLMAgent 的部分加上 `language`, 目前我已經加一半了
-我希望在 LLMAgent 可以在 `get_response` 裡面去設定語言, 目前我是寫死 `zh-TW`, 但其實可以透過 `./configs/*.yaml` 裡面新增 `language` 來設定
-
-另外 `LLMAgent` 裡面的 `model_name` 可以直接命名為 `model`, 這樣跟 `PlayerConfig` 看起來會更接近 或許就可以把共同的 Field 抽成一個 type
-並且幫我將 LLMAgent 裡面新增一個 `name` 的 field, 我希望這樣可以減少 `setup_game` 裡面的 `players` 內容, 因為我很不喜歡 `list[tuple[str, str, BaseAgent]]` 這種複雜的型態 因為我覺得裡面會用到的 `player_id, name` 都有替代 例如 player_id 可以用 model, name 可以直接用 name就好
-
 ## 請依照我代碼實際狀況去更新 `README.md`, `README.zh-TW.md`, 和 `README.zh-CN.md`
 
 目前代碼經過很多迭代 但都沒有更新文檔 所以請你逐行檢查文件是否與代碼一致

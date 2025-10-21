@@ -26,6 +26,7 @@ class VotingPhaseMixin:
     _handle_lover_death: "Callable"
     _handle_wolf_beauty_charm_death: "Callable"
     _handle_death_abilities: "Callable"
+    _get_public_discussion_context: "Callable[[], str]"
 
     def _build_voting_context(self, player: Player) -> str:
         """Build context for voting phase.
@@ -41,7 +42,7 @@ class VotingPhaseMixin:
 
         context_parts = [
             f"You are {player.name}, a {player.get_role_name()}.",
-            f"It is Day {self.game_state.round_number}, voting phase.",
+            f"Current: Round {self.game_state.round_number} - Voting Phase",
             "",
         ]
 
@@ -57,8 +58,13 @@ class VotingPhaseMixin:
 
         alive_players = [p.name for p in self.game_state.get_alive_players()]
         context_parts.append(f"\nAlive players: {', '.join(alive_players)}")
-        context_parts.append("")
 
+        # Include the full discussion history for informed voting
+        discussion_history = self._get_public_discussion_context()
+        if discussion_history:
+            context_parts.append(discussion_history)
+
+        context_parts.append("")
         context_parts.append(
             "Based on the discussion and your role knowledge, "
             "vote for the player you believe should be eliminated."
@@ -104,6 +110,8 @@ class VotingPhaseMixin:
                     possible_targets=possible_targets,
                     allow_skip=False,
                     additional_context=context,
+                    round_number=self.game_state.round_number,
+                    phase="Voting",
                 )
 
                 if target_player:

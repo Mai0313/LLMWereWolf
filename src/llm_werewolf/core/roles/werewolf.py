@@ -73,6 +73,8 @@ class Werewolf(Role):
                 possible_targets=possible_targets,
                 allow_skip=False,
                 additional_context=context,
+                round_number=game_state.round_number,
+                phase="Night",
             )
 
             if target:
@@ -143,10 +145,12 @@ class WhiteWolf(Role):
                 possible_targets=possible_targets,
                 allow_skip=True,
                 additional_context=(
-                    f"It is round {game_state.round_number}. You can kill another werewolf tonight. "
+                    "You can kill another werewolf tonight. "
                     "This is optional - you may skip if you prefer."
                 ),
                 fallback_random=False,  # White Wolf can skip
+                round_number=game_state.round_number,
+                phase="Night",
             )
 
             if target:
@@ -209,6 +213,8 @@ class WolfBeauty(Role):
                     "If you die, the charmed player will die with you immediately. "
                     "Choose wisely - you can only charm one player for the entire game."
                 ),
+                round_number=game_state.round_number,
+                phase="Night",
             )
 
             if target:
@@ -262,6 +268,8 @@ class GuardianWolf(Role):
                     "This protection works against White Wolf kills and other threats."
                 ),
                 fallback_random=False,
+                round_number=game_state.round_number,
+                phase="Night",
             )
 
             if target:
@@ -359,6 +367,8 @@ class BloodMoonApostle(Role):
                     additional_context=(
                         "You have transformed into a werewolf! Vote for who to eliminate tonight."
                     ),
+                    round_number=game_state.round_number,
+                    phase="Night",
                 )
 
                 if target:
@@ -414,6 +424,8 @@ class NightmareWolf(Role):
                     "They will not be able to use their role ability this night."
                 ),
                 fallback_random=False,
+                round_number=game_state.round_number,
+                phase="Night",
             )
 
             if target:

@@ -15,6 +15,8 @@ class ActionSelector:
         possible_targets: list[Player],
         allow_skip: bool = False,
         additional_context: str = "",
+        round_number: int | None = None,
+        phase: str | None = None,
     ) -> str:
         """Build a prompt for selecting a target player.
 
@@ -24,11 +26,21 @@ class ActionSelector:
             possible_targets: List of possible target players.
             allow_skip: Whether the player can skip this action.
             additional_context: Additional context information.
+            round_number: Current round number.
+            phase: Current game phase.
 
         Returns:
             str: The formatted prompt.
         """
-        prompt_parts = [f"You are a {role_name}.", f"Action: {action_description}", ""]
+        prompt_parts = [f"You are a {role_name}."]
+
+        # Add round and phase information
+        if round_number is not None and phase:
+            prompt_parts.append(f"Current: Round {round_number} - {phase}")
+        elif round_number is not None:
+            prompt_parts.append(f"Current Round: {round_number}")
+
+        prompt_parts.extend([f"Action: {action_description}", ""])
 
         if additional_context:
             prompt_parts.append(additional_context)
@@ -79,18 +91,34 @@ class ActionSelector:
         return None
 
     @staticmethod
-    def build_yes_no_prompt(role_name: str, question: str, context: str = "") -> str:
+    def build_yes_no_prompt(
+        role_name: str,
+        question: str,
+        context: str = "",
+        round_number: int | None = None,
+        phase: str | None = None,
+    ) -> str:
         """Build a yes/no question prompt.
 
         Args:
             role_name: Name of the role.
             question: The question to ask.
             context: Additional context.
+            round_number: Current round number.
+            phase: Current game phase.
 
         Returns:
             str: The formatted prompt.
         """
-        prompt_parts = [f"You are a {role_name}.", f"Question: {question}"]
+        prompt_parts = [f"You are a {role_name}."]
+
+        # Add round and phase information
+        if round_number is not None and phase:
+            prompt_parts.append(f"Current: Round {round_number} - {phase}")
+        elif round_number is not None:
+            prompt_parts.append(f"Current Round: {round_number}")
+
+        prompt_parts.append(f"Question: {question}")
 
         if context:
             prompt_parts.append("")
@@ -124,6 +152,8 @@ class ActionSelector:
         possible_targets: list[Player],
         num_targets: int,
         additional_context: str = "",
+        round_number: int | None = None,
+        phase: str | None = None,
     ) -> str:
         """Build a prompt for selecting multiple targets.
 
@@ -133,16 +163,25 @@ class ActionSelector:
             possible_targets: List of possible targets.
             num_targets: Number of targets to select.
             additional_context: Additional context.
+            round_number: Current round number.
+            phase: Current game phase.
 
         Returns:
             str: The formatted prompt.
         """
-        prompt_parts = [
-            f"You are a {role_name}.",
+        prompt_parts = [f"You are a {role_name}."]
+
+        # Add round and phase information
+        if round_number is not None and phase:
+            prompt_parts.append(f"Current: Round {round_number} - {phase}")
+        elif round_number is not None:
+            prompt_parts.append(f"Current Round: {round_number}")
+
+        prompt_parts.extend([
             f"Action: {action_description}",
             f"You need to select {num_targets} different targets.",
             "",
-        ]
+        ])
 
         if additional_context:
             prompt_parts.append(additional_context)
@@ -204,6 +243,8 @@ class ActionSelector:
         allow_skip: bool = False,
         additional_context: str = "",
         fallback_random: bool = True,
+        round_number: int | None = None,
+        phase: str | None = None,
     ) -> Player | None:
         """Get a target selection from an AI agent.
 
@@ -215,6 +256,8 @@ class ActionSelector:
             allow_skip: Whether skipping is allowed.
             additional_context: Additional context.
             fallback_random: If True, randomly select if AI fails.
+            round_number: Current round number.
+            phase: Current game phase.
 
         Returns:
             Player | None: Selected target, or None if skipped.
@@ -223,7 +266,13 @@ class ActionSelector:
             return None
 
         prompt = ActionSelector.build_target_selection_prompt(
-            role_name, action_description, possible_targets, allow_skip, additional_context
+            role_name,
+            action_description,
+            possible_targets,
+            allow_skip,
+            additional_context,
+            round_number,
+            phase,
         )
 
         try:

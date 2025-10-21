@@ -96,6 +96,8 @@ class Seer(Role):
                 possible_targets=possible_targets,
                 allow_skip=False,
                 additional_context=context,
+                round_number=game_state.round_number,
+                phase="Night",
             )
 
             if target:
@@ -147,6 +149,8 @@ class Witch(Role):
                     role_name="Witch",
                     question=f"Do you want to use your save potion to save {target.name}?",
                     context=f"{target.name} will be killed by werewolves tonight. You can only use this potion once in the entire game.",
+                    round_number=game_state.round_number,
+                    phase="Night",
                 )
 
                 try:
@@ -178,6 +182,8 @@ class Witch(Role):
                     allow_skip=True,
                     additional_context="You can poison any player tonight. You can only use this potion once in the entire game.",
                     fallback_random=False,
+                    round_number=game_state.round_number,
+                    phase="Night",
                 )
 
                 if target:
@@ -268,6 +274,8 @@ class Guard(Role):
                 possible_targets=possible_targets,
                 allow_skip=False,
                 additional_context=context,
+                round_number=game_state.round_number,
+                phase="Night",
             )
 
             if target:
@@ -453,6 +461,8 @@ class Cupid(Role):
                     "The two lovers will know each other's identities. "
                     "If one dies, the other dies immediately from heartbreak."
                 ),
+                round_number=game_state.round_number,
+                phase="Night",
             )
 
             try:
@@ -515,6 +525,8 @@ class Raven(Role):
                 possible_targets=possible_targets,
                 allow_skip=False,
                 additional_context="The marked player will have one extra vote against them in tomorrow's voting.",
+                round_number=game_state.round_number,
+                phase="Night",
             )
 
             if target:
@@ -568,6 +580,8 @@ class GraveyardKeeper(Role):
                     "This will reveal their role and camp."
                 ),
                 fallback_random=False,
+                round_number=game_state.round_number,
+                phase="Night",
             )
 
             if target:

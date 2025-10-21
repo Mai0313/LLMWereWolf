@@ -21,6 +21,8 @@ class NightPhaseMixin:
     _log_event: "Callable"
     process_actions: "Callable"
     resolve_deaths: "Callable"
+    werewolf_discussion_history: list[str]
+    _get_werewolf_discussion_context: "Callable[[], str]"
 
     def _run_werewolf_discussion(self) -> list[str]:
         """Run werewolf discussion phase where werewolves discuss their target.
@@ -72,14 +74,26 @@ class NightPhaseMixin:
                     },
                 )
 
-                # Build discussion context
-                context = (
-                    f"You are {werewolf.name}, a Werewolf.\n"
-                    f"You are working with these werewolves: {', '.join(werewolf_names)}.\n"
-                    f"Available targets: {', '.join(target_names)}.\n"
-                    f"\nDiscuss with your fellow werewolves who should be eliminated tonight.\n"
-                    f"Share your thoughts and suggestions (1-2 sentences)."
-                )
+                # Build discussion context with werewolf history
+                context_parts = [
+                    f"You are {werewolf.name}, a Werewolf.",
+                    f"Current: Round {self.game_state.round_number} - Night Phase",
+                    f"You are working with these werewolves: {', '.join(werewolf_names)}.",
+                    f"Available targets: {', '.join(target_names)}.",
+                ]
+
+                # Include werewolf discussion history
+                werewolf_history = self._get_werewolf_discussion_context()
+                if werewolf_history:
+                    context_parts.append(werewolf_history)
+
+                context_parts.extend([
+                    "",
+                    "Discuss with your fellow werewolves who should be eliminated tonight.",
+                    "Share your thoughts and suggestions (1-2 sentences).",
+                ])
+
+                context = "\n".join(context_parts)
 
                 try:
                     speech = "".join(werewolf.agent.get_response(context))
@@ -98,6 +112,9 @@ class NightPhaseMixin:
                     )
 
                     messages.append(f"🐺 {werewolf.name}: {speech}")
+
+                    # Add to global werewolf discussion history
+                    self.werewolf_discussion_history.append(f"{werewolf.name}: {speech}")
                 except Exception as e:
                     self._log_event(
                         EventType.ERROR,

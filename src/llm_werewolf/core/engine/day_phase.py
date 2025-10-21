@@ -18,6 +18,8 @@ class DayPhaseMixin:
     game_state: "GameState | None"
     locale: "Locale"
     _log_event: "Callable"
+    public_discussion_history: list[str]
+    _get_public_discussion_context: "Callable[[], str]"
 
     def _build_discussion_context(self, player: Player) -> str:
         """Build context for day discussion.
@@ -33,7 +35,7 @@ class DayPhaseMixin:
 
         context_parts = [
             f"You are {player.name}, a {player.get_role_name()}.",
-            f"It is Day {self.game_state.round_number}, discussion phase.",
+            f"Current: Round {self.game_state.round_number} - Day Discussion Phase",
             "",
         ]
 
@@ -49,8 +51,13 @@ class DayPhaseMixin:
 
         alive_players = [p.name for p in self.game_state.get_alive_players()]
         context_parts.append(f"\nAlive players: {', '.join(alive_players)}")
-        context_parts.append("")
 
+        # Include previous discussion history
+        discussion_history = self._get_public_discussion_context()
+        if discussion_history:
+            context_parts.append(discussion_history)
+
+        context_parts.append("")
         context_parts.append(
             "Share your thoughts, suspicions, or information. "
             "Your goal is to help your team win while staying in character."
@@ -127,6 +134,9 @@ class DayPhaseMixin:
                     )
 
                     messages.append(f"{player.name}: {speech}")
+
+                    # Add to global public discussion history
+                    self.public_discussion_history.append(f"{player.name}: {speech}")
                 except Exception as e:
                     self._log_event(
                         EventType.ERROR,

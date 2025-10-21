@@ -40,6 +40,10 @@ class GameEngineBase:
         self.locale = Locale(language)
         self._last_phase: str = ""  # Track phase changes for separators
 
+        # Global discussion history for context management
+        self.public_discussion_history: list[str] = []  # All players can see
+        self.werewolf_discussion_history: list[str] = []  # Only werewolves can see
+
         self.on_event: Callable[[Event], None] = self._default_print_event
 
     def _default_print_event(self, event: Event) -> None:
@@ -167,6 +171,28 @@ class GameEngineBase:
         )
 
         self.on_event(event)
+
+    def _get_public_discussion_context(self) -> str:
+        """Get formatted public discussion history as context.
+
+        Returns:
+            str: Formatted discussion history for all players.
+        """
+        if not self.public_discussion_history:
+            return ""
+
+        return "\n\nPrevious discussion:\n" + "\n".join(self.public_discussion_history)
+
+    def _get_werewolf_discussion_context(self) -> str:
+        """Get formatted werewolf discussion history as context.
+
+        Returns:
+            str: Formatted discussion history for werewolves only.
+        """
+        if not self.werewolf_discussion_history:
+            return ""
+
+        return "\n\nWerewolf team discussion:\n" + "\n".join(self.werewolf_discussion_history)
 
     def get_game_state(self) -> GameState | None:
         """Get the current game state.

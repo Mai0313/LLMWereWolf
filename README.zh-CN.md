@@ -144,10 +144,10 @@ XAI_API_KEY=xai-...
 
 - `6-players`：新手局（6 人）- 2 狼人 + 预言家、女巫、2 平民
 - `9-players`：标准局（9 人）- 2 狼人 + 预言家、女巫、猎人、守卫、3 平民
-- `12-players`：进阶局（12 人）- 3 狼人（含狼王）+ 预言家、女巫、猎人、守卫、丘比特、白痴、3 平民
-- `15-players`：完整局（15 人）- 4 狼人（含狼王、白狼王）+ 预言家、女巫、猎人、守卫、丘比特、白痴、长老、乌鸦、3 平民
-- `expert`：专家配置（12 人）- 复杂角色组合，包含多种特殊狼人
-- `chaos`：混乱角色组合（10 人）- 不常见的角色搭配，适合进阶玩家
+- `12-players`：进阶局（12 人）- 3 狼人（2 狼人 + 狼王）+ 预言家、女巫、猎人、守卫、丘比特、白痴、3 平民
+- `15-players`：完整局（15 人）- 4 狼人（2 狼人 + 狼王 + 白狼王）+ 预言家、女巫、猎人、守卫、丘比特、白痴、长老、乌鸦、3 平民
+- `expert`：专家配置（12 人）- 3 狼人（狼人 + 狼王 + 白狼王）+ 预言家、女巫、猎人、守卫、丘比特、骑士、魔术师、长老、平民
+- `chaos`：混乱角色组合（10 人）- 3 特殊狼人（白狼王 + 狼美人 + 隐狼）+ 预言家、女巫、猎人、白痴、长老、乌鸦、平民
 
 ### 自定义配置
 
@@ -178,8 +178,22 @@ players:
     temperature: 0.7
     max_tokens: 500
 
-  - name: Claude 分析师
-    model: claude-3-5-sonnet-20241022
+  - name: GPT-4.1 玩家
+    model: gpt-4.1
+    base_url: https://api.openai.com/v1
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: 500
+
+  - name: GPT-5 分析师
+    model: gpt-5-chat
+    base_url: https://api.openai.com/v1
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: 500
+
+  - name: Claude Sonnet
+    model: claude-sonnet-4-5-20250929
     base_url: https://api.anthropic.com/v1
     api_key_env: ANTHROPIC_API_KEY
     temperature: 0.7
@@ -189,6 +203,13 @@ players:
     model: deepseek-reasoner
     base_url: https://api.deepseek.com/v1
     api_key_env: DEEPSEEK_API_KEY
+    temperature: 0.7
+    max_tokens: 500
+
+  - name: Claude Haiku
+    model: claude-haiku-4-5-20251001
+    base_url: https://api.anthropic.com/v1
+    api_key_env: ANTHROPIC_API_KEY
     temperature: 0.7
     max_tokens: 500
 
@@ -216,7 +237,7 @@ players:
 - `model`：模型类型
   - `human`：真人玩家（通过终端输入）
   - `demo`：测试用简单代理（随机回应）
-  - LLM 模型名称：如 `gpt-4o`、`claude-3-5-sonnet-20241022`、`llama3`
+  - LLM 模型名称：如 `gpt-4o`、`gpt-4.1`、`gpt-5-chat`、`claude-sonnet-4-5-20250929`、`claude-haiku-4-5-20251001`、`deepseek-reasoner`、`llama3`
 - `base_url`：API 端点（LLM 模型必填）
 - `api_key_env`：环境变量名称（有验证的端点必填）
 - `temperature`：选填，默认 0.7
@@ -307,8 +328,8 @@ result = engine.play_game()
 
 由于使用 OpenAI 兼容 API，以下提供商都可以使用：
 
-- **OpenAI**：GPT-4、GPT-4o、GPT-3.5-turbo 等
-- **Anthropic**：Claude 3.5 Sonnet、Claude 3 Opus、Claude 3 Haiku 等
+- **OpenAI**：GPT-4、GPT-4o、GPT-4.1、GPT-5-Chat、GPT-3.5-turbo 等
+- **Anthropic**：Claude Sonnet 4.5、Claude Haiku 4.5、Claude 3.5 Sonnet、Claude 3 Opus、Claude 3 Haiku 等
 - **DeepSeek**：DeepSeek-Reasoner、DeepSeek-Chat 等
 - **xAI**：Grok 系列模型
 - **本地模型**：Ollama、LM Studio、vLLM 等

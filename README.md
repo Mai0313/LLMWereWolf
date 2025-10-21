@@ -144,10 +144,10 @@ Adjust the `preset` field in the configuration file to apply a built-in role com
 
 - `6-players`: Beginner game (6 players) - 2 Werewolves + Seer, Witch, 2 Villagers.
 - `9-players`: Standard game (9 players) - 2 Werewolves + Seer, Witch, Hunter, Guard, 3 Villagers.
-- `12-players`: Advanced game (12 players) - 3 Werewolves (including AlphaWolf) + Seer, Witch, Hunter, Guard, Cupid, Idiot, 3 Villagers.
-- `15-players`: Full game (15 players) - 4 Werewolves (including AlphaWolf, WhiteWolf) + Seer, Witch, Hunter, Guard, Cupid, Idiot, Elder, Raven, 3 Villagers.
-- `expert`: Expert configuration (12 players) - Complex role combination with various special werewolves.
-- `chaos`: Chaotic role combination (10 players) - Uncommon role pairings, suitable for advanced players.
+- `12-players`: Advanced game (12 players) - 3 Werewolves (2 Werewolves + AlphaWolf) + Seer, Witch, Hunter, Guard, Cupid, Idiot, 3 Villagers.
+- `15-players`: Full game (15 players) - 4 Werewolves (2 Werewolves + AlphaWolf + WhiteWolf) + Seer, Witch, Hunter, Guard, Cupid, Idiot, Elder, Raven, 3 Villagers.
+- `expert`: Expert configuration (12 players) - 3 Werewolves (Werewolf + AlphaWolf + WhiteWolf) + Seer, Witch, Hunter, Guard, Cupid, Knight, Magician, Elder, Villager.
+- `chaos`: Chaotic role combination (10 players) - 3 Special Werewolves (WhiteWolf + WolfBeauty + HiddenWolf) + Seer, Witch, Hunter, Idiot, Elder, Raven, Villager.
 
 ### Custom Configuration
 
@@ -178,8 +178,22 @@ players:
     temperature: 0.7
     max_tokens: 500
 
-  - name: Claude Analyst
-    model: claude-3-5-sonnet-20241022
+  - name: GPT-4.1 Player
+    model: gpt-4.1
+    base_url: https://api.openai.com/v1
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: 500
+
+  - name: GPT-5 Analyst
+    model: gpt-5-chat
+    base_url: https://api.openai.com/v1
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: 500
+
+  - name: Claude Sonnet
+    model: claude-sonnet-4-5-20250929
     base_url: https://api.anthropic.com/v1
     api_key_env: ANTHROPIC_API_KEY
     temperature: 0.7
@@ -189,6 +203,13 @@ players:
     model: deepseek-reasoner
     base_url: https://api.deepseek.com/v1
     api_key_env: DEEPSEEK_API_KEY
+    temperature: 0.7
+    max_tokens: 500
+
+  - name: Claude Haiku
+    model: claude-haiku-4-5-20251001
+    base_url: https://api.anthropic.com/v1
+    api_key_env: ANTHROPIC_API_KEY
     temperature: 0.7
     max_tokens: 500
 
@@ -216,7 +237,7 @@ players:
 - `model`: Model type.
   - `human`: Human player (input via terminal).
   - `demo`: Simple agent for testing (random responses).
-  - LLM model name: e.g., `gpt-4o`, `claude-3-5-sonnet-20241022`, `llama3`.
+  - LLM model name: e.g., `gpt-4o`, `gpt-4.1`, `gpt-5-chat`, `claude-sonnet-4-5-20250929`, `claude-haiku-4-5-20251001`, `deepseek-reasoner`, `llama3`.
 - `base_url`: API endpoint (required for LLM models).
 - `api_key_env`: Environment variable name (required for authenticated endpoints).
 - `temperature`: Optional, defaults to 0.7.
@@ -307,8 +328,8 @@ result = engine.play_game()
 
 Since it uses an OpenAI-compatible API, the following providers can be used:
 
-- **OpenAI**: GPT-4, GPT-4o, GPT-3.5-turbo, etc.
-- **Anthropic**: Claude 3.5 Sonnet, Claude 3 Opus, Claude 3 Haiku, etc.
+- **OpenAI**: GPT-4, GPT-4o, GPT-4.1, GPT-5-Chat, GPT-3.5-turbo, etc.
+- **Anthropic**: Claude Sonnet 4.5, Claude Haiku 4.5, Claude 3.5 Sonnet, Claude 3 Opus, Claude 3 Haiku, etc.
 - **DeepSeek**: DeepSeek-Reasoner, DeepSeek-Chat, etc.
 - **xAI**: Grok series models.
 - **Local Models**: Ollama, LM Studio, vLLM, etc.

@@ -284,20 +284,14 @@ class GameEngine:
 
         return "\n".join(context_parts)
 
-    def run_voting_phase(self) -> list[str]:
-        """Execute the voting phase.
+    def _collect_votes(self) -> list[Action]:
+        """Collect votes from all players.
 
         Returns:
-            list[str]: Messages from the voting phase.
+            list[Action]: List of vote actions.
         """
         if not self.game_state:
-            msg = "Game not initialized"
-            raise RuntimeError(msg)
-
-        messages = []
-        self.game_state.set_phase(GamePhase.DAY_VOTING)
-
-        messages.append("\n=== Voting Phase ===")
+            return []
 
         vote_actions: list[Action] = []
         for player in self.game_state.get_alive_players():
@@ -310,7 +304,6 @@ class GameEngine:
 
             if player.agent:
                 context = self._build_voting_context(player)
-
                 target_player = ActionSelector.get_target_from_agent(
                     agent=player.agent,
                     role_name=player.get_role_name(),
@@ -323,11 +316,17 @@ class GameEngine:
                 if target_player:
                     vote_actions.append(VoteAction(player, target_player, self.game_state))
 
-        # Process votes and log each vote
+        return vote_actions
+
+    def _process_votes(self, vote_actions: list[Action]) -> None:
+        """Process and log vote actions.
+
+        Args:
+            vote_actions: List of vote actions to process.
+        """
         for action in vote_actions:
             if action.validate():
                 action.execute()
-                # Log individual vote with locale
                 self._log_event(
                     EventType.VOTE_CAST,
                     self.locale.get(
@@ -341,104 +340,165 @@ class GameEngine:
                     },
                 )
 
+    def _display_vote_results(self, vote_counts: dict[str, int]) -> None:
+        """Display vote results summary.
+
+        Args:
+            vote_counts: Dictionary mapping player_id to vote count.
+        """
+        if not self.game_state:
+            return
+
+        self._log_event(
+            EventType.VOTE_RESULT,
+            self.locale.get("vote_summary"),
+            data={"vote_counts": vote_counts},
+        )
+
+        for target_id, count in sorted(vote_counts.items(), key=lambda x: x[1], reverse=True):
+            target = self.game_state.get_player(target_id)
+            if target:
+                voters = [
+                    self.game_state.get_player(voter_id).name
+                    for voter_id, voted_for in self.game_state.votes.items()
+                    if voted_for == target_id and self.game_state.get_player(voter_id)
+                ]
+                voters_str = ", ".join(voters)
+                self._log_event(
+                    EventType.VOTE_RESULT,
+                    self.locale.get(
+                        "vote_count", target=target.name, count=count, voters=voters_str
+                    ),
+                    data={"target_id": target_id, "count": count, "voters": voters},
+                )
+
+    def _handle_lover_death(self, dead_player: Player) -> None:
+        """Handle lover partner death when a player dies.
+
+        Args:
+            dead_player: The player who died.
+        """
+        if not self.game_state or not dead_player.is_lover() or not dead_player.lover_partner_id:
+            return
+
+        partner = self.game_state.get_player(dead_player.lover_partner_id)
+        if partner and partner.is_alive():
+            partner.kill()
+            self.game_state.day_deaths.add(partner.player_id)
+            self._log_event(
+                EventType.LOVER_DIED,
+                self.locale.get("died_of_heartbreak", player=partner.name),
+                data={"player_id": partner.player_id},
+            )
+
+    def _handle_wolf_beauty_charm_death(self, wolf_beauty: Player) -> None:
+        """Handle charmed player death when Wolf Beauty dies.
+
+        Args:
+            wolf_beauty: The Wolf Beauty player who died.
+        """
+        if not self.game_state or not isinstance(wolf_beauty.role, WolfBeauty):
+            return
+
+        if wolf_beauty.role.charmed_player:
+            charmed = self.game_state.get_player(wolf_beauty.role.charmed_player)
+            if charmed and charmed.is_alive():
+                charmed.kill()
+                self.game_state.day_deaths.add(charmed.player_id)
+                self._log_event(
+                    EventType.PLAYER_DIED,
+                    self.locale.get(
+                        "died_from_charm",
+                        player=charmed.name,
+                        wolf_beauty=wolf_beauty.name,
+                    ),
+                    data={
+                        "player_id": charmed.player_id,
+                        "reason": "wolf_beauty_charm",
+                    },
+                )
+
+    def _eliminate_voted_player(self, eliminated: Player) -> None:
+        """Eliminate a player who received the most votes.
+
+        Args:
+            eliminated: The player to eliminate.
+        """
+        if not self.game_state:
+            return
+
+        eliminated_id = eliminated.player_id
+
+        # Special case: Idiot reveals instead of dying
+        if isinstance(eliminated.role, Idiot) and not eliminated.role.revealed:
+            eliminated.role.revealed = True
+            eliminated.disable_voting()
+            self._log_event(
+                EventType.ROLE_REVEALED,
+                self.locale.get("idiot_revealed", player=eliminated.name),
+                data={"player_id": eliminated_id, "role": "Idiot"},
+            )
+            return
+
+        # Normal elimination
+        eliminated.kill()
+        self.game_state.day_deaths.add(eliminated_id)
+        self.game_state.death_causes[eliminated_id] = "vote"
+
+        self._log_event(
+            EventType.PLAYER_ELIMINATED,
+            self.locale.get(
+                "player_eliminated",
+                player=eliminated.name,
+                role=eliminated.get_role_name(),
+            ),
+            data={"player_id": eliminated_id, "role": eliminated.get_role_name()},
+        )
+
+        # Handle Elder penalty
+        if isinstance(eliminated.role, Elder):
+            self._handle_elder_penalty()
+            self._log_event(
+                EventType.ROLE_REVEALED,
+                self.locale.get("elder_executed"),
+                data={"player_id": eliminated_id},
+            )
+
+        # Handle cascading deaths
+        self._handle_lover_death(eliminated)
+        self._handle_wolf_beauty_charm_death(eliminated)
+
+    def run_voting_phase(self) -> list[str]:
+        """Execute the voting phase.
+
+        Returns:
+            list[str]: Messages from the voting phase.
+        """
+        if not self.game_state:
+            msg = "Game not initialized"
+            raise RuntimeError(msg)
+
+        messages = []
+        self.game_state.set_phase(GamePhase.DAY_VOTING)
+        messages.append("\n=== Voting Phase ===")
+
+        # Collect and process votes
+        vote_actions = self._collect_votes()
+        self._process_votes(vote_actions)
+
         vote_counts = self.game_state.get_vote_counts()
 
         if vote_counts:
-            # Display vote summary
-            self._log_event(
-                EventType.VOTE_RESULT,
-                self.locale.get("vote_summary"),
-                data={"vote_counts": vote_counts},
-            )
+            self._display_vote_results(vote_counts)
 
-            # Display detailed vote counts
-            for target_id, count in sorted(vote_counts.items(), key=lambda x: x[1], reverse=True):
-                target = self.game_state.get_player(target_id)
-                if target:
-                    # Get voters for this target
-                    voters = [
-                        self.game_state.get_player(voter_id).name
-                        for voter_id, voted_for in self.game_state.votes.items()
-                        if voted_for == target_id and self.game_state.get_player(voter_id)
-                    ]
-                    voters_str = ", ".join(voters)
-                    self._log_event(
-                        EventType.VOTE_RESULT,
-                        self.locale.get(
-                            "vote_count", target=target.name, count=count, voters=voters_str
-                        ),
-                        data={"target_id": target_id, "count": count, "voters": voters},
-                    )
-
+            # Determine elimination
             max_votes = max(vote_counts.values())
             candidates = [pid for pid, count in vote_counts.items() if count == max_votes]
 
             if len(candidates) == 1:
-                eliminated_id = candidates[0]
-                eliminated = self.game_state.get_player(eliminated_id)
+                eliminated = self.game_state.get_player(candidates[0])
                 if eliminated:
-                    if isinstance(eliminated.role, Idiot) and not eliminated.role.revealed:
-                        eliminated.role.revealed = True
-                        eliminated.disable_voting()
-                        self._log_event(
-                            EventType.ROLE_REVEALED,
-                            self.locale.get("idiot_revealed", player=eliminated.name),
-                            data={"player_id": eliminated_id, "role": "Idiot"},
-                        )
-                    else:
-                        eliminated.kill()
-                        self.game_state.day_deaths.add(eliminated_id)
-                        self.game_state.death_causes[eliminated_id] = "vote"
-
-                        self._log_event(
-                            EventType.PLAYER_ELIMINATED,
-                            self.locale.get(
-                                "player_eliminated",
-                                player=eliminated.name,
-                                role=eliminated.get_role_name(),
-                            ),
-                            data={"player_id": eliminated_id, "role": eliminated.get_role_name()},
-                        )
-
-                        if isinstance(eliminated.role, Elder):
-                            self._handle_elder_penalty()
-                            self._log_event(
-                                EventType.ROLE_REVEALED,
-                                self.locale.get("elder_executed"),
-                                data={"player_id": eliminated_id},
-                            )
-
-                        if eliminated.is_lover() and eliminated.lover_partner_id:
-                            partner = self.game_state.get_player(eliminated.lover_partner_id)
-                            if partner and partner.is_alive():
-                                partner.kill()
-                                self.game_state.day_deaths.add(partner.player_id)
-                                self._log_event(
-                                    EventType.LOVER_DIED,
-                                    self.locale.get("died_of_heartbreak", player=partner.name),
-                                    data={"player_id": partner.player_id},
-                                )
-
-                        if (
-                            isinstance(eliminated.role, WolfBeauty)
-                            and eliminated.role.charmed_player
-                        ):
-                            charmed = self.game_state.get_player(eliminated.role.charmed_player)
-                            if charmed and charmed.is_alive():
-                                charmed.kill()
-                                self.game_state.day_deaths.add(charmed.player_id)
-                                self._log_event(
-                                    EventType.PLAYER_DIED,
-                                    self.locale.get(
-                                        "died_from_charm",
-                                        player=charmed.name,
-                                        wolf_beauty=eliminated.name,
-                                    ),
-                                    data={
-                                        "player_id": charmed.player_id,
-                                        "reason": "wolf_beauty_charm",
-                                    },
-                                )
+                    self._eliminate_voted_player(eliminated)
             else:
                 self._log_event(EventType.VOTE_RESULT, self.locale.get("vote_tied"), data={})
         else:

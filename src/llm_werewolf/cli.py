@@ -6,6 +6,7 @@ from rich.console import Console
 from llm_werewolf.core import GameEngine
 from llm_werewolf.ai.agents import load_config, create_agent
 from llm_werewolf.core.config import get_preset_by_name
+from llm_werewolf.core.locale import Locale
 from llm_werewolf.core.role_registry import create_roles
 
 console = Console()
@@ -36,13 +37,17 @@ def main(config: str) -> None:
     ]
     roles = create_roles(role_names=game_config.role_names)
 
-    engine = GameEngine(game_config)
+    # Initialize locale and game engine with language support
+    locale = Locale(players_config.language)
+    engine = GameEngine(game_config, language=players_config.language)
     engine.setup_game(players=players, roles=roles)
     logfire.info("game_created", config_path=str(config_path), preset=players_config.preset)
 
-    console.print(f"[green]已載入設定檔: {config_path.resolve()}[/green]")
-    console.print(f"[cyan]Preset: {players_config.preset}[/cyan]")
-    console.print("[cyan]介面模式: Console (自動執行)[/cyan]")
+    console.print(
+        f"[green]{locale.get('config_loaded', config_path=config_path.resolve())}[/green]"
+    )
+    console.print(f"[cyan]{locale.get('preset_info', preset=players_config.preset)}[/cyan]")
+    console.print(f"[cyan]{locale.get('interface_mode')}[/cyan]")
 
     try:
         result = engine.play_game()
@@ -52,16 +57,26 @@ def main(config: str) -> None:
             alive = engine.game_state.get_alive_players()
             dead = engine.game_state.get_dead_players()
 
-            console.print("\n存活玩家: ")
+            console.print(locale.get("alive_players"))
             for player in alive:
-                console.print(f"- {player.name} ({player.get_role_name()})")
+                console.print(
+                    locale.get("player_role_info", name=player.name, role=player.get_role_name())
+                )
 
-            console.print("\n淘汰玩家: ")
+            console.print(locale.get("dead_players"))
             for player in dead:
-                console.print(f"- {player.name} ({player.get_role_name()})")
+                console.print(
+                    locale.get("player_role_info", name=player.name, role=player.get_role_name())
+                )
 
     except KeyboardInterrupt:
-        console.print("\n遊戲已由使用者中止。")
+        # Use locale for interruption message
+        if players_config.language == "zh-TW":
+            console.print("\n遊戲已由使用者中止。")
+        elif players_config.language == "zh-CN":
+            console.print("\n游戏已由用户中止。")
+        else:
+            console.print("\nGame interrupted by user.")
     except Exception as exc:
         logfire.error(
             "game_execution_error",
@@ -69,7 +84,13 @@ def main(config: str) -> None:
             config_path=str(config_path),
             preset=players_config.preset,
         )
-        console.print(f"[red]執行遊戲時發生錯誤: {exc}[/red]")
+        # Use locale for error message
+        if players_config.language == "zh-TW":
+            console.print(f"[red]執行遊戲時發生錯誤: {exc}[/red]")
+        elif players_config.language == "zh-CN":
+            console.print(f"[red]执行游戏时发生错误: {exc}[/red]")
+        else:
+            console.print(f"[red]Error executing game: {exc}[/red]")
         raise
 
 

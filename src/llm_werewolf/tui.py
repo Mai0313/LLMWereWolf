@@ -35,7 +35,7 @@ def main(config: str, debug: bool = False) -> None:
     ]
     roles = create_roles(role_names=game_config.role_names)
 
-    engine = GameEngine(game_config)
+    engine = GameEngine(game_config, language=players_config.language)
     engine.setup_game(players=players, roles=roles)
     logfire.info(
         "tui_started", config_path=str(config_path), preset=players_config.preset, show_debug=debug

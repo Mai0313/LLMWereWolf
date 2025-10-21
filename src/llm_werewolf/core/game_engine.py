@@ -8,6 +8,7 @@ from llm_werewolf.core.agent import BaseAgent
 from llm_werewolf.core.types import Camp, Event, EventType, GamePhase
 from llm_werewolf.core.config import GameConfig
 from llm_werewolf.core.events import EventLogger
+from llm_werewolf.core.locale import Locale
 from llm_werewolf.core.player import Player
 from llm_werewolf.core.actions import Action, VoteAction
 from llm_werewolf.core.victory import VictoryChecker
@@ -26,16 +27,19 @@ console = Console()
 class GameEngine:
     """Core game engine that controls the flow of the Werewolf game."""
 
-    def __init__(self, config: GameConfig | None = None) -> None:
+    def __init__(self, config: GameConfig | None = None, language: str = "en-US") -> None:
         """Initialize the game engine.
 
         Args:
             config: Game configuration.
+            language: Language code for localization (en-US, zh-TW, zh-CN).
         """
         self.config = config
         self.game_state: GameState | None = None
         self.event_logger = EventLogger()
         self.victory_checker: VictoryChecker | None = None
+        self.locale = Locale(language)
+        self._last_phase: str = ""  # Track phase changes for separators
 
         self.on_event: Callable[[Event], None] = self._default_print_event
 
@@ -47,8 +51,15 @@ class GameEngine:
         Args:
             event: The game event to display.
         """
-        prefix = f"[回合 {event.round_number}][{event.phase.upper()}]"
-        console.print(f"{prefix} {event.message}")
+        # Print phase separator when phase changes
+        if event.phase != self._last_phase and event.event_type == EventType.PHASE_CHANGED:
+            if "night" in event.phase.lower():
+                console.print(f"\n{self.locale.get('night_separator')}")
+            elif "day" in event.phase.lower():
+                console.print(f"\n{self.locale.get('day_separator')}")
+            self._last_phase = event.phase
+
+        console.print(event.message)
 
     def setup_game(self, players: list[BaseAgent], roles: list[Role]) -> None:
         """Initialize the game with players and roles.
@@ -81,7 +92,7 @@ class GameEngine:
 
         self._log_event(
             EventType.GAME_STARTED,
-            f"Game started with {len(player_objects)} players",
+            self.locale.get("game_started", player_count=len(player_objects)),
             data={"player_count": len(player_objects)},
         )
 
@@ -112,11 +123,11 @@ class GameEngine:
 
         self._log_event(
             EventType.PHASE_CHANGED,
-            f"Night {self.game_state.round_number} begins",
+            self.locale.get("night_begins", round_number=self.game_state.round_number),
             data={"phase": "night", "round": self.game_state.round_number},
         )
 
-        messages.append(f"\n=== Night {self.game_state.round_number} ===")
+        messages.append("")
 
         players_with_night_actions = self.game_state.get_players_with_night_actions()
 
@@ -152,11 +163,11 @@ class GameEngine:
 
         self._log_event(
             EventType.PHASE_CHANGED,
-            f"Day {self.game_state.round_number} begins",
+            self.locale.get("day_begins", round_number=self.game_state.round_number),
             data={"phase": "day", "round": self.game_state.round_number},
         )
 
-        messages.append(f"\n=== Day {self.game_state.round_number} ===")
+        messages.append("")
 
         if self.game_state.night_deaths:
             for player_id in self.game_state.night_deaths:
@@ -312,12 +323,53 @@ class GameEngine:
                 if target_player:
                     vote_actions.append(VoteAction(player, target_player, self.game_state))
 
-        vote_messages = self.process_actions(vote_actions)
-        messages.extend(vote_messages)
+        # Process votes and log each vote
+        for action in vote_actions:
+            if action.validate():
+                action.execute()
+                # Log individual vote with locale
+                self._log_event(
+                    EventType.VOTE_CAST,
+                    self.locale.get(
+                        "vote_cast", voter=action.actor.name, target=action.target.name
+                    ),
+                    data={
+                        "voter_id": action.actor.player_id,
+                        "voter_name": action.actor.name,
+                        "target_id": action.target.player_id,
+                        "target_name": action.target.name,
+                    },
+                )
 
         vote_counts = self.game_state.get_vote_counts()
 
         if vote_counts:
+            # Display vote summary
+            self._log_event(
+                EventType.VOTE_RESULT,
+                self.locale.get("vote_summary"),
+                data={"vote_counts": vote_counts},
+            )
+
+            # Display detailed vote counts
+            for target_id, count in sorted(vote_counts.items(), key=lambda x: x[1], reverse=True):
+                target = self.game_state.get_player(target_id)
+                if target:
+                    # Get voters for this target
+                    voters = [
+                        self.game_state.get_player(voter_id).name
+                        for voter_id, voted_for in self.game_state.votes.items()
+                        if voted_for == target_id and self.game_state.get_player(voter_id)
+                    ]
+                    voters_str = ", ".join(voters)
+                    self._log_event(
+                        EventType.VOTE_RESULT,
+                        self.locale.get(
+                            "vote_count", target=target.name, count=count, voters=voters_str
+                        ),
+                        data={"target_id": target_id, "count": count, "voters": voters},
+                    )
+
             max_votes = max(vote_counts.values())
             candidates = [pid for pid, count in vote_counts.items() if count == max_votes]
 
@@ -328,29 +380,32 @@ class GameEngine:
                     if isinstance(eliminated.role, Idiot) and not eliminated.role.revealed:
                         eliminated.role.revealed = True
                         eliminated.disable_voting()
-                        messages.append(
-                            f"{eliminated.name} reveals they are the Idiot and survives!"
+                        self._log_event(
+                            EventType.ROLE_REVEALED,
+                            self.locale.get("idiot_revealed", player=eliminated.name),
+                            data={"player_id": eliminated_id, "role": "Idiot"},
                         )
                     else:
                         eliminated.kill()
                         self.game_state.day_deaths.add(eliminated_id)
                         self.game_state.death_causes[eliminated_id] = "vote"
-                        messages.append(
-                            f"{eliminated.name} was eliminated by vote. "
-                            f"They were a {eliminated.get_role_name()}."
-                        )
 
                         self._log_event(
                             EventType.PLAYER_ELIMINATED,
-                            f"{eliminated.name} was voted out",
+                            self.locale.get(
+                                "player_eliminated",
+                                player=eliminated.name,
+                                role=eliminated.get_role_name(),
+                            ),
                             data={"player_id": eliminated_id, "role": eliminated.get_role_name()},
                         )
 
                         if isinstance(eliminated.role, Elder):
                             self._handle_elder_penalty()
-                            messages.append(
-                                "The Elder was executed by the village! "
-                                "All villagers lose their special abilities as punishment!"
+                            self._log_event(
+                                EventType.ROLE_REVEALED,
+                                self.locale.get("elder_executed"),
+                                data={"player_id": eliminated_id},
                             )
 
                         if eliminated.is_lover() and eliminated.lover_partner_id:
@@ -358,10 +413,9 @@ class GameEngine:
                             if partner and partner.is_alive():
                                 partner.kill()
                                 self.game_state.day_deaths.add(partner.player_id)
-                                messages.append(f"{partner.name} died of heartbreak (lover)!")
                                 self._log_event(
                                     EventType.LOVER_DIED,
-                                    f"{partner.name} died of heartbreak",
+                                    self.locale.get("died_of_heartbreak", player=partner.name),
                                     data={"player_id": partner.player_id},
                                 )
 
@@ -373,22 +427,22 @@ class GameEngine:
                             if charmed and charmed.is_alive():
                                 charmed.kill()
                                 self.game_state.day_deaths.add(charmed.player_id)
-                                messages.append(
-                                    f"{charmed.name} died from Wolf Beauty's charm "
-                                    f"(Wolf Beauty {eliminated.name} was eliminated)!"
-                                )
                                 self._log_event(
                                     EventType.PLAYER_DIED,
-                                    f"{charmed.name} died from Wolf Beauty's charm",
+                                    self.locale.get(
+                                        "died_from_charm",
+                                        player=charmed.name,
+                                        wolf_beauty=eliminated.name,
+                                    ),
                                     data={
                                         "player_id": charmed.player_id,
                                         "reason": "wolf_beauty_charm",
                                     },
                                 )
             else:
-                messages.append("Vote tied. No one is eliminated.")
+                self._log_event(EventType.VOTE_RESULT, self.locale.get("vote_tied"), data={})
         else:
-            messages.append("No votes cast.")
+            self._log_event(EventType.VOTE_RESULT, self.locale.get("no_votes"), data={})
 
         death_ability_messages = self._handle_death_abilities()
         messages.extend(death_ability_messages)
@@ -407,23 +461,35 @@ class GameEngine:
         if not self.game_state:
             return []
 
-        messages = []
+        messages: list[str] = []
 
         if self.game_state.witch_saved_target == target.player_id:
-            messages.append(f"{target.name} was saved by the witch!")
+            self._log_event(
+                EventType.WITCH_SAVED,
+                self.locale.get("saved_by_witch", player=target.name),
+                data={"player_id": target.player_id},
+            )
         elif self.game_state.guard_protected == target.player_id:
-            messages.append(f"{target.name} was protected by the guard!")
+            self._log_event(
+                EventType.GUARD_PROTECTED,
+                self.locale.get("protected_by_guard", player=target.name),
+                data={"player_id": target.player_id},
+            )
         else:
             if isinstance(target.role, Elder) and target.role.lives > 1:
                 target.role.lives -= 1
-                messages.append(f"{target.name} was attacked but survived (Elder)!")
+                self._log_event(
+                    EventType.PLAYER_DIED,
+                    self.locale.get("elder_attacked", player=target.name),
+                    data={"player_id": target.player_id},
+                )
             else:
                 target.kill()
                 self.game_state.night_deaths.add(target.player_id)
 
                 self._log_event(
-                    EventType.WEREWOLF_KILLED,
-                    f"{target.name} was killed by werewolves",
+                    EventType.PLAYER_DIED,
+                    self.locale.get("killed_by_werewolves", player=target.name),
                     data={"player_id": target.player_id},
                 )
 
@@ -432,7 +498,11 @@ class GameEngine:
                     if partner and partner.is_alive():
                         partner.kill()
                         self.game_state.night_deaths.add(partner.player_id)
-                        messages.append(f"{partner.name} died of heartbreak (lover)!")
+                        self._log_event(
+                            EventType.LOVER_DIED,
+                            self.locale.get("died_of_heartbreak", player=partner.name),
+                            data={"player_id": partner.player_id},
+                        )
 
         return messages
 
@@ -473,8 +543,10 @@ class GameEngine:
             if isinstance(player.role, (Hunter, AlphaWolf)):
                 death_cause = self.game_state.death_causes.get(player_id)
                 if death_cause == "witch_poison":
-                    messages.append(
-                        f"{player.name} was poisoned by the Witch and cannot use their death ability."
+                    self._log_event(
+                        EventType.MESSAGE,
+                        self.locale.get("poisoned_no_ability", player=player.name),
+                        data={"player_id": player_id},
                     )
                     self.game_state.death_abilities_used.add(player_id)
                     continue
@@ -486,7 +558,11 @@ class GameEngine:
                     continue
 
                 role_name = player.get_role_name()
-                messages.append(f"{player.name} ({role_name}) can shoot before dying!")
+                self._log_event(
+                    EventType.MESSAGE,
+                    self.locale.get("death_ability_active", player=player.name, role=role_name),
+                    data={"player_id": player_id, "role": role_name},
+                )
 
                 if player.agent:
                     target = ActionSelector.get_target_from_agent(
@@ -507,11 +583,19 @@ class GameEngine:
                     else:
                         self.game_state.day_deaths.add(target.player_id)
 
-                    messages.append(f"{player.name} shoots {target.name}!")
+                    # Use appropriate event based on role
+                    if isinstance(player.role, Hunter):
+                        event_msg = self.locale.get(
+                            "hunter_shoots", hunter=player.name, target=target.name
+                        )
+                    else:  # AlphaWolf
+                        event_msg = self.locale.get(
+                            "alpha_wolf_shoots", alpha=player.name, target=target.name
+                        )
 
                     self._log_event(
                         EventType.HUNTER_REVENGE,
-                        f"{player.name} shoots {target.name}",
+                        event_msg,
                         data={
                             "shooter_id": player.player_id,
                             "target_id": target.player_id,
@@ -656,7 +740,11 @@ class GameEngine:
 
             target = self.game_state.get_player(selected_target_id)
             if target:
-                messages.append(f"Werewolves have chosen their target: {target.name}")
+                self._log_event(
+                    EventType.WEREWOLF_KILLED,
+                    self.locale.get("werewolf_target", target=target.name),
+                    data={"target_id": selected_target_id, "target_name": target.name},
+                )
 
         return messages
 
@@ -669,6 +757,15 @@ class GameEngine:
         Returns:
             list[str]: Messages from processing actions.
         """
+        from llm_werewolf.core.actions.villager import (
+            CupidLinkAction,
+            SeerCheckAction,
+            WitchSaveAction,
+            WitchPoisonAction,
+            GuardProtectAction,
+        )
+        from llm_werewolf.core.actions.werewolf import WhiteWolfKillAction, WolfBeautyCharmAction
+
         messages = []
 
         def get_action_priority(action: Action) -> int:
@@ -687,6 +784,67 @@ class GameEngine:
         for action in sorted_actions:
             if action.validate():
                 result_messages = action.execute()
+
+                # Log detailed events for different action types
+                if isinstance(action, GuardProtectAction):
+                    self._log_event(
+                        EventType.GUARD_PROTECTED,
+                        self.locale.get("guard_protected", target=action.target.name),
+                        data={"target_id": action.target.player_id},
+                    )
+                elif isinstance(action, WitchSaveAction):
+                    self._log_event(
+                        EventType.WITCH_SAVED,
+                        self.locale.get("witch_saved", target=action.target.name),
+                        data={"target_id": action.target.player_id},
+                    )
+                elif isinstance(action, WitchPoisonAction):
+                    self._log_event(
+                        EventType.WITCH_POISONED,
+                        self.locale.get("witch_poisoned", target=action.target.name),
+                        data={"target_id": action.target.player_id},
+                    )
+                    # Mark poisoned target for death
+                    if action.target.is_alive() and self.game_state:
+                        action.target.kill()
+                        self.game_state.night_deaths.add(action.target.player_id)
+                        self.game_state.death_causes[action.target.player_id] = "witch_poison"
+                elif isinstance(action, SeerCheckAction):
+                    from llm_werewolf.core.roles.werewolf import HiddenWolf
+
+                    result = action.target.get_camp()
+                    if isinstance(action.target.role, HiddenWolf):
+                        result = "villager"
+                    self._log_event(
+                        EventType.SEER_CHECKED,
+                        self.locale.get("seer_checked", target=action.target.name, result=result),
+                        data={"target_id": action.target.player_id, "result": result},
+                        visible_to=[action.actor.player_id],  # Only seer sees this
+                    )
+                elif isinstance(action, CupidLinkAction):
+                    self._log_event(
+                        EventType.LOVERS_LINKED,
+                        self.locale.get(
+                            "cupid_links", player1=action.target1.name, player2=action.target2.name
+                        ),
+                        data={
+                            "player1_id": action.target1.player_id,
+                            "player2_id": action.target2.player_id,
+                        },
+                    )
+                elif isinstance(action, WhiteWolfKillAction):
+                    self._log_event(
+                        EventType.MESSAGE,
+                        self.locale.get("white_wolf_kills", target=action.target.name),
+                        data={"target_id": action.target.player_id},
+                    )
+                elif isinstance(action, WolfBeautyCharmAction):
+                    self._log_event(
+                        EventType.MESSAGE,
+                        self.locale.get("wolf_beauty_charms", target=action.target.name),
+                        data={"target_id": action.target.player_id},
+                    )
+
                 messages.extend(result_messages)
 
         return messages
@@ -718,9 +876,9 @@ class GameEngine:
             self.game_state.next_phase()
 
         if self.game_state.winner:
-            return f"Game Over! {self.game_state.winner} camp wins!"
+            return self.locale.get("game_over", winner=self.game_state.winner)
 
-        return "Game ended"
+        return self.locale.get("game_ended", winner="unknown", reason="")
 
     def _log_event(
         self,

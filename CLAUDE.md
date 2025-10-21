@@ -68,11 +68,19 @@ The game follows a modular architecture with clear separation of concerns:
 
 **Game Engine Flow:**
 
-1. `GameEngine` (`core/game_engine.py`) orchestrates the entire game loop
+1. `GameEngine` (`core/engine/game_engine.py`) orchestrates the entire game loop
+   - Composed of multiple mixins for clean separation of concerns:
+     - `GameEngineBase` (`core/engine/base.py`): Core initialization, event handling, and game loop
+     - `NightPhaseMixin` (`core/engine/night_phase.py`): Night phase execution logic
+     - `DayPhaseMixin` (`core/engine/day_phase.py`): Day discussion phase logic
+     - `VotingPhaseMixin` (`core/engine/voting_phase.py`): Voting phase logic
+     - `DeathHandlerMixin` (`core/engine/death_handler.py`): Death-related logic (werewolf kills, lover deaths, etc.)
+     - `ActionProcessorMixin` (`core/engine/action_processor.py`): Processing game actions
 2. `GameState` (`core/game_state.py`) maintains current game state (players, round, phase)
 3. `EventLogger` (`core/events.py`) tracks all game events for display/debugging
-4. `VictoryChecker` (`core/victory.py`) evaluates win conditions after each phase
-5. `ActionSelector` (`core/action_selector.py`) prompts agents and selects valid actions
+4. `EventFormatter` (`core/event_formatter.py`) provides centralized event formatting for consistent display
+5. `VictoryChecker` (`core/victory.py`) evaluates win conditions after each phase
+6. `ActionSelector` (`core/action_selector.py`) prompts agents and selects valid actions
 
 **Phase Execution:**
 
@@ -88,7 +96,8 @@ The action system (`core/actions/`) separates action logic from role definitions
 - `CommonActions` (`actions/common.py`): Shared actions like voting and discussion
 - `VillagerActions` (`actions/villager.py`): Villager faction-specific actions
 - `WerewolfActions` (`actions/werewolf.py`): Werewolf faction-specific actions
-- Actions are created and executed through role's `perform_action()` method
+- Actions are returned from role's `get_night_actions()` method and executed by the game engine
+- `ActionSelector` (`core/action_selector.py`): Helper class for building prompts and parsing agent responses for target selection, yes/no questions, and multi-target selections
 
 **Agent System:**
 The agent system is designed for extensibility:
@@ -151,14 +160,23 @@ Night actions execute in order defined by `ActionPriority` enum (0=highest prior
 
 ## Key Implementation Details
 
+### Discussion Context Management
+
+The game engine maintains two separate discussion histories for context:
+
+- `public_discussion_history`: Available to all players during day discussion
+- `werewolf_discussion_history`: Only available to werewolves during night discussion
+
+These are managed in `GameEngineBase` and help agents maintain coherent conversations by having access to previous statements.
+
 ### Adding a New Role
 
-1. Create role class in appropriate file (`roles/werewolf.py`, `roles/villager.py`, `roles/neutral.py`)
-2. Inherit from `Role` and implement:
+1. Create role class in appropriate file (`core/roles/werewolf.py`, `core/roles/villager.py`, `core/roles/neutral.py`)
+2. Inherit from `Role` (`core/roles/base.py`) and implement:
    - `get_config()`: Return `RoleConfig` with name, camp, description, priority
-   - `get_night_actions()`: **Required** - All roles must implement this method. If the role has no night actions, return an empty list `[]`. If the role has night actions, return a list of `Action` objects.
-3. Register in `role_registry.py` ROLE_CLASSES dict
-4. Optionally update the automatic role assignment logic in `create_game_config_from_player_count()` if you want this role to be auto-assigned for specific player counts
+   - `get_night_actions()`: **Required** - All roles must implement this method. If the role has no night actions, return an empty list `[]`. If the role has night actions, return a list of `Action` objects from `core/actions/`.
+3. Register in `core/role_registry.py` ROLE_CLASSES dict
+4. Optionally update the automatic role assignment logic in `create_game_config_from_player_count()` (`core/config/presets.py`) if you want this role to be auto-assigned for specific player counts
 5. Add tests in `tests/core/test_roles.py`
 
 **Note**: The `get_night_actions()` method is an abstract method that **must** be implemented by all roles. This design forces developers to explicitly consider whether a role has night abilities, preventing bugs where developers forget to implement night actions for roles that should have them. Roles without night abilities (like Villager, Hunter, Idiot) should return an empty list.
@@ -174,15 +192,17 @@ Night actions execute in order defined by `ActionPriority` enum (0=highest prior
 ### Game State Management
 
 - `GameState` is the single source of truth for player status
-- Players are never mutated directly during actions; instead, actions return effect descriptions
-- `GameEngine` applies action results by updating player states
-- Status effects (protected, poisoned, charmed) are cleared at phase boundaries
+- Players track their status through boolean flags: `is_alive`, `is_protected`, `is_poisoned`, `is_charmed`, `revealed_as_idiot`
+- Actions are executed through the action system, returning effect descriptions
+- `ActionProcessorMixin` in `GameEngine` applies action results by updating player states
+- Status effects (protected, poisoned, charmed) are cleared at phase boundaries by the respective phase mixins
 
 ### Language Support
 
 - Game supports multilingual prompts via `language` config field (en-US, zh-TW, zh-CN)
+- `Locale` class (`core/locale.py`) manages localized strings with fallback to English
 - LLMAgent appends language instruction to all prompts: "Please respond in {language}"
-- Console output currently uses hardcoded Chinese; localization is incomplete
+- Event messages are formatted through `EventFormatter` with support for localization
 
 ## Testing
 

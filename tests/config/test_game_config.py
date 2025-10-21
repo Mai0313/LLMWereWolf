@@ -1,5 +1,3 @@
-"""Tests for game configuration."""
-
 import pytest
 from pydantic import ValidationError
 

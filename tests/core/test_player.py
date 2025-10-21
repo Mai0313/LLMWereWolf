@@ -1,5 +1,3 @@
-"""Tests for Player class."""
-
 from llm_werewolf.core.roles import Villager, Werewolf
 from llm_werewolf.core.player import Player, PlayerStatus
 

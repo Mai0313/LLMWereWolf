@@ -1,5 +1,3 @@
-"""Tests for role classes."""
-
 from unittest.mock import patch
 
 from llm_werewolf.core.agent import DemoAgent

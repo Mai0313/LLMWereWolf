@@ -1,5 +1,3 @@
-"""Tests for simplified AI agents."""
-
 from llm_werewolf.ai import LLMAgent
 from llm_werewolf.core.agent import DemoAgent
 

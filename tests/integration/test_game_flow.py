@@ -1,5 +1,3 @@
-"""Integration tests for game flow."""
-
 from llm_werewolf.core import GameEngine
 from llm_werewolf.core.agent import DemoAgent
 from llm_werewolf.core.role_registry import create_roles

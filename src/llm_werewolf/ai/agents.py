@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from functools import cached_property
+from collections.abc import Iterator
 
 import yaml
 import dotenv
@@ -84,22 +85,35 @@ class LLMAgent(BaseAgent):
         client = OpenAI(api_key=self.api_key, base_url=self.base_url)
         return client
 
-    def get_response(self, message: str) -> str:
+    def get_response(self, message: str) -> Iterator[str]:
+        """Get a streaming response from the LLM.
+
+        Args:
+            message: The prompt message.
+
+        Yields:
+            str: Chunks of the response as they arrive.
+        """
         message += f"\nPlease respond in {self.language}."
         self.chat_history.append({"role": "user", "content": message})
-        response = self.client.chat.completions.create(
+
+        stream = self.client.chat.completions.create(
             model=self.model,
             messages=self.chat_history,
             temperature=self.temperature,
             max_tokens=self.max_tokens,
             reasoning_effort=self.reasoning_effort,
+            stream=True,
         )
-        self.chat_history.append({
-            "role": "assistant",
-            "content": response.choices[0].message.content,
-        })
 
-        return response.choices[0].message.content
+        full_response = ""
+        for chunk in stream:
+            if chunk.choices[0].delta.content:
+                content = chunk.choices[0].delta.content
+                full_response += content
+                yield content
+
+        self.chat_history.append({"role": "assistant", "content": full_response})
 
 
 class PlayersConfig(BaseModel):

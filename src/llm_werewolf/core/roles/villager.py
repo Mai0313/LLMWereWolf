@@ -150,7 +150,7 @@ class Witch(Role):
                 )
 
                 try:
-                    response = self.player.agent.get_response(prompt)
+                    response = "".join(self.player.agent.get_response(prompt))
                     use_save = ActionSelector.parse_yes_no(response)
 
                     if use_save:
@@ -448,7 +448,8 @@ class Cupid(Role):
             )
 
             try:
-                response = self.player.agent.get_response(prompt)
+                # Collect the full response from the streaming generator
+                response = "".join(self.player.agent.get_response(prompt))
                 selected = ActionSelector.parse_multi_target_selection(
                     response, possible_targets, num_targets=2
                 )

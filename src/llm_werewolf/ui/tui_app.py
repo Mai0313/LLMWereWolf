@@ -58,11 +58,7 @@ class WerewolfTUI(App):
     }
     """
 
-    BINDINGS: ClassVar = [
-        ("q", "quit", "Quit"),
-        ("ctrl+c", "quit", "Quit"),
-        ("n", "next_step", "Next Step"),
-    ]
+    BINDINGS: ClassVar = [("q", "quit", "Quit"), ("ctrl+c", "quit", "Quit")]
 
     def __init__(self, game_engine: GameEngine | None = None) -> None:
         """Initialize the TUI application.
@@ -118,8 +114,16 @@ class WerewolfTUI(App):
 
             self.game_engine.on_event = self.on_game_event
 
+            # Start the game automatically in the background (in a thread since play_game is sync)
+            self.run_worker(self._run_game, exclusive=True, thread=True)
+
         # Update footer with uptime every second
         self.set_interval(1.0, self.update_footer)
+
+    def _run_game(self) -> None:
+        """Run the game in a background worker."""
+        if self.game_engine:
+            self.game_engine.play_game()
 
     def update_footer(self) -> None:
         """Update the footer with current uptime."""
@@ -150,12 +154,6 @@ class WerewolfTUI(App):
             self.chat_panel.add_event(event)
 
         self.update_game_state()
-
-    def action_next_step(self) -> None:
-        """Advance the game by one step."""
-        if self.game_engine:
-            self.game_engine.step()
-            self.update_game_state()
 
     def add_system_message(self, message: str) -> None:
         """Add a system message to the chat.

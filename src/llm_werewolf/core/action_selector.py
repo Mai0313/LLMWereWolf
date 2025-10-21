@@ -227,7 +227,7 @@ class ActionSelector:
         )
 
         try:
-            response = agent.get_response(prompt)
+            response = "".join(agent.get_response(prompt))
             target = ActionSelector.parse_target_selection(response, possible_targets, allow_skip)
 
             if target is not None or allow_skip:

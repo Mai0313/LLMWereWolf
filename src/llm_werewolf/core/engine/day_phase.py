@@ -98,7 +98,7 @@ class DayPhaseMixin:
                 game_context = self._build_discussion_context(player)
 
                 try:
-                    speech = player.agent.get_response(game_context)
+                    speech = "".join(player.agent.get_response(game_context))
 
                     self._log_event(
                         EventType.PLAYER_SPEECH,

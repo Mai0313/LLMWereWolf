@@ -23,6 +23,7 @@ Other languages: [English](README.md) | [繁體中文](README.zh-TW.md) | [简�
 
 - 🎮 **Complete Game Logic**: Full implementation of Werewolf rules with 20+ roles.
 - 🤖 **LLM Integration**: Unified agent interface for easy integration with any LLM (OpenAI, Anthropic, DeepSeek, local models, etc.).
+- ⚡ **Streaming Responses**: LLM agents use streaming API by default, reducing perceived wait time with faster first-token response.
 - 🖥️ **Beautiful TUI**: Real-time game visualization using the Textual framework, supporting an interactive terminal interface.
 - 👤 **Human Players**: Supports mixed games with human players and AIs.
 - ⚙️ **Configurable**: Flexibly configure players and game parameters through YAML configuration files.
@@ -280,7 +281,7 @@ The TUI (Terminal User Interface) provides real-time game visualization with a m
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
 │ 🐺 Werewolf Game                                                       AI-Powered Werewolf     │
-│ q Quit  d Toggle Debug  n Next Step                                             [00:02:34]     │
+│ q Quit  d Toggle Debug                                                           [00:02:34]     │
 ├──────────────────────┬─────────────────────────────────────────┬───────────────────────────────┤
 │                      │ ╭───── Game Status ─────╮               │                               │
 │    Players           │ │ 🌙 Round 2 - Night    │               │    Debug Info                 │
@@ -360,9 +361,10 @@ Events are color-coded by importance for quick identification of key information
 ### TUI Controls
 
 - **q**: Quit the game.
-- **n**: Manually proceed to the next step (for debugging).
 - **Mouse Wheel**: Scroll through the chat history.
 - **Arrow Keys**: Move between focusable components.
+
+The game runs automatically once started - no manual intervention is required.
 
 ### Console Mode
 

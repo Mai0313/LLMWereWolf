@@ -1,4 +1,5 @@
 import random
+from collections.abc import Iterator
 
 from pydantic import Field, BaseModel
 from rich.console import Console
@@ -16,14 +17,14 @@ class BaseAgent(BaseModel):
     name: str
     model: str
 
-    def get_response(self, message: str) -> str:
-        """Get a response from the agent.
+    def get_response(self, message: str) -> Iterator[str]:
+        """Get a streaming response from the agent.
 
         Args:
             message: The prompt message.
 
-        Returns:
-            str: The agent's response.
+        Yields:
+            str: Chunks of the agent's response.
 
         Raises:
             NotImplementedError: If not implemented by subclass.
@@ -47,14 +48,14 @@ class DemoAgent(BaseAgent):
 
     model: str = Field(default="demo")
 
-    def get_response(self, message: str) -> str:
-        """Return a canned response.
+    def get_response(self, message: str) -> Iterator[str]:
+        """Return a canned response as a stream.
 
         Args:
             message: The prompt message (ignored).
 
-        Returns:
-            str: A random canned response.
+        Yields:
+            str: The complete response in one chunk.
         """
         responses = [
             "I agree.",
@@ -63,7 +64,7 @@ class DemoAgent(BaseAgent):
             "That's interesting.",
             "I have my suspicions.",
         ]
-        return random.choice(responses)  # noqa: S311
+        yield random.choice(responses)  # noqa: S311
 
 
 class HumanAgent(BaseAgent):
@@ -74,14 +75,14 @@ class HumanAgent(BaseAgent):
 
     model: str = Field(default="human")
 
-    def get_response(self, message: str) -> str:
-        """Get response from human input.
+    def get_response(self, message: str) -> Iterator[str]:
+        """Get response from human input as a stream.
 
         Args:
             message: The prompt message.
 
-        Returns:
-            str: Human's response from console input.
+        Yields:
+            str: The complete response in one chunk.
         """
         console.print(f"\n{message}")
-        return input("Your response: ")
+        yield input("Your response: ")

@@ -1,8 +1,3 @@
-"""Pydantic model definitions for the LLM Werewolf game.
-
-This module contains all shared data models to avoid circular import issues.
-"""
-
 from datetime import datetime
 
 from pydantic import Field, BaseModel, ConfigDict

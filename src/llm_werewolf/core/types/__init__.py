@@ -1,9 +1,3 @@
-"""Type definitions for the LLM Werewolf game.
-
-This package contains all type definitions including enums, models, and protocols
-to avoid circular import issues throughout the codebase.
-"""
-
 # Export all enums
 from llm_werewolf.core.types.enums import (
     Camp,

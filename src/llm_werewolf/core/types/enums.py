@@ -1,8 +1,3 @@
-"""Enum definitions for the LLM Werewolf game.
-
-This module contains all enum types to avoid circular import issues.
-"""
-
 from enum import Enum
 
 

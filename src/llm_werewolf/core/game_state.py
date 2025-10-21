@@ -1,18 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-from llm_werewolf.core.types import GamePhase, GameStateInfo
-
-if TYPE_CHECKING:
-    from llm_werewolf.core.events import Event
-    from llm_werewolf.core.player import Player
+from llm_werewolf.core.types import Event, GamePhase, GameStateInfo, PlayerProtocol
 
 
 class GameState:
     """Manages the current state of the Werewolf game."""
 
-    def __init__(self, players: list[Player]) -> None:
+    def __init__(self, players: list[PlayerProtocol]) -> None:
         """Initialize the game state.
 
         Args:
@@ -99,7 +93,7 @@ class GameState:
 
         return self.phase
 
-    def get_alive_players(self, except_ids: list[str] | None = None) -> list[Player]:
+    def get_alive_players(self, except_ids: list[str] | None = None) -> list[PlayerProtocol]:
         """Get all alive players.
 
         Args:
@@ -113,7 +107,7 @@ class GameState:
             alive = [p for p in alive if p.player_id not in except_ids]
         return alive
 
-    def get_dead_players(self) -> list[Player]:
+    def get_dead_players(self) -> list[PlayerProtocol]:
         """Get all dead players.
 
         Returns:
@@ -121,11 +115,11 @@ class GameState:
         """
         return [p for p in self.players if not p.is_alive()]
 
-    def get_players_with_night_actions(self) -> list[Player]:
+    def get_players_with_night_actions(self) -> list[PlayerProtocol]:
         """Get all alive players that have night actions."""
         return [p for p in self.get_alive_players() if p.role.has_night_action(self)]
 
-    def get_player(self, player_id: str) -> Player | None:
+    def get_player(self, player_id: str) -> PlayerProtocol | None:
         """Get a player by ID.
 
         Args:
@@ -136,7 +130,7 @@ class GameState:
         """
         return self.player_dict.get(player_id)
 
-    def get_players_by_camp(self, camp: str) -> list[Player]:
+    def get_players_by_camp(self, camp: str) -> list[PlayerProtocol]:
         """Get all players in a specific camp.
 
         Args:

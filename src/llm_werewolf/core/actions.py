@@ -1,19 +1,14 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
 
-from llm_werewolf.core.types import ActionType
-
-if TYPE_CHECKING:
-    from llm_werewolf.core.player import Player
-    from llm_werewolf.core.game_state import GameState
+from llm_werewolf.core.types import ActionType, PlayerProtocol, GameStateProtocol
 
 
 class Action(ABC):
     """Abstract base class for all game actions."""
 
-    def __init__(self, actor: Player, game_state: GameState) -> None:
+    def __init__(self, actor: PlayerProtocol, game_state: GameStateProtocol) -> None:
         """Initialize the action.
 
         Args:
@@ -54,7 +49,9 @@ class Action(ABC):
 class WerewolfVoteAction(Action):
     """Action for a werewolf to vote for a kill target."""
 
-    def __init__(self, actor: Player, target: Player, game_state: GameState) -> None:
+    def __init__(
+        self, actor: PlayerProtocol, target: PlayerProtocol, game_state: GameStateProtocol
+    ) -> None:
         """Initialize the werewolf vote action.
 
         Args:
@@ -82,7 +79,9 @@ class WerewolfVoteAction(Action):
 class WerewolfKillAction(Action):
     """Action for werewolves to kill a player (legacy - kept for compatibility)."""
 
-    def __init__(self, actor: Player, target: Player, game_state: GameState) -> None:
+    def __init__(
+        self, actor: PlayerProtocol, target: PlayerProtocol, game_state: GameStateProtocol
+    ) -> None:
         """Initialize the werewolf kill action.
 
         Args:
@@ -110,7 +109,9 @@ class WerewolfKillAction(Action):
 class WitchSaveAction(Action):
     """Action for witch to save a player."""
 
-    def __init__(self, actor: Player, target: Player, game_state: GameState) -> None:
+    def __init__(
+        self, actor: PlayerProtocol, target: PlayerProtocol, game_state: GameStateProtocol
+    ) -> None:
         """Initialize the witch save action.
 
         Args:
@@ -150,7 +151,9 @@ class WitchSaveAction(Action):
 class WitchPoisonAction(Action):
     """Action for witch to poison a player."""
 
-    def __init__(self, actor: Player, target: Player, game_state: GameState) -> None:
+    def __init__(
+        self, actor: PlayerProtocol, target: PlayerProtocol, game_state: GameStateProtocol
+    ) -> None:
         """Initialize the witch poison action.
 
         Args:
@@ -188,7 +191,9 @@ class WitchPoisonAction(Action):
 class SeerCheckAction(Action):
     """Action for seer to check a player."""
 
-    def __init__(self, actor: Player, target: Player, game_state: GameState) -> None:
+    def __init__(
+        self, actor: PlayerProtocol, target: PlayerProtocol, game_state: GameStateProtocol
+    ) -> None:
         """Initialize the seer check action.
 
         Args:
@@ -223,7 +228,9 @@ class SeerCheckAction(Action):
 class GuardProtectAction(Action):
     """Action for guard to protect a player."""
 
-    def __init__(self, actor: Player, target: Player, game_state: GameState) -> None:
+    def __init__(
+        self, actor: PlayerProtocol, target: PlayerProtocol, game_state: GameStateProtocol
+    ) -> None:
         """Initialize the guard protect action.
 
         Args:
@@ -264,7 +271,9 @@ class GuardProtectAction(Action):
 class VoteAction(Action):
     """Action for voting during the day."""
 
-    def __init__(self, actor: Player, target: Player, game_state: GameState) -> None:
+    def __init__(
+        self, actor: PlayerProtocol, target: PlayerProtocol, game_state: GameStateProtocol
+    ) -> None:
         """Initialize the vote action.
 
         Args:
@@ -292,7 +301,9 @@ class VoteAction(Action):
 class HunterShootAction(Action):
     """Action for hunter to shoot when dying."""
 
-    def __init__(self, actor: Player, target: Player, game_state: GameState) -> None:
+    def __init__(
+        self, actor: PlayerProtocol, target: PlayerProtocol, game_state: GameStateProtocol
+    ) -> None:
         """Initialize the hunter shoot action.
 
         Args:
@@ -322,7 +333,11 @@ class CupidLinkAction(Action):
     """Action for Cupid to link two players as lovers."""
 
     def __init__(
-        self, actor: Player, target1: Player, target2: Player, game_state: GameState
+        self,
+        actor: PlayerProtocol,
+        target1: PlayerProtocol,
+        target2: PlayerProtocol,
+        game_state: GameStateProtocol,
     ) -> None:
         """Initialize the cupid link action.
 
@@ -373,7 +388,9 @@ class CupidLinkAction(Action):
 class RavenMarkAction(Action):
     """Action for Raven to mark a player for extra votes."""
 
-    def __init__(self, actor: Player, target: Player, game_state: GameState) -> None:
+    def __init__(
+        self, actor: PlayerProtocol, target: PlayerProtocol, game_state: GameStateProtocol
+    ) -> None:
         """Initialize the raven mark action.
 
         Args:
@@ -401,7 +418,9 @@ class RavenMarkAction(Action):
 class WhiteWolfKillAction(Action):
     """Action for White Wolf to kill another werewolf."""
 
-    def __init__(self, actor: Player, target: Player, game_state: GameState) -> None:
+    def __init__(
+        self, actor: PlayerProtocol, target: PlayerProtocol, game_state: GameStateProtocol
+    ) -> None:
         """Initialize the white wolf kill action.
 
         Args:
@@ -452,7 +471,9 @@ class WhiteWolfKillAction(Action):
 class WolfBeautyCharmAction(Action):
     """Action for Wolf Beauty to charm a player."""
 
-    def __init__(self, actor: Player, target: Player, game_state: GameState) -> None:
+    def __init__(
+        self, actor: PlayerProtocol, target: PlayerProtocol, game_state: GameStateProtocol
+    ) -> None:
         """Initialize the wolf beauty charm action.
 
         Args:
@@ -492,7 +513,9 @@ class WolfBeautyCharmAction(Action):
 class GuardianWolfProtectAction(Action):
     """Action for Guardian Wolf to protect a werewolf."""
 
-    def __init__(self, actor: Player, target: Player, game_state: GameState) -> None:
+    def __init__(
+        self, actor: PlayerProtocol, target: PlayerProtocol, game_state: GameStateProtocol
+    ) -> None:
         """Initialize the guardian wolf protect action.
 
         Args:
@@ -524,7 +547,9 @@ class GuardianWolfProtectAction(Action):
 class NightmareWolfBlockAction(Action):
     """Action for Nightmare Wolf to block a player's ability."""
 
-    def __init__(self, actor: Player, target: Player, game_state: GameState) -> None:
+    def __init__(
+        self, actor: PlayerProtocol, target: PlayerProtocol, game_state: GameStateProtocol
+    ) -> None:
         """Initialize the nightmare wolf block action.
 
         Args:
@@ -552,7 +577,9 @@ class NightmareWolfBlockAction(Action):
 class GraveyardKeeperCheckAction(Action):
     """Action for Graveyard Keeper to check a dead player."""
 
-    def __init__(self, actor: Player, target: Player, game_state: GameState) -> None:
+    def __init__(
+        self, actor: PlayerProtocol, target: PlayerProtocol, game_state: GameStateProtocol
+    ) -> None:
         """Initialize the graveyard keeper check action.
 
         Args:
@@ -583,7 +610,9 @@ class GraveyardKeeperCheckAction(Action):
 class KnightDuelAction(Action):
     """Action for Knight to duel a player during the day."""
 
-    def __init__(self, actor: Player, target: Player, game_state: GameState) -> None:
+    def __init__(
+        self, actor: PlayerProtocol, target: PlayerProtocol, game_state: GameStateProtocol
+    ) -> None:
         """Initialize the knight duel action.
 
         Args:

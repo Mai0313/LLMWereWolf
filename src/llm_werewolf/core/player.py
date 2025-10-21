@@ -1,12 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-from llm_werewolf.core.types import PlayerInfo, PlayerStatus
-
-if TYPE_CHECKING:
-    from llm_werewolf.core.agent import BaseAgent
-    from llm_werewolf.core.roles.base import Role
+from llm_werewolf.core.types import PlayerInfo, PlayerStatus, RoleProtocol, AgentProtocol
 
 
 class Player:
@@ -16,8 +10,8 @@ class Player:
         self,
         player_id: str,
         name: str,
-        role: Role,
-        agent: BaseAgent | None = None,
+        role: type[RoleProtocol],
+        agent: AgentProtocol | None = None,
         ai_model: str = "unknown",
     ) -> None:
         """Initialize a player.

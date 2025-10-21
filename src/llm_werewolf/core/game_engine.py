@@ -3,9 +3,9 @@ from typing import TYPE_CHECKING, Any
 from pathlib import Path
 
 from llm_werewolf.core.agent import BaseAgent
-from llm_werewolf.core.types import Camp, GamePhase
+from llm_werewolf.core.types import Camp, Event, EventType, GamePhase
 from llm_werewolf.core.config import GameConfig
-from llm_werewolf.core.events import Event, EventType, EventLogger
+from llm_werewolf.core.events import EventLogger
 from llm_werewolf.core.player import Player
 from llm_werewolf.core.actions import Action, VoteAction
 from llm_werewolf.core.victory import VictoryChecker

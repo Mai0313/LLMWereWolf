@@ -4,16 +4,20 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from llm_werewolf.core.types import Camp, RoleConfig, ActionPriority
-    from llm_werewolf.core.player import Player
-    from llm_werewolf.core.actions import Action
-    from llm_werewolf.core.game_state import GameState
+    from llm_werewolf.core.types import (
+        Camp,
+        RoleConfig,
+        ActionPriority,
+        ActionProtocol,
+        PlayerProtocol,
+        GameStateProtocol,
+    )
 
 
 class Role(ABC):
     """Abstract base class for all roles in the Werewolf game."""
 
-    def __init__(self, player: Player) -> None:
+    def __init__(self, player: PlayerProtocol) -> None:
         """Initialize the role."""
         self.player = player
         self.ability_uses = 0
@@ -65,7 +69,7 @@ class Role(ABC):
         """
         return self.config.priority
 
-    def can_act_tonight(self, player: Player, round_number: int) -> bool:
+    def can_act_tonight(self, player: PlayerProtocol, round_number: int) -> bool:
         """Check if this role can perform an action tonight.
 
         Args:
@@ -86,7 +90,7 @@ class Role(ABC):
 
         return not (self.config.max_uses is not None and self.ability_uses >= self.config.max_uses)
 
-    def can_act_today(self, player: Player) -> bool:
+    def can_act_today(self, player: PlayerProtocol) -> bool:
         """Check if this role can perform an action today.
 
         Args:
@@ -100,7 +104,7 @@ class Role(ABC):
 
         return player.is_alive()
 
-    def get_action_prompt(self, player: Player, game_state: object) -> str:
+    def get_action_prompt(self, player: PlayerProtocol, game_state: object) -> str:
         """Get the prompt for the AI agent when this role needs to act.
 
         Args:
@@ -113,17 +117,17 @@ class Role(ABC):
         return f"You are {player.name}, a {self.name}. {self.description}"
 
     @abstractmethod
-    def get_night_actions(self, game_state: GameState) -> list[Action]:
+    def get_night_actions(self, game_state: GameStateProtocol) -> list[ActionProtocol]:
         """Get the night actions for this role.
 
         Args:
             game_state: The current game state.
 
         Returns:
-            list[Action]: A list of actions to perform.
+            list[ActionProtocol]: A list of actions to perform.
         """
 
-    def has_night_action(self, game_state: GameState) -> bool:
+    def has_night_action(self, game_state: GameStateProtocol) -> bool:
         """Check if the role has a night action.
 
         Args:
@@ -145,7 +149,9 @@ class Role(ABC):
 
         return self.config.can_act_night
 
-    def validate_action(self, actor: Player, target: Player | None, action_data: dict) -> bool:
+    def validate_action(
+        self, actor: PlayerProtocol, target: PlayerProtocol | None, action_data: dict
+    ) -> bool:
         """Validate if an action is legal.
 
         Args:

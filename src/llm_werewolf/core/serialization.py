@@ -7,7 +7,7 @@ from pathlib import Path
 from pydantic import Field, BaseModel
 
 if TYPE_CHECKING:
-    from llm_werewolf.core.player import Player
+    from llm_werewolf.core.types import PlayerProtocol, GameStateProtocol
     from llm_werewolf.core.game_state import GameState
 
 
@@ -57,7 +57,7 @@ class GameStateSnapshot(BaseModel):
     winner: str | None = None
 
 
-def serialize_player(player: Player) -> PlayerSnapshot:
+def serialize_player(player: PlayerProtocol) -> PlayerSnapshot:
     """Serialize a player to a snapshot.
 
     Args:
@@ -119,7 +119,7 @@ def serialize_player(player: Player) -> PlayerSnapshot:
     )
 
 
-def serialize_game_state(game_state: GameState) -> GameStateSnapshot:
+def serialize_game_state(game_state: GameStateProtocol) -> GameStateSnapshot:
     """Serialize a game state to a snapshot.
 
     Args:
@@ -152,7 +152,7 @@ def serialize_game_state(game_state: GameState) -> GameStateSnapshot:
     )
 
 
-def save_game_state(game_state: GameState, file_path: str | Path) -> None:
+def save_game_state(game_state: GameStateProtocol, file_path: str | Path) -> None:
     """Save game state to a JSON file.
 
     Args:

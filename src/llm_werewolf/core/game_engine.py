@@ -2,6 +2,8 @@ import random
 from typing import TYPE_CHECKING, Any
 from pathlib import Path
 
+from rich.console import Console
+
 from llm_werewolf.core.agent import BaseAgent
 from llm_werewolf.core.types import Camp, Event, EventType, GamePhase
 from llm_werewolf.core.config import GameConfig
@@ -18,6 +20,8 @@ from llm_werewolf.core.action_selector import ActionSelector
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+console = Console()
+
 
 class GameEngine:
     """Core game engine that controls the flow of the Werewolf game."""
@@ -33,7 +37,18 @@ class GameEngine:
         self.event_logger = EventLogger()
         self.victory_checker: VictoryChecker | None = None
 
-        self.on_event: Callable[[Event], None] = lambda event: None
+        self.on_event: Callable[[Event], None] = self._default_print_event
+
+    def _default_print_event(self, event: Event) -> None:
+        """Default event handler that prints to console.
+
+        This can be overridden by TUI or other interfaces.
+
+        Args:
+            event: The game event to display.
+        """
+        prefix = f"[回合 {event.round_number}][{event.phase.upper()}]"
+        console.print(f"{prefix} {event.message}")
 
     def setup_game(self, players: list[tuple[str, str, BaseAgent]], roles: list[Role]) -> None:
         """Initialize the game with players and roles.

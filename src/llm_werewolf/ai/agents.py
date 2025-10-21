@@ -3,11 +3,15 @@ from pathlib import Path
 from functools import cached_property
 
 import yaml
+import dotenv
 from openai import OpenAI
 from pydantic import Field, BaseModel, ConfigDict, computed_field, field_validator
+from openai.types.shared import ReasoningEffort
 from pydantic_core.core_schema import ValidationInfo
 
 from llm_werewolf.core.agent import BaseAgent, DemoAgent, HumanAgent
+
+dotenv.load_dotenv()
 
 
 class PlayerConfig(BaseModel):
@@ -22,18 +26,35 @@ class PlayerConfig(BaseModel):
     name: str = Field(..., description="Display name for the player")
     model: str = Field(
         ...,
-        description="Model name: 'human', 'demo', or LLM model name (e.g., 'gpt-4', 'claude-3-5-sonnet-20241022')",
+        title="Model Name",
+        description="The model name of your player",
+        examples=["gpt-5", "human", "demo"],
     )
     base_url: str | None = Field(
         default=None,
-        description="API base URL (required for LLM models, e.g., https://api.openai.com/v1)",
+        title="API Base URL",
+        description="API base URL (required for LLM models).",
+        examples=["https://api.openai.com/v1", "https://api.anthropic.com/v1"],
     )
     api_key_env: str | None = Field(
         default=None,
+        title="API Key Environment Variable",
         description="Environment variable name containing the API key (e.g., OPENAI_API_KEY)",
+        examples=["OPENAI_API_KEY", "ANTHROPIC_API_KEY"],
     )
-    temperature: float = Field(default=0.7, ge=0.0, le=2.0, description="LLM temperature")
-    max_tokens: int = Field(default=500, gt=0, description="Maximum response tokens")
+    temperature: float = Field(
+        default=0.7,
+        title="Temperature",
+        description="The temperature of your player",
+        ge=0.0,
+        le=2.0,
+    )
+    max_tokens: int | None = Field(
+        default=None, title="Max Tokens", description="Maximum response tokens"
+    )
+    reasoning_effort: ReasoningEffort | None = Field(
+        default=None, title="Reasoning Effort", description="Reasoning effort level for LLM"
+    )
 
     @field_validator("base_url")
     @classmethod
@@ -46,14 +67,65 @@ class PlayerConfig(BaseModel):
         return v
 
 
+class LLMAgent(BaseAgent):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    model_name: str
+    api_key: str
+    base_url: str
+    temperature: float = Field(default=0.7)
+    max_tokens: int | None
+    reasoning_effort: ReasoningEffort | None = Field(default=None)
+    language: str = Field(...)
+    chat_history: list[dict[str, str]] = Field(default=[])
+
+    @computed_field
+    @cached_property
+    def client(self) -> OpenAI:
+        client = OpenAI(api_key=self.api_key, base_url=self.base_url)
+        return client
+
+    def get_response(self, message: str) -> str:
+        message += f"\nPlease respond in {self.language}."
+        self.chat_history.append({"role": "user", "content": message})
+        response = self.client.chat.completions.create(
+            model=self.model_name,
+            messages=self.chat_history,
+            temperature=self.temperature,
+            max_tokens=self.max_tokens,
+            reasoning_effort="high",
+        )
+        self.chat_history.append({
+            "role": "assistant",
+            "content": response.choices[0].message.content,
+        })
+
+        return response.choices[0].message.content
+
+
 class PlayersConfig(BaseModel):
     """Root configuration containing all players and optional game settings."""
 
-    players: list[PlayerConfig] = Field(..., min_length=1, description="List of player configs")
     preset: str | None = Field(
-        default=None, description="Optional preset name for roles (e.g., '9-players')"
+        default=None,
+        title="Preset for roles",
+        description="Optional preset name for roles.",
+        examples=["6-players", "9-players", "12-players", "15-players"],
     )
     show_debug: bool = Field(default=False, description="Show the debug panel in TUI mode")
+    language: str = Field(
+        default="en-US",
+        title="Language",
+        description="Language code for the game.",
+        examples=["en-US", "zh-TW"],
+    )
+    players: list[PlayerConfig] = Field(
+        ...,
+        title="Player List",
+        description="List of player configs, you should define it under ./configs/<name>.yaml",
+        min_length=1,
+        max_length=15,
+    )
 
     @field_validator("players")
     @classmethod
@@ -65,48 +137,6 @@ class PlayersConfig(BaseModel):
             msg = f"Duplicate player names found: {duplicates}"
             raise ValueError(msg)
         return v
-
-
-class LLMAgent(BaseAgent):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    model_name: str
-    api_key: str = Field(default="not-needed")
-    base_url: str | None = Field(default=None)
-    temperature: float = Field(default=0.7)
-    max_tokens: int = Field(default=500)
-    chat_history: list[dict[str, str]] = Field(default=[])
-
-    @computed_field
-    @cached_property
-    def client(self) -> OpenAI:
-        client = OpenAI(api_key=self.api_key, base_url=self.base_url)
-        return client
-
-    def get_response(self, message: str) -> str:
-        self.chat_history.append({"role": "user", "content": message})
-        response = self.client.chat.completions.create(
-            model=self.model_name,
-            messages=self.chat_history,
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
-        )
-        self.chat_history.append({
-            "role": "assistant",
-            "content": response.choices[0].message.content,
-        })
-
-        return response.choices[0].message.content
-
-    def reset(self) -> None:
-        self.chat_history.clear()
-        self.client = None
-
-    def add_to_history(self, role: str, content: str) -> None:
-        self.chat_history.append({"role": role, "content": content})
-
-    def get_history(self) -> list[dict[str, str]]:
-        return self.chat_history.copy()
 
 
 def create_agent(config: PlayerConfig) -> DemoAgent | HumanAgent | LLMAgent:
@@ -143,6 +173,7 @@ def create_agent(config: PlayerConfig) -> DemoAgent | HumanAgent | LLMAgent:
         base_url=config.base_url,
         temperature=config.temperature,
         max_tokens=config.max_tokens,
+        language="zh-TW",
     )
 
 

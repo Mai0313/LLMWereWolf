@@ -1,45 +1,46 @@
 preset: 6-players
 show_debug: false
+language: zh-TW
 
 players:
-  - name: gpt-4o
-    model: gpt-4o
-    base_url: https://api.openai.com/v1
+  - name: gpt-5-mini
+    model: gpt-5-mini
+    base_url: https://api.mai0313.com
     api_key_env: OPENAI_API_KEY
     temperature: 0.7
-    max_tokens: 500
+    max_tokens: null
 
-  - name: gpt-4.1
-    model: gpt-4.1
-    base_url: https://api.openai.com/v1
+  - name: gpt-5-mini-1
+    model: gpt-5-mini
+    base_url: https://api.mai0313.com
     api_key_env: OPENAI_API_KEY
     temperature: 0.7
-    max_tokens: 500
+    max_tokens: null
+
+  - name: gpt-5-mini-2
+    model: gpt-5-mini
+    base_url: https://api.mai0313.com
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: null
+
+  - name: gpt-5-mini-3
+    model: gpt-5-mini
+    base_url: https://api.mai0313.com
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: null
+
+  - name: gpt-5-mini-4
+    model: gpt-5-mini
+    base_url: https://api.mai0313.com
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: null
 
   - name: gpt-5-chat
     model: gpt-5-chat
-    base_url: https://api.openai.com/v1
+    base_url: https://api.mai0313.com
     api_key_env: OPENAI_API_KEY
     temperature: 0.7
-    max_tokens: 500
-
-  - name: claude-sonnet-4-5-20250929
-    model: claude-sonnet-4-5-20250929
-    base_url: https://api.anthropic.com/v1
-    api_key_env: ANTHROPIC_API_KEY
-    temperature: 0.7
-    max_tokens: 500
-
-  - name: deepseek-reasoner
-    model: deepseek-reasoner
-    base_url: https://api.deepseek.com/v1
-    api_key_env: DEEPSEEK_API_KEY
-    temperature: 0.7
-    max_tokens: 500
-
-  - name: claude-haiku-4-5-20251001
-    model: claude-haiku-4-5-20251001
-    base_url: https://api.anthropic.com/v1
-    api_key_env: ANTHROPIC_API_KEY
-    temperature: 0.7
-    max_tokens: 500
+    max_tokens: null

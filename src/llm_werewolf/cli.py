@@ -6,7 +6,6 @@ from rich.console import Console
 from llm_werewolf.core import GameEngine
 from llm_werewolf.ai.agents import load_config, create_agent
 from llm_werewolf.core.config import get_preset_by_name
-from llm_werewolf.core.events import Event
 from llm_werewolf.core.role_registry import create_roles
 
 console = Console()
@@ -37,12 +36,6 @@ def main(config: str) -> None:
     ]
 
     engine = GameEngine(game_config)
-
-    def print_event(event: Event) -> None:
-        prefix = f"[回合 {event.round_number}][{event.phase.upper()}]"
-        console.print(f"{prefix} {event.message}")
-
-    engine.on_event = print_event
     engine.setup_game(players, create_roles(game_config.role_names))
     logfire.info("game_created", config_path=str(config_path), preset=players_config.preset)
 

@@ -1,5 +1,6 @@
 preset: 9-players
 show_debug: false
+language: zh-TW
 
 players:
   - name: DemoPlayer1

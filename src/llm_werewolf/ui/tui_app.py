@@ -4,9 +4,9 @@ from textual.app import App, ComposeResult
 from textual.widgets import Footer, Header
 from textual.containers import Vertical, Horizontal
 
+from llm_werewolf.core.engine import GameEngine
 from llm_werewolf.core.events import Event
 from llm_werewolf.ui.components import ChatPanel, GamePanel, DebugPanel, PlayerPanel
-from llm_werewolf.core.game_engine import GameEngine
 
 
 class WerewolfTUI(App):

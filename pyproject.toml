@@ -400,7 +400,7 @@ keep-runtime-typing = true
 # Ignore `E402` (import violations) in all `__init__.py` files, and in `path/to/file.py`.
 "__init__.py" = ["E402", "F401", "D104"]
 "*.ipynb" = ["T201", "F401", "S105", "F811", "ANN", "PERF", "SLF"]
-"tests/*" = ["S101", "ANN", "SLF001"]
+"tests/*" = ["S101", "SLF001"]
 "notebooks/*.ipynb" = ["UP", "DOC", "RUF", "D", "C", "F401", "T201"]
 "examples/*.py" = ["UP", "DOC", "RUF", "D", "C", "F401", "T201"]
 

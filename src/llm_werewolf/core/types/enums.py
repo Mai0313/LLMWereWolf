@@ -83,6 +83,7 @@ class EventType(str, Enum):
     PLAYER_DIED = "player_died"
     PLAYER_REVIVED = "player_revived"
     ROLE_REVEALED = "role_revealed"
+    ROLE_ACTING = "role_acting"
 
     WEREWOLF_KILLED = "werewolf_killed"
     WITCH_SAVED = "witch_saved"

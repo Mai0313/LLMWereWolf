@@ -36,34 +36,24 @@ class ChatPanel(RichLog):
         time_str = event.timestamp.strftime("%H:%M:%S")
         text.append(f"[{time_str}] ", style="dim")
 
-        # Event type icon
-        event_icons = {
-            "game_started": "🎮",
-            "game_ended": "🏁",
-            "phase_changed": "⏰",
-            "player_died": "💀",
-            "werewolf_killed": "🐺",
-            "witch_saved": "💊",
-            "witch_poisoned": "☠️",
-            "vote_cast": "🗳️",
-            "vote_result": "📊",
-            "player_eliminated": "❌",
-            "player_speech": "💬",
-            "player_discussion": "🗨️",
-            "message": "📢",
-            "error": "⚠️",
-        }
-        icon = event_icons.get(event.event_type.value, "i")
-        text.append(f"{icon} ", style="bold")
-
-        # Message content with color based on event type
         message_styles = {
             "game_started": "bold green",
             "game_ended": "bold red",
             "phase_changed": "bold cyan",
+            "round_started": "bold blue",
             "player_died": "red",
+            "player_revived": "green",
+            "role_revealed": "magenta",
+            "role_acting": "dim cyan",
             "werewolf_killed": "red",
             "witch_saved": "green",
+            "witch_poisoned": "red",
+            "seer_checked": "blue",
+            "guard_protected": "green",
+            "lovers_linked": "magenta",
+            "lover_died": "red",
+            "hunter_revenge": "yellow",
+            "knight_duel": "yellow",
             "vote_cast": "yellow",
             "vote_result": "bold yellow",
             "player_eliminated": "bold red",

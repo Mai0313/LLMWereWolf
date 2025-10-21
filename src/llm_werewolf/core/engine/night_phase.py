@@ -82,6 +82,14 @@ class NightPhaseMixin:
 
         night_actions: list[Action] = []
         for player in players_with_night_actions:
+            # Log that this role is acting
+            role_name = player.get_role_name()
+            self._log_event(
+                EventType.ROLE_ACTING,
+                self.locale.get("role_acting", role=role_name, player=player.name),
+                data={"player_id": player.player_id, "role": role_name},
+            )
+
             action = player.role.get_night_actions(self.game_state)
             if action:
                 night_actions.extend(action)

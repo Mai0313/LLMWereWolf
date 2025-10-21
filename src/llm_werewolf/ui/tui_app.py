@@ -154,9 +154,7 @@ class WerewolfTUI(App):
     def action_next_step(self) -> None:
         """Advance the game by one step."""
         if self.game_engine:
-            messages = self.game_engine.step()
-            for msg in messages:
-                self.add_system_message(msg)
+            self.game_engine.step()
             self.update_game_state()
 
     def add_system_message(self, message: str) -> None:

@@ -1,8 +1,7 @@
 import re
 import random
 
-from llm_werewolf.core.agent import BaseAgent
-from llm_werewolf.core.player import Player
+from llm_werewolf.core.types import AgentProtocol, PlayerProtocol
 
 
 class ActionSelector:
@@ -12,7 +11,7 @@ class ActionSelector:
     def build_target_selection_prompt(
         role_name: str,
         action_description: str,
-        possible_targets: list[Player],
+        possible_targets: list[PlayerProtocol],
         allow_skip: bool = False,
         additional_context: str = "",
         round_number: int | None = None,
@@ -63,8 +62,8 @@ class ActionSelector:
 
     @staticmethod
     def parse_target_selection(
-        response: str, possible_targets: list[Player], allow_skip: bool = False
-    ) -> Player | None:
+        response: str, possible_targets: list[PlayerProtocol], allow_skip: bool = False
+    ) -> PlayerProtocol | None:
         """Parse AI response to extract selected target.
 
         Args:
@@ -73,7 +72,7 @@ class ActionSelector:
             allow_skip: Whether skipping was allowed.
 
         Returns:
-            Player | None: The selected player, or None if skipped/invalid.
+            PlayerProtocol | None: The selected player, or None if skipped/invalid.
         """
         numbers = re.findall(r"\d+", response.strip())
         if not numbers:
@@ -149,7 +148,7 @@ class ActionSelector:
     def build_multi_target_prompt(
         role_name: str,
         action_description: str,
-        possible_targets: list[Player],
+        possible_targets: list[PlayerProtocol],
         num_targets: int,
         additional_context: str = "",
         round_number: int | None = None,
@@ -202,8 +201,8 @@ class ActionSelector:
 
     @staticmethod
     def parse_multi_target_selection(
-        response: str, possible_targets: list[Player], num_targets: int
-    ) -> list[Player] | None:
+        response: str, possible_targets: list[PlayerProtocol], num_targets: int
+    ) -> list[PlayerProtocol] | None:
         """Parse multi-target selection response.
 
         Args:
@@ -212,7 +211,7 @@ class ActionSelector:
             num_targets: Expected number of targets.
 
         Returns:
-            list[Player] | None: Selected players, or None if invalid.
+            list[PlayerProtocol] | None: Selected players, or None if invalid.
         """
         numbers = re.findall(r"\d+", response.strip())
         if len(numbers) != num_targets:
@@ -236,16 +235,16 @@ class ActionSelector:
 
     @staticmethod
     def get_target_from_agent(
-        agent: BaseAgent,
+        agent: AgentProtocol,
         role_name: str,
         action_description: str,
-        possible_targets: list[Player],
+        possible_targets: list[PlayerProtocol],
         allow_skip: bool = False,
         additional_context: str = "",
         fallback_random: bool = True,
         round_number: int | None = None,
         phase: str | None = None,
-    ) -> Player | None:
+    ) -> PlayerProtocol | None:
         """Get a target selection from an AI agent.
 
         Args:
@@ -260,7 +259,7 @@ class ActionSelector:
             phase: Current game phase.
 
         Returns:
-            Player | None: Selected target, or None if skipped.
+            PlayerProtocol | None: Selected target, or None if skipped.
         """
         if not possible_targets:
             return None

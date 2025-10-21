@@ -1,22 +1,10 @@
-from pydantic import Field, BaseModel
-
-from llm_werewolf.core.player import Player
-from llm_werewolf.core.game_state import GameState
-
-
-class VictoryResult(BaseModel):
-    """Result of a victory check."""
-
-    has_winner: bool = Field(..., description="Whether there is a winner")
-    winner_camp: str | None = Field(None, description="The winning camp")
-    winner_ids: list[str] = Field(default_factory=list, description="IDs of winning players")
-    reason: str = Field(..., description="Reason for the victory")
+from llm_werewolf.core.types import VictoryResult, PlayerProtocol, GameStateProtocol
 
 
 class VictoryChecker:
     """Checks for victory conditions in the Werewolf game."""
 
-    def __init__(self, game_state: GameState) -> None:
+    def __init__(self, game_state: GameStateProtocol) -> None:
         """Initialize the victory checker.
 
         Args:
@@ -140,11 +128,11 @@ class VictoryChecker:
         """
         return self.check_victory().has_winner
 
-    def get_winning_players(self) -> list[Player]:
+    def get_winning_players(self) -> list[PlayerProtocol]:
         """Get the list of winning players.
 
         Returns:
-            list[Player]: List of winning players, or empty list if no winner.
+            list[PlayerProtocol]: List of winning players, or empty list if no winner.
         """
         result = self.check_victory()
         if not result.has_winner:
@@ -156,11 +144,11 @@ class VictoryChecker:
             if self.game_state.get_player(player_id) is not None
         ]
 
-    def get_losing_players(self) -> list[Player]:
+    def get_losing_players(self) -> list[PlayerProtocol]:
         """Get the list of losing players.
 
         Returns:
-            list[Player]: List of losing players, or empty list if no winner.
+            list[PlayerProtocol]: List of losing players, or empty list if no winner.
         """
         result = self.check_victory()
         if not result.has_winner:

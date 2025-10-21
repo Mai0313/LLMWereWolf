@@ -26,9 +26,8 @@ class WitchSaveAction(Action):
 
     def validate(self) -> bool:
         """Validate the save action."""
-        from llm_werewolf.core.roles.villager import Witch
-
-        if not isinstance(self.actor.role, Witch):
+        # Check if actor has Witch abilities (has_save_potion attribute)
+        if not hasattr(self.actor.role, "has_save_potion"):
             return False
 
         if self.game_state.werewolf_target != self.target.player_id:
@@ -38,9 +37,8 @@ class WitchSaveAction(Action):
 
     def execute(self) -> list[str]:
         """Execute the witch save."""
-        from llm_werewolf.core.roles.villager import Witch
-
-        if isinstance(self.actor.role, Witch):
+        # Update Witch's save potion status
+        if hasattr(self.actor.role, "has_save_potion"):
             self.actor.role.has_save_potion = False
         self.game_state.witch_saved_target = self.target.player_id
         return [f"Witch saves {self.target.name}"]
@@ -68,9 +66,8 @@ class WitchPoisonAction(Action):
 
     def validate(self) -> bool:
         """Validate the poison action."""
-        from llm_werewolf.core.roles.villager import Witch
-
-        if not isinstance(self.actor.role, Witch):
+        # Check if actor has Witch abilities (has_poison_potion attribute)
+        if not hasattr(self.actor.role, "has_poison_potion"):
             return False
         return (
             self.actor.is_alive() and self.actor.role.has_poison_potion and self.target.is_alive()
@@ -78,9 +75,8 @@ class WitchPoisonAction(Action):
 
     def execute(self) -> list[str]:
         """Execute the witch poison."""
-        from llm_werewolf.core.roles.villager import Witch
-
-        if isinstance(self.actor.role, Witch):
+        # Update Witch's poison potion status
+        if hasattr(self.actor.role, "has_poison_potion"):
             self.actor.role.has_poison_potion = False
         self.game_state.witch_poison_target = self.target.player_id
         return [f"Witch poisons {self.target.name}"]
@@ -112,11 +108,10 @@ class SeerCheckAction(Action):
 
     def execute(self) -> list[str]:
         """Execute the seer check."""
-        from llm_werewolf.core.roles.werewolf import HiddenWolf
-
         result = self.target.get_camp()
 
-        if isinstance(self.target.role, HiddenWolf):
+        # HiddenWolf appears as villager to Seer (check by role name)
+        if self.target.role.name == "HiddenWolf":
             result = "villager"
 
         self.game_state.seer_checked[self.game_state.round_number] = self.target.player_id
@@ -145,9 +140,8 @@ class GuardProtectAction(Action):
 
     def validate(self) -> bool:
         """Validate the guard protect."""
-        from llm_werewolf.core.roles.villager import Guard
-
-        if not isinstance(self.actor.role, Guard):
+        # Check if actor has Guard abilities (last_protected attribute)
+        if not hasattr(self.actor.role, "last_protected"):
             return False
 
         if self.actor.role.last_protected == self.target.player_id:
@@ -157,9 +151,8 @@ class GuardProtectAction(Action):
 
     def execute(self) -> list[str]:
         """Execute the guard protect."""
-        from llm_werewolf.core.roles.villager import Guard
-
-        if isinstance(self.actor.role, Guard):
+        # Update Guard's last protected target
+        if hasattr(self.actor.role, "last_protected"):
             self.actor.role.last_protected = self.target.player_id
 
         self.game_state.guard_protected = self.target.player_id
@@ -194,9 +187,8 @@ class CupidLinkAction(Action):
 
     def validate(self) -> bool:
         """Validate the cupid link."""
-        from llm_werewolf.core.roles.villager import Cupid
-
-        if not isinstance(self.actor.role, Cupid):
+        # Check if actor has Cupid abilities (has_linked attribute)
+        if not hasattr(self.actor.role, "has_linked"):
             return False
 
         if self.actor.role.has_linked:
@@ -211,12 +203,11 @@ class CupidLinkAction(Action):
 
     def execute(self) -> list[str]:
         """Execute the cupid link."""
-        from llm_werewolf.core.roles.villager import Cupid
-
         self.target1.set_lover(self.target2.player_id)
         self.target2.set_lover(self.target1.player_id)
 
-        if isinstance(self.actor.role, Cupid):
+        # Update Cupid's has_linked status
+        if hasattr(self.actor.role, "has_linked"):
             self.actor.role.has_linked = True
 
         return [f"Cupid links {self.target1.name} and {self.target2.name} as lovers"]
@@ -307,9 +298,8 @@ class KnightDuelAction(Action):
 
     def validate(self) -> bool:
         """Validate the knight duel."""
-        from llm_werewolf.core.roles.villager import Knight
-
-        if not isinstance(self.actor.role, Knight):
+        # Check if actor has Knight abilities (has_dueled attribute)
+        if not hasattr(self.actor.role, "has_dueled"):
             return False
 
         if self.actor.role.has_dueled:
@@ -319,8 +309,6 @@ class KnightDuelAction(Action):
 
     def execute(self) -> list[str]:
         """Execute the knight duel."""
-        from llm_werewolf.core.roles.villager import Knight
-
         messages = []
 
         if self.target.get_camp() == "werewolf":
@@ -332,7 +320,8 @@ class KnightDuelAction(Action):
             self.game_state.day_deaths.add(self.actor.player_id)
             messages.append(f"Knight {self.actor.name} loses the duel and dies!")
 
-        if isinstance(self.actor.role, Knight):
+        # Update Knight's has_dueled status
+        if hasattr(self.actor.role, "has_dueled"):
             self.actor.role.has_dueled = True
 
         return messages

@@ -9,7 +9,13 @@ from llm_werewolf.core.types.enums import (
 )
 
 # Export all models
-from llm_werewolf.core.types.models import Event, PlayerInfo, RoleConfig, GameStateInfo
+from llm_werewolf.core.types.models import (
+    Event,
+    PlayerInfo,
+    RoleConfig,
+    GameStateInfo,
+    VictoryResult,
+)
 
 # Export all protocols
 from llm_werewolf.core.types.protocols import (
@@ -39,4 +45,5 @@ __all__ = [
     "PlayerStatus",
     "RoleConfig",
     "RoleProtocol",
+    "VictoryResult",
 ]

@@ -1,9 +1,14 @@
 import logfire
 
-from llm_werewolf.core.types import Camp, RoleConfig, ActionPriority
-from llm_werewolf.core.player import Player
+from llm_werewolf.core.types import (
+    Camp,
+    RoleConfig,
+    ActionPriority,
+    ActionProtocol,
+    PlayerProtocol,
+    GameStateProtocol,
+)
 from llm_werewolf.core.actions import (
-    Action,
     CupidLinkAction,
     RavenMarkAction,
     SeerCheckAction,
@@ -12,7 +17,6 @@ from llm_werewolf.core.actions import (
     GuardProtectAction,
     GraveyardKeeperCheckAction,
 )
-from llm_werewolf.core.game_state import GameState
 from llm_werewolf.core.roles.base import Role
 from llm_werewolf.core.action_selector import ActionSelector
 
@@ -39,7 +43,7 @@ class Villager(Role):
             can_act_day=False,
         )
 
-    def get_night_actions(self, game_state: GameState) -> list["Action"]:
+    def get_night_actions(self, game_state: GameStateProtocol) -> list[ActionProtocol]:
         """Villager has no night actions."""
         return []
 
@@ -65,7 +69,7 @@ class Seer(Role):
             can_act_day=False,
         )
 
-    def get_night_actions(self, game_state: GameState) -> list["Action"]:
+    def get_night_actions(self, game_state: GameStateProtocol) -> list[ActionProtocol]:
         """Get the night actions for the Seer role."""
         if not self.player.is_alive():
             return []
@@ -113,7 +117,7 @@ class Witch(Role):
     Each potion can only be used once per game.
     """
 
-    def __init__(self, player: Player) -> None:
+    def __init__(self, player: PlayerProtocol) -> None:
         """Initialize the Witch role."""
         super().__init__(player)
         self.has_save_potion = True
@@ -134,7 +138,7 @@ class Witch(Role):
             can_act_day=False,
         )
 
-    def get_night_actions(self, game_state: GameState) -> list["Action"]:
+    def get_night_actions(self, game_state: GameStateProtocol) -> list[ActionProtocol]:
         """Get the night actions for the Witch role."""
         if not self.player.is_alive():
             return []
@@ -198,7 +202,7 @@ class Hunter(Role):
     When eliminated (by werewolves or voting), can shoot and eliminate another player.
     """
 
-    def get_night_actions(self, game_state: GameState) -> list["Action"]:
+    def get_night_actions(self, game_state: GameStateProtocol) -> list[ActionProtocol]:
         """Hunter has no night actions."""
         return []
 
@@ -226,7 +230,7 @@ class Guard(Role):
     Cannot protect the same player two nights in a row.
     """
 
-    def __init__(self, player: Player) -> None:
+    def __init__(self, player: PlayerProtocol) -> None:
         """Initialize the Guard role."""
         super().__init__(player)
         self.last_protected: str | None = None
@@ -246,7 +250,7 @@ class Guard(Role):
             can_act_day=False,
         )
 
-    def get_night_actions(self, game_state: GameState) -> list["Action"]:
+    def get_night_actions(self, game_state: GameStateProtocol) -> list[ActionProtocol]:
         """Get the night actions for the Guard role."""
         if not self.player.is_alive():
             return []
@@ -291,7 +295,7 @@ class Idiot(Role):
     When voted out, reveals identity and survives but loses voting rights.
     """
 
-    def __init__(self, player: Player) -> None:
+    def __init__(self, player: PlayerProtocol) -> None:
         """Initialize the Idiot role."""
         super().__init__(player)
         self.revealed = False
@@ -311,7 +315,7 @@ class Idiot(Role):
             can_act_day=False,
         )
 
-    def get_night_actions(self, game_state: GameState) -> list["Action"]:
+    def get_night_actions(self, game_state: GameStateProtocol) -> list[ActionProtocol]:
         """Idiot has no night actions."""
         return []
 
@@ -323,7 +327,7 @@ class Elder(Role):
     with special abilities lose their powers.
     """
 
-    def __init__(self, player: Player) -> None:
+    def __init__(self, player: PlayerProtocol) -> None:
         """Initialize the Elder role."""
         super().__init__(player)
         self.lives = 2
@@ -343,7 +347,7 @@ class Elder(Role):
             can_act_day=False,
         )
 
-    def get_night_actions(self, game_state: GameState) -> list["Action"]:
+    def get_night_actions(self, game_state: GameStateProtocol) -> list[ActionProtocol]:
         """Elder has no night actions."""
         return []
 
@@ -355,12 +359,12 @@ class Knight(Role):
     they die. If not, the Knight dies.
     """
 
-    def __init__(self, player: Player) -> None:
+    def __init__(self, player: PlayerProtocol) -> None:
         """Initialize the Knight role."""
         super().__init__(player)
         self.has_dueled = False
 
-    def get_night_actions(self, game_state: GameState) -> list["Action"]:
+    def get_night_actions(self, game_state: GameStateProtocol) -> list[ActionProtocol]:
         """Knight has no night actions."""
         return []
 
@@ -387,12 +391,12 @@ class Magician(Role):
     Once per game, can swap two players' roles at night.
     """
 
-    def __init__(self, player: Player) -> None:
+    def __init__(self, player: PlayerProtocol) -> None:
         """Initialize the Magician role."""
         super().__init__(player)
         self.has_swapped = False
 
-    def get_night_actions(self, game_state: GameState) -> list["Action"]:
+    def get_night_actions(self, game_state: GameStateProtocol) -> list[ActionProtocol]:
         """Get the night actions for the Magician role."""
         # NOTE: Full implementation requires a MagicianSwapAction and game engine support
         # for swapping roles between players. This is a complex operation that affects
@@ -435,12 +439,12 @@ class Cupid(Role):
     Lovers win together or die together.
     """
 
-    def __init__(self, player: Player) -> None:
+    def __init__(self, player: PlayerProtocol) -> None:
         """Initialize the Cupid role."""
         super().__init__(player)
         self.has_linked = False
 
-    def get_night_actions(self, game_state: GameState) -> list["Action"]:
+    def get_night_actions(self, game_state: GameStateProtocol) -> list[ActionProtocol]:
         """Get the night actions for the Cupid role."""
         if game_state.round_number != 1:
             return []
@@ -507,7 +511,7 @@ class Raven(Role):
     during the next day's voting.
     """
 
-    def get_night_actions(self, game_state: GameState) -> list["Action"]:
+    def get_night_actions(self, game_state: GameStateProtocol) -> list[ActionProtocol]:
         """Get the night actions for the Raven role."""
         if not self.player.is_alive():
             return []
@@ -556,7 +560,7 @@ class GraveyardKeeper(Role):
     Each night, can check if a dead player was a werewolf or villager.
     """
 
-    def get_night_actions(self, game_state: GameState) -> list["Action"]:
+    def get_night_actions(self, game_state: GameStateProtocol) -> list[ActionProtocol]:
         """Get the night actions for the GraveyardKeeper role."""
         if not self.player.is_alive():
             return []

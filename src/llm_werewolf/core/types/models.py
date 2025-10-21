@@ -75,3 +75,12 @@ class Event(BaseModel):
             str: The public message.
         """
         return self.message
+
+
+class VictoryResult(BaseModel):
+    """Result of a victory check."""
+
+    has_winner: bool = Field(..., description="Whether there is a winner")
+    winner_camp: str | None = Field(None, description="The winning camp")
+    winner_ids: list[str] = Field(default_factory=list, description="IDs of winning players")
+    reason: str = Field(..., description="Reason for the victory")

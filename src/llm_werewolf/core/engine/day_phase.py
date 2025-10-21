@@ -2,8 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from llm_werewolf.core.types import EventType, GamePhase
-from llm_werewolf.core.player import Player
+from llm_werewolf.core.types import EventType, GamePhase, PlayerProtocol
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -21,7 +20,7 @@ class DayPhaseMixin:
     public_discussion_history: list[str]
     _get_public_discussion_context: "Callable[[], str]"
 
-    def _build_discussion_context(self, player: Player) -> str:
+    def _build_discussion_context(self, player: PlayerProtocol) -> str:
         """Build context for day discussion.
 
         Args:

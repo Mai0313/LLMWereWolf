@@ -2,10 +2,8 @@
 
 from typing import TYPE_CHECKING
 
-from llm_werewolf.core.types import EventType, GamePhase
-from llm_werewolf.core.player import Player
+from llm_werewolf.core.types import EventType, GamePhase, PlayerProtocol
 from llm_werewolf.core.actions import VoteAction
-from llm_werewolf.core.roles.villager import Elder, Idiot
 from llm_werewolf.core.action_selector import ActionSelector
 
 if TYPE_CHECKING:
@@ -28,7 +26,7 @@ class VotingPhaseMixin:
     _handle_death_abilities: "Callable"
     _get_public_discussion_context: "Callable[[], str]"
 
-    def _build_voting_context(self, player: Player) -> str:
+    def _build_voting_context(self, player: PlayerProtocol) -> str:
         """Build context for voting phase.
 
         Args:
@@ -173,7 +171,7 @@ class VotingPhaseMixin:
                     data={"target_id": target_id, "count": count, "voters": voters},
                 )
 
-    def _eliminate_voted_player(self, eliminated: Player) -> None:
+    def _eliminate_voted_player(self, eliminated: PlayerProtocol) -> None:
         """Eliminate a player who received the most votes.
 
         Args:
@@ -185,7 +183,11 @@ class VotingPhaseMixin:
         eliminated_id = eliminated.player_id
 
         # Special case: Idiot reveals instead of dying
-        if isinstance(eliminated.role, Idiot) and not eliminated.role.revealed:
+        if (
+            eliminated.role.name == "Idiot"
+            and hasattr(eliminated.role, "revealed")
+            and not eliminated.role.revealed
+        ):
             eliminated.role.revealed = True
             eliminated.disable_voting()
             self._log_event(
@@ -209,7 +211,7 @@ class VotingPhaseMixin:
         )
 
         # Handle Elder penalty
-        if isinstance(eliminated.role, Elder):
+        if eliminated.role.name == "Elder":
             self._handle_elder_penalty()
             self._log_event(
                 EventType.ROLE_REVEALED,

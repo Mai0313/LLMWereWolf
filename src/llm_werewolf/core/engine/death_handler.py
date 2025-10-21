@@ -3,10 +3,7 @@
 import random
 from typing import TYPE_CHECKING
 
-from llm_werewolf.core.types import Camp, EventType
-from llm_werewolf.core.player import Player
-from llm_werewolf.core.roles.villager import Elder
-from llm_werewolf.core.roles.werewolf import AlphaWolf, WolfBeauty
+from llm_werewolf.core.types import Camp, EventType, PlayerProtocol
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -22,7 +19,7 @@ class DeathHandlerMixin:
     locale: "Locale"
     _log_event: "Callable"
 
-    def _handle_lover_death(self, dead_player: Player) -> None:
+    def _handle_lover_death(self, dead_player: PlayerProtocol) -> None:
         """Handle lover partner death when a player dies.
 
         Args:
@@ -41,13 +38,13 @@ class DeathHandlerMixin:
                 data={"player_id": partner.player_id},
             )
 
-    def _handle_wolf_beauty_charm_death(self, wolf_beauty: Player) -> None:
+    def _handle_wolf_beauty_charm_death(self, wolf_beauty: PlayerProtocol) -> None:
         """Handle charmed player death when Wolf Beauty dies.
 
         Args:
             wolf_beauty: The Wolf Beauty player who died.
         """
-        if not self.game_state or not isinstance(wolf_beauty.role, WolfBeauty):
+        if not self.game_state or not hasattr(wolf_beauty.role, "charmed_player"):
             return
 
         if wolf_beauty.role.charmed_player:
@@ -78,7 +75,7 @@ class DeathHandlerMixin:
             data={"reason": "elder_penalty"},
         )
 
-    def _handle_werewolf_kill(self, target: Player) -> list[str]:
+    def _handle_werewolf_kill(self, target: PlayerProtocol) -> list[str]:
         """Handle werewolf kill and its consequences.
 
         Args:
@@ -105,7 +102,7 @@ class DeathHandlerMixin:
                 data={"player_id": target.player_id},
             )
         else:
-            if isinstance(target.role, Elder) and target.role.lives > 1:
+            if hasattr(target.role, "lives") and target.role.lives > 1:
                 target.role.lives -= 1
                 self._log_event(
                     EventType.PLAYER_DIED,
@@ -144,7 +141,6 @@ class DeathHandlerMixin:
         if not self.game_state:
             return []
 
-        from llm_werewolf.core.roles.villager import Hunter
         from llm_werewolf.core.action_selector import ActionSelector
 
         messages = []
@@ -157,7 +153,7 @@ class DeathHandlerMixin:
             if not player:
                 continue
 
-            if isinstance(player.role, (Hunter, AlphaWolf)):
+            if player.role.name in ("Hunter", "AlphaWolf"):
                 death_cause = self.game_state.death_causes.get(player_id)
                 if death_cause == "witch_poison":
                     self._log_event(
@@ -201,7 +197,7 @@ class DeathHandlerMixin:
                         self.game_state.day_deaths.add(target.player_id)
 
                     # Use appropriate event based on role
-                    if isinstance(player.role, Hunter):
+                    if player.role.name == "Hunter":
                         event_msg = self.locale.get(
                             "hunter_shoots", hunter=player.name, target=target.name
                         )
@@ -277,7 +273,7 @@ class DeathHandlerMixin:
 
         for player in self.game_state.players:
             if (
-                isinstance(player.role, WolfBeauty)
+                hasattr(player.role, "charmed_player")
                 and not player.is_alive()
                 and player.role.charmed_player
             ):

@@ -81,10 +81,9 @@ class ActionProcessorMixin:
                         self.game_state.night_deaths.add(action.target.player_id)
                         self.game_state.death_causes[action.target.player_id] = "witch_poison"
                 elif isinstance(action, SeerCheckAction):
-                    from llm_werewolf.core.roles.werewolf import HiddenWolf
-
                     result = action.target.get_camp()
-                    if isinstance(action.target.role, HiddenWolf):
+                    # HiddenWolf appears as villager to Seer
+                    if action.target.role.name == "HiddenWolf":
                         result = "villager"
                     self._log_event(
                         EventType.SEER_CHECKED,

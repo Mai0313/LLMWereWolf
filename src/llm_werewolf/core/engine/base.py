@@ -6,15 +6,13 @@ from pathlib import Path
 
 from rich.console import Console
 
-from llm_werewolf.core.agent import BaseAgent
-from llm_werewolf.core.types import Event, EventType, GamePhase
+from llm_werewolf.core.types import Event, EventType, GamePhase, RoleProtocol, AgentProtocol
 from llm_werewolf.core.config import GameConfig
 from llm_werewolf.core.events import EventLogger
 from llm_werewolf.core.locale import Locale
 from llm_werewolf.core.player import Player
 from llm_werewolf.core.victory import VictoryChecker
 from llm_werewolf.core.game_state import GameState
-from llm_werewolf.core.roles.base import Role
 from llm_werewolf.core.event_formatter import EventFormatter
 
 if TYPE_CHECKING:
@@ -66,7 +64,7 @@ class GameEngineBase:
         formatted_text = EventFormatter.format_event(event, include_timestamp=False)
         console.print(formatted_text)
 
-    def setup_game(self, players: list[BaseAgent], roles: list[Role]) -> None:
+    def setup_game(self, players: list[AgentProtocol], roles: list[RoleProtocol]) -> None:
         """Initialize the game with players and roles.
 
         Args:

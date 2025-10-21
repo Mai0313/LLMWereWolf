@@ -1,7 +1,11 @@
-from llm_werewolf.core.types import Camp, RoleConfig, ActionPriority
-from llm_werewolf.core.player import Player
-from llm_werewolf.core.actions import Action
-from llm_werewolf.core.game_state import GameState
+from llm_werewolf.core.types import (
+    Camp,
+    RoleConfig,
+    ActionPriority,
+    ActionProtocol,
+    PlayerProtocol,
+    GameStateProtocol,
+)
 from llm_werewolf.core.roles.base import Role
 
 
@@ -12,13 +16,13 @@ class Thief(Role):
     The role they choose becomes their actual role for the game.
     """
 
-    def __init__(self, player: Player) -> None:
+    def __init__(self, player: PlayerProtocol) -> None:
         """Initialize the Thief role."""
         super().__init__(player)
         self.available_roles: list[Role] = []
         self.has_chosen = False
 
-    def get_night_actions(self, game_state: GameState) -> list[Action]:
+    def get_night_actions(self, game_state: GameStateProtocol) -> list[ActionProtocol]:
         """Get the night actions for the Thief role.
 
         Note: Thief logic requires game setup to provide extra role cards.
@@ -53,13 +57,13 @@ class Lover(Role):
     Lovers win together and die together.
     """
 
-    def __init__(self, player: Player) -> None:
+    def __init__(self, player: PlayerProtocol) -> None:
         """Initialize the Lover role."""
         super().__init__(player)
         self.partner_id: str | None = None
         self.original_role: Role | None = None
 
-    def get_night_actions(self, game_state: GameState) -> list[Action]:
+    def get_night_actions(self, game_state: GameStateProtocol) -> list[ActionProtocol]:
         """Get the night actions for the Lover role.
 
         Lovers have no special night actions.
@@ -94,11 +98,11 @@ class WhiteLoverWolf(Role):
     This is a dynamic role that represents the conflicted state.
     """
 
-    def __init__(self, player: Player) -> None:
+    def __init__(self, player: PlayerProtocol) -> None:
         """Initialize the White Lover Wolf role."""
         super().__init__(player)
 
-    def get_night_actions(self, game_state: GameState) -> list[Action]:
+    def get_night_actions(self, game_state: GameStateProtocol) -> list[ActionProtocol]:
         """Get the night actions for the White Lover Wolf role.
 
         This role has no special night actions.

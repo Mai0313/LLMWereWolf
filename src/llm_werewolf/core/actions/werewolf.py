@@ -86,9 +86,8 @@ class WhiteWolfKillAction(Action):
 
     def validate(self) -> bool:
         """Validate the white wolf kill."""
-        from llm_werewolf.core.roles.werewolf import WhiteWolf
-
-        if not isinstance(self.actor.role, WhiteWolf):
+        # Check if actor is WhiteWolf (by role name)
+        if self.actor.role.name != "WhiteWolf":
             return False
 
         if self.game_state.round_number % 2 == 0:
@@ -139,9 +138,8 @@ class WolfBeautyCharmAction(Action):
 
     def validate(self) -> bool:
         """Validate the wolf beauty charm."""
-        from llm_werewolf.core.roles.werewolf import WolfBeauty
-
-        if not isinstance(self.actor.role, WolfBeauty):
+        # Check if actor has WolfBeauty abilities (charmed_player attribute)
+        if not hasattr(self.actor.role, "charmed_player"):
             return False
 
         if self.actor.role.charmed_player:
@@ -151,9 +149,8 @@ class WolfBeautyCharmAction(Action):
 
     def execute(self) -> list[str]:
         """Execute the wolf beauty charm."""
-        from llm_werewolf.core.roles.werewolf import WolfBeauty
-
-        if isinstance(self.actor.role, WolfBeauty):
+        # Update WolfBeauty's charmed_player status
+        if hasattr(self.actor.role, "charmed_player"):
             self.actor.role.charmed_player = self.target.player_id
 
         return [f"Wolf Beauty charms {self.target.name}"]

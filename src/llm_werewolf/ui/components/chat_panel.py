@@ -4,6 +4,7 @@ from rich.text import Text
 from textual.widgets import RichLog
 
 from llm_werewolf.core.events import Event
+from llm_werewolf.core.event_formatter import EventFormatter
 
 
 class ChatPanel(RichLog):
@@ -30,41 +31,8 @@ class ChatPanel(RichLog):
         Args:
             event: The event to display.
         """
-        # Create formatted message based on event type
-        text = Text()
-
-        # Timestamp
-        time_str = event.timestamp.strftime("%H:%M:%S")
-        text.append(f"[{time_str}] ", style="dim")
-
-        message_styles = {
-            "game_started": "bold green",
-            "game_ended": "bold red",
-            "phase_changed": "bold cyan",
-            "round_started": "bold blue",
-            "player_died": "red",
-            "player_revived": "green",
-            "role_revealed": "magenta",
-            "role_acting": "dim cyan",
-            "werewolf_killed": "red",
-            "witch_saved": "green",
-            "witch_poisoned": "red",
-            "seer_checked": "blue",
-            "guard_protected": "green",
-            "lovers_linked": "magenta",
-            "lover_died": "red",
-            "hunter_revenge": "yellow",
-            "knight_duel": "yellow",
-            "vote_cast": "yellow",
-            "vote_result": "bold yellow",
-            "player_eliminated": "bold red",
-            "player_speech": "cyan",
-            "player_discussion": "blue",
-            "error": "bold red",
-        }
-        style = message_styles.get(event.event_type.value, "white")
-        text.append(event.message, style=style)
-
+        # Use the centralized event formatter
+        text = EventFormatter.format_event(event, include_timestamp=True)
         self.write(text)
 
     def add_system_message(self, message: str) -> None:

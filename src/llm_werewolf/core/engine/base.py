@@ -15,6 +15,7 @@ from llm_werewolf.core.player import Player
 from llm_werewolf.core.victory import VictoryChecker
 from llm_werewolf.core.game_state import GameState
 from llm_werewolf.core.roles.base import Role
+from llm_werewolf.core.event_formatter import EventFormatter
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -57,7 +58,9 @@ class GameEngineBase:
                 console.print(f"\n{self.locale.get('day_separator')}")
             self._last_phase = event.phase
 
-        console.print(event.message)
+        # Use the centralized event formatter (without timestamp for CLI)
+        formatted_text = EventFormatter.format_event(event, include_timestamp=False)
+        console.print(formatted_text)
 
     def setup_game(self, players: list[BaseAgent], roles: list[Role]) -> None:
         """Initialize the game with players and roles.

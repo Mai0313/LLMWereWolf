@@ -92,7 +92,7 @@ class LLMAgent(BaseAgent):
             messages=self.chat_history,
             temperature=self.temperature,
             max_tokens=self.max_tokens,
-            reasoning_effort="high",
+            reasoning_effort=self.reasoning_effort,
         )
         self.chat_history.append({
             "role": "assistant",

@@ -1,8 +1,6 @@
 from pathlib import Path
 
 import logfire
-
-logfire.configure(send_to_logfire=False)
 from rich.console import Console
 
 from llm_werewolf.core import GameEngine

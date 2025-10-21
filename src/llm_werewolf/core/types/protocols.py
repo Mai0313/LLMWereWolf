@@ -14,7 +14,8 @@ from llm_werewolf.core.types.models import PlayerInfo, RoleConfig
 class AgentProtocol(Protocol):
     """Protocol for agent objects."""
 
-    model_name: str
+    name: str
+    model: str
 
     def get_response(self, message: str) -> str:
         """Get a response from the agent.

@@ -13,7 +13,8 @@ class BaseAgent(BaseModel):
     Provides shared functionality like __repr__.
     """
 
-    model_name: str
+    name: str
+    model: str
 
     def get_response(self, message: str) -> str:
         """Get a response from the agent.
@@ -33,9 +34,9 @@ class BaseAgent(BaseModel):
         """Return a string representation of the agent.
 
         Returns:
-            str: The model name.
+            str: The agent name and model.
         """
-        return self.model_name
+        return f"{self.name} ({self.model})"
 
 
 class DemoAgent(BaseAgent):
@@ -44,7 +45,7 @@ class DemoAgent(BaseAgent):
     Useful for testing game logic without requiring AI API calls.
     """
 
-    model_name: str = Field(default="demo")
+    model: str = Field(default="demo")
 
     def get_response(self, message: str) -> str:
         """Return a canned response.
@@ -71,7 +72,7 @@ class HumanAgent(BaseAgent):
     Allows human players to participate in the game via terminal input.
     """
 
-    model_name: str = Field(default="human")
+    model: str = Field(default="human")
 
     def get_response(self, message: str) -> str:
         """Get response from human input.

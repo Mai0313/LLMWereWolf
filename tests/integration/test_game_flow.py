@@ -12,7 +12,7 @@ def test_game_initialization() -> None:
     # Create players
     players = []
     for i in range(config.num_players):
-        players.append((f"p{i}", f"Player{i}", DemoAgent()))
+        players.append(DemoAgent(name=f"Player{i}", model="demo"))
 
     # Get roles
     roles = create_roles(role_names=config.role_names)
@@ -29,7 +29,7 @@ def test_game_state_initialization() -> None:
     config = PRESET_6_PLAYERS
     engine = GameEngine(config)
 
-    players = [(f"p{i}", f"Player{i}", DemoAgent()) for i in range(config.num_players)]
+    players = [DemoAgent(name=f"Player{i}", model="demo") for i in range(config.num_players)]
     roles = create_roles(role_names=config.role_names)
 
     engine.setup_game(players=players, roles=roles)
@@ -44,7 +44,7 @@ def test_role_assignment() -> None:
     config = PRESET_6_PLAYERS
     engine = GameEngine(config)
 
-    players = [(f"p{i}", f"Player{i}", DemoAgent()) for i in range(config.num_players)]
+    players = [DemoAgent(name=f"Player{i}", model="demo") for i in range(config.num_players)]
     roles = create_roles(role_names=config.role_names)
 
     engine.setup_game(players=players, roles=roles)
@@ -64,7 +64,7 @@ def test_victory_checker() -> None:
     config = PRESET_6_PLAYERS
     engine = GameEngine(config)
 
-    players = [(f"p{i}", f"Player{i}", DemoAgent()) for i in range(config.num_players)]
+    players = [DemoAgent(name=f"Player{i}", model="demo") for i in range(config.num_players)]
     roles = create_roles(role_names=config.role_names)
 
     engine.setup_game(players=players, roles=roles)

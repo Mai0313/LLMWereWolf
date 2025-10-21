@@ -70,7 +70,6 @@ class PlayerConfig(BaseModel):
 class LLMAgent(BaseAgent):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    model_name: str
     api_key: str
     base_url: str
     temperature: float = Field(default=0.7)
@@ -89,7 +88,7 @@ class LLMAgent(BaseAgent):
         message += f"\nPlease respond in {self.language}."
         self.chat_history.append({"role": "user", "content": message})
         response = self.client.chat.completions.create(
-            model=self.model_name,
+            model=self.model,
             messages=self.chat_history,
             temperature=self.temperature,
             max_tokens=self.max_tokens,
@@ -139,11 +138,14 @@ class PlayersConfig(BaseModel):
         return v
 
 
-def create_agent(config: PlayerConfig) -> DemoAgent | HumanAgent | LLMAgent:
+def create_agent(
+    config: PlayerConfig, language: str = "en-US"
+) -> DemoAgent | HumanAgent | LLMAgent:
     """Create an agent instance from player configuration.
 
     Args:
         config: Player configuration.
+        language: Language code for the agent (e.g., "en-US", "zh-TW").
 
     Returns:
         DemoAgent | HumanAgent | LLMAgent: Created agent instance.
@@ -154,10 +156,10 @@ def create_agent(config: PlayerConfig) -> DemoAgent | HumanAgent | LLMAgent:
     model = config.model.lower()
 
     if model == "human":
-        return HumanAgent(model_name="human")
+        return HumanAgent(name=config.name, model="human")
 
     if model == "demo":
-        return DemoAgent(model_name="demo")
+        return DemoAgent(name=config.name, model="demo")
 
     api_key = None
     if config.api_key_env:
@@ -168,12 +170,13 @@ def create_agent(config: PlayerConfig) -> DemoAgent | HumanAgent | LLMAgent:
         )
 
     return LLMAgent(
-        model_name=config.model,
+        name=config.name,
+        model=config.model,
         api_key=api_key,
         base_url=config.base_url,
         temperature=config.temperature,
         max_tokens=config.max_tokens,
-        language="zh-TW",
+        language=language,
     )
 
 

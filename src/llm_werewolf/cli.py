@@ -31,8 +31,8 @@ def main(config: str) -> None:
         raise ValueError
 
     players = [
-        (f"player_{idx + 1}", player_cfg.name, create_agent(player_cfg))
-        for idx, player_cfg in enumerate(players_config.players)
+        create_agent(player_cfg, language=players_config.language)
+        for player_cfg in players_config.players
     ]
     roles = create_roles(role_names=game_config.role_names)
 

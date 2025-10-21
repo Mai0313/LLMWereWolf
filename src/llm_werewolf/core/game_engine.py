@@ -50,11 +50,11 @@ class GameEngine:
         prefix = f"[回合 {event.round_number}][{event.phase.upper()}]"
         console.print(f"{prefix} {event.message}")
 
-    def setup_game(self, players: list[tuple[str, str, BaseAgent]], roles: list[Role]) -> None:
+    def setup_game(self, players: list[BaseAgent], roles: list[Role]) -> None:
         """Initialize the game with players and roles.
 
         Args:
-            players: List of tuples (player_id, name, agent).
+            players: List of agent instances with name and model attributes.
             roles: List of role instances to assign.
         """
         if len(players) != len(roles):
@@ -65,8 +65,12 @@ class GameEngine:
         random.shuffle(shuffled_roles)
 
         player_objects = []
-        for (player_id, name, agent), role_class in zip(players, shuffled_roles, strict=False):
-            ai_model = getattr(agent, "model_name", "unknown") if agent else "human"
+        for idx, (agent, role_class) in enumerate(
+            zip(players, shuffled_roles, strict=False), start=1
+        ):
+            player_id = f"player_{idx}"
+            name = agent.name
+            ai_model = agent.model
             player = Player(
                 player_id=player_id, name=name, role=role_class, agent=agent, ai_model=ai_model
             )

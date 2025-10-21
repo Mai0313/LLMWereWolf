@@ -62,8 +62,12 @@ def test_role_string_representation() -> None:
 
 def test_werewolf_get_night_actions() -> None:
     """Test Werewolf get_night_actions method."""
-    werewolf_player = Player("p1", "Werewolf", Werewolf, agent=DemoAgent())
-    villager_player = Player("p2", "Villager", Villager, agent=DemoAgent())
+    werewolf_player = Player(
+        "p1", "Werewolf", Werewolf, agent=DemoAgent(name="Werewolf", model="demo")
+    )
+    villager_player = Player(
+        "p2", "Villager", Villager, agent=DemoAgent(name="Villager", model="demo")
+    )
     players = [werewolf_player, villager_player]
     game_state = GameState(players)
 
@@ -80,8 +84,10 @@ def test_werewolf_get_night_actions() -> None:
 
 def test_seer_get_night_actions() -> None:
     """Test Seer get_night_actions method."""
-    seer_player = Player("p1", "Seer", Seer, agent=DemoAgent())
-    villager_player = Player("p2", "Villager", Villager, agent=DemoAgent())
+    seer_player = Player("p1", "Seer", Seer, agent=DemoAgent(name="Seer", model="demo"))
+    villager_player = Player(
+        "p2", "Villager", Villager, agent=DemoAgent(name="Villager", model="demo")
+    )
     players = [seer_player, villager_player]
     game_state = GameState(players)
 
@@ -97,8 +103,10 @@ def test_seer_get_night_actions() -> None:
 
 def test_witch_get_night_actions_save() -> None:
     """Test Witch get_night_actions method for saving."""
-    witch_player = Player("p1", "Witch", Witch, agent=DemoAgent())
-    villager_player = Player("p2", "Villager", Villager, agent=DemoAgent())
+    witch_player = Player("p1", "Witch", Witch, agent=DemoAgent(name="Witch", model="demo"))
+    villager_player = Player(
+        "p2", "Villager", Villager, agent=DemoAgent(name="Villager", model="demo")
+    )
     players = [witch_player, villager_player]
     game_state = GameState(players)
     game_state.werewolf_target = "p2"
@@ -128,8 +136,10 @@ def test_witch_get_night_actions_poison() -> None:
 
 def test_guard_get_night_actions() -> None:
     """Test Guard get_night_actions method."""
-    guard_player = Player("p1", "Guard", Guard, agent=DemoAgent())
-    villager_player = Player("p2", "Villager", Villager, agent=DemoAgent())
+    guard_player = Player("p1", "Guard", Guard, agent=DemoAgent(name="Guard", model="demo"))
+    villager_player = Player(
+        "p2", "Villager", Villager, agent=DemoAgent(name="Villager", model="demo")
+    )
     players = [guard_player, villager_player]
     game_state = GameState(players)
 

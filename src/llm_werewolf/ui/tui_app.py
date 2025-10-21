@@ -19,13 +19,23 @@ class WerewolfTUI(App):
         background: $surface;
     }
 
-    #left_panel {
-        width: 3fr;
+    #top_container {
+        height: 35%;
+        width: 100%;
+    }
+
+    #bottom_container {
+        height: 65%;
+        width: 100%;
+    }
+
+    #player_section {
+        width: 66%;
         height: 100%;
     }
 
-    #middle_panel {
-        width: 5fr;
+    #game_section {
+        width: 34%;
         height: 100%;
     }
 
@@ -36,13 +46,13 @@ class WerewolfTUI(App):
     }
 
     GamePanel {
-        height: 50%;
+        height: 100%;
         border: solid $secondary;
         background: $panel;
     }
 
     ChatPanel {
-        height: 50%;
+        height: 100%;
         border: solid $success;
         background: $panel;
     }
@@ -72,22 +82,29 @@ class WerewolfTUI(App):
     def compose(self) -> ComposeResult:
         """Compose the TUI layout.
 
+        Layout:
+        - Top (35%): Players (left 2/3) | Game Status (right 1/3)
+        - Bottom (65%): Chat/Terminal Output (full width)
+
         Yields:
             Textual widgets for the UI.
         """
         yield Header(show_clock=True)
 
-        with Horizontal():
-            with Vertical(id="left_panel"):
+        # Top container: Players and Game Status side by side
+        with Horizontal(id="top_container"):
+            with Vertical(id="player_section"):
                 self.player_panel = PlayerPanel()
                 yield self.player_panel
 
-            with Vertical(id="middle_panel"):
+            with Vertical(id="game_section"):
                 self.game_panel = GamePanel()
                 yield self.game_panel
 
-                self.chat_panel = ChatPanel()
-                yield self.chat_panel
+        # Bottom container: Chat/Terminal output
+        with Vertical(id="bottom_container"):
+            self.chat_panel = ChatPanel()
+            yield self.chat_panel
 
         yield Footer()
 

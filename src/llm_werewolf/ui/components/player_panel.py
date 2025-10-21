@@ -1,12 +1,12 @@
 from typing import Any
 
 from rich.table import Table
-from textual.widgets import Static
+from textual.widgets import RichLog
 
 from llm_werewolf.core.game_state import GameState
 
 
-class PlayerPanel(Static):
+class PlayerPanel(RichLog):
     """Widget displaying the list of players and their status."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
@@ -26,17 +26,26 @@ class PlayerPanel(Static):
     def refresh_display(self) -> None:
         """Refresh the display with current game state."""
         if not self.game_state:
-            self.update("No game in progress")
             return
+
+        # Clear previous content
+        self.clear()
 
         # Check if there are any human players in the game
         has_human_player = any(p.ai_model == "human" for p in self.game_state.players)
 
-        table = Table(title="Players", show_header=True, header_style="bold magenta")
+        # Create table without title
+        table = Table(
+            show_header=True,
+            header_style="bold magenta",
+            box=None,
+            padding=(0, 1),
+            collapse_padding=True,
+        )
         table.add_column("Name", style="cyan", no_wrap=True)
-        table.add_column("Model", style="blue")
-        table.add_column("Status", style="green")
-        table.add_column("Role", style="yellow")
+        table.add_column("Model", style="blue", no_wrap=True)
+        table.add_column("Status", style="green", no_wrap=True)
+        table.add_column("Role", style="yellow", no_wrap=True)
 
         for player in self.game_state.players:
             # Determine status icon
@@ -73,7 +82,8 @@ class PlayerPanel(Static):
                 role_display,
             )
 
-        self.update(table)
+        # Write table to RichLog
+        self.write(table)
 
     def on_mount(self) -> None:
         """Called when widget is mounted."""

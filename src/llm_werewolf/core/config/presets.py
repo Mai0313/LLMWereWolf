@@ -1,139 +1,21 @@
 from llm_werewolf.core.config.game_config import GameConfig
 
-PRESET_6_PLAYERS = GameConfig(
-    num_players=6,
-    role_names=["Werewolf", "Werewolf", "Seer", "Witch", "Villager", "Villager"],
-    night_timeout=45,
-    day_timeout=180,
-    vote_timeout=45,
-)
 
-PRESET_9_PLAYERS = GameConfig(
-    num_players=9,
-    role_names=[
-        "Werewolf",
-        "Werewolf",
-        "Seer",
-        "Witch",
-        "Hunter",
-        "Guard",
-        "Villager",
-        "Villager",
-        "Villager",
-    ],
-    night_timeout=60,
-    day_timeout=300,
-    vote_timeout=60,
-)
+def create_game_config_from_player_count(num_players: int) -> GameConfig:
+    """Automatically generate game configuration based on number of players.
 
-PRESET_12_PLAYERS = GameConfig(
-    num_players=12,
-    role_names=[
-        "Werewolf",
-        "Werewolf",
-        "AlphaWolf",
-        "Seer",
-        "Witch",
-        "Hunter",
-        "Guard",
-        "Cupid",
-        "Idiot",
-        "Villager",
-        "Villager",
-        "Villager",
-    ],
-    night_timeout=60,
-    day_timeout=400,
-    vote_timeout=60,
-)
-
-PRESET_15_PLAYERS = GameConfig(
-    num_players=15,
-    role_names=[
-        "Werewolf",
-        "Werewolf",
-        "AlphaWolf",
-        "WhiteWolf",
-        "Seer",
-        "Witch",
-        "Hunter",
-        "Guard",
-        "Cupid",
-        "Idiot",
-        "Elder",
-        "Raven",
-        "Villager",
-        "Villager",
-        "Villager",
-    ],
-    night_timeout=90,
-    day_timeout=500,
-    vote_timeout=90,
-)
-
-PRESET_EXPERT = GameConfig(
-    num_players=12,
-    role_names=[
-        "Werewolf",
-        "AlphaWolf",
-        "WhiteWolf",
-        "Seer",
-        "Witch",
-        "Hunter",
-        "Guard",
-        "Cupid",
-        "Knight",
-        "Magician",
-        "Elder",
-        "Villager",
-    ],
-    night_timeout=90,
-    day_timeout=400,
-    vote_timeout=60,
-)
-
-PRESET_CHAOS = GameConfig(
-    num_players=10,
-    role_names=[
-        "WhiteWolf",
-        "WolfBeauty",
-        "HiddenWolf",
-        "Seer",
-        "Witch",
-        "Hunter",
-        "Idiot",
-        "Elder",
-        "Raven",
-        "Villager",
-    ],
-    night_timeout=90,
-    day_timeout=400,
-    vote_timeout=60,
-)
-
-
-def get_preset(num_players: int) -> GameConfig:
-    """Get a preset configuration for a given number of players.
+    This function creates a balanced role composition by scaling the number of
+    werewolves and special roles based on the total player count.
 
     Args:
-        num_players: Number of players in the game.
+        num_players: Number of players in the game (6-20).
 
     Returns:
-        GameConfig: A preset configuration.
+        GameConfig: Generated game configuration with balanced roles.
 
     Raises:
-        ValueError: If no preset exists for the given player count.
+        ValueError: If player count is outside valid range (6-20).
     """
-    presets = {
-        6: PRESET_6_PLAYERS,
-        9: PRESET_9_PLAYERS,
-        12: PRESET_12_PLAYERS,
-        15: PRESET_15_PLAYERS,
-    }
-
-    if num_players in presets:
-        return presets[num_players]
-
     if num_players < 6:
         msg = "Minimum 6 players required"
         raise ValueError(msg)
@@ -141,45 +23,65 @@ def get_preset(num_players: int) -> GameConfig:
         msg = "Maximum 20 players supported"
         raise ValueError(msg)
 
-    closest = min(presets.keys(), key=lambda x: abs(x - num_players))
-    msg = (
-        f"No preset for {num_players} players. "
-        f"Try using the {closest}-player preset and customize it."
+    # Determine number of werewolves and special roles based on player count
+    role_names = []
+
+    # Werewolf allocation
+    if num_players <= 8:
+        # 6-8 players: 2 werewolves
+        role_names.extend(["Werewolf", "Werewolf"])
+    elif num_players <= 11:
+        # 9-11 players: 2 werewolves + 1 special werewolf
+        role_names.extend(["Werewolf", "Werewolf", "AlphaWolf"])
+    elif num_players <= 14:
+        # 12-14 players: 2 werewolves + 2 special werewolves
+        role_names.extend(["Werewolf", "Werewolf", "AlphaWolf", "WhiteWolf"])
+    else:
+        # 15+ players: 2 werewolves + 3 special werewolves
+        role_names.extend(["Werewolf", "Werewolf", "AlphaWolf", "WhiteWolf", "WolfBeauty"])
+
+    # Core divine roles (always present)
+    role_names.extend(["Seer", "Witch"])
+
+    # Additional divine roles based on player count
+    if num_players >= 7:
+        role_names.append("Guard")
+    if num_players >= 9:
+        role_names.append("Hunter")
+    if num_players >= 11:
+        role_names.append("Cupid")
+    if num_players >= 13:
+        role_names.append("Idiot")
+    if num_players >= 15:
+        role_names.append("Elder")
+    if num_players >= 17:
+        role_names.append("Knight")
+    if num_players >= 19:
+        role_names.append("Raven")
+
+    # Fill remaining slots with villagers
+    num_special_roles = len(role_names)
+    num_villagers = num_players - num_special_roles
+    role_names.extend(["Villager"] * num_villagers)
+
+    # Set timeouts based on player count
+    if num_players <= 8:
+        night_timeout = 45
+        day_timeout = 180
+        vote_timeout = 45
+    elif num_players <= 12:
+        night_timeout = 60
+        day_timeout = 300
+        vote_timeout = 60
+    else:
+        night_timeout = 90
+        day_timeout = 400
+        vote_timeout = 90
+
+    return GameConfig(
+        num_players=num_players,
+        role_names=role_names,
+        night_timeout=night_timeout,
+        day_timeout=day_timeout,
+        vote_timeout=vote_timeout,
     )
-    raise ValueError(msg)
-
-
-def get_all_presets() -> dict[str, GameConfig]:
-    """Get all available presets.
-
-    Returns:
-        dict[str, GameConfig]: Dictionary of preset names to configs.
-    """
-    return {
-        "6-players": PRESET_6_PLAYERS,
-        "9-players": PRESET_9_PLAYERS,
-        "12-players": PRESET_12_PLAYERS,
-        "15-players": PRESET_15_PLAYERS,
-        "expert": PRESET_EXPERT,
-        "chaos": PRESET_CHAOS,
-    }
-
-
-def get_preset_by_name(name: str) -> GameConfig:
-    """Get a preset by name.
-
-    Args:
-        name: Name of the preset.
-
-    Returns:
-        GameConfig: The preset configuration.
-
-    Raises:
-        ValueError: If preset name is not found.
-    """
-    presets = get_all_presets()
-    if name not in presets:
-        available = ", ".join(presets.keys())
-        msg = f"Preset '{name}' not found. Available presets: {available}"
-        raise ValueError(msg)
-    return presets[name]

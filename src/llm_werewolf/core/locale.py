@@ -68,7 +68,7 @@ class Locale:
             "death_ability_active": "{player} ({role}) can shoot before dying!",
             # Config
             "config_loaded": "Loaded configuration: {config_path}",
-            "preset_info": "Preset: {preset}",
+            "player_count_info": "Number of players: {num_players}",
             "interface_mode": "Interface mode: Console (auto-execute)",
         },
         "zh-TW": {
@@ -131,7 +131,7 @@ class Locale:
             "death_ability_active": "{player}（{role}）可以在死前射殺一人!",
             # Config
             "config_loaded": "已載入設定檔：{config_path}",
-            "preset_info": "預設組合：{preset}",
+            "player_count_info": "玩家人數：{num_players}",
             "interface_mode": "介面模式：Console（自動執行）",
         },
         "zh-CN": {
@@ -194,7 +194,7 @@ class Locale:
             "death_ability_active": "{player}（{role}）可以在死前射杀一人!",
             # Config
             "config_loaded": "已加载配置文件：{config_path}",
-            "preset_info": "预设组合：{preset}",
+            "player_count_info": "玩家人数：{num_players}",
             "interface_mode": "界面模式：Console（自动执行）",
         },
     }

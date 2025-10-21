@@ -75,9 +75,8 @@ uv run werewolf configs/demo.yaml
 
 YAML Configuration File Options:
 
-- `preset: <preset-name>`: Specifies the role preset configuration (e.g., `6-players`, `9-players`, `12-players`, `15-players`, `expert`, `chaos`).
 - `language: <language-code>`: Sets the game language (e.g., `en-US`, `zh-TW`, `zh-CN`). Default: `en-US`.
-- `players: [...]`: Defines the list of players.
+- `players: [...]`: Defines the list of players. The number of players (6-20) will automatically determine the role composition.
 
 ### Environment Configuration
 
@@ -136,16 +135,18 @@ XAI_API_KEY=xai-...
 
 ## Configuration
 
-### Using Preset Configurations
+### Automatic Role Assignment
 
-Adjust the `preset` field in the configuration file to apply a built-in role combination. Options include:
+The game automatically generates balanced role compositions based on the number of players (6-20). No need to manually configure presets!
 
-- `6-players`: Beginner game (6 players) - 2 Werewolves + Seer, Witch, 2 Villagers.
-- `9-players`: Standard game (9 players) - 2 Werewolves + Seer, Witch, Hunter, Guard, 3 Villagers.
-- `12-players`: Advanced game (12 players) - 3 Werewolves (2 Werewolves + AlphaWolf) + Seer, Witch, Hunter, Guard, Cupid, Idiot, 3 Villagers.
-- `15-players`: Full game (15 players) - 4 Werewolves (2 Werewolves + AlphaWolf + WhiteWolf) + Seer, Witch, Hunter, Guard, Cupid, Idiot, Elder, Raven, 3 Villagers.
-- `expert`: Expert configuration (12 players) - 3 Werewolves (Werewolf + AlphaWolf + WhiteWolf) + Seer, Witch, Hunter, Guard, Cupid, Knight, Magician, Elder, Villager.
-- `chaos`: Chaotic role combination (10 players) - 3 Special Werewolves (WhiteWolf + WolfBeauty + HiddenWolf) + Seer, Witch, Hunter, Idiot, Elder, Raven, Villager.
+**How it works:**
+
+- **6-8 players**: 2 Werewolves + Seer, Witch + Villagers
+- **9-11 players**: 3 Werewolves (including AlphaWolf) + Seer, Witch, Hunter, Guard + Villagers
+- **12-14 players**: 4 Werewolves (including AlphaWolf, WhiteWolf) + Seer, Witch, Hunter, Guard, Cupid, Idiot + Villagers
+- **15+ players**: 5 Werewolves + More divine roles (Elder, Knight, Raven, etc.) + Villagers
+
+The system scales werewolf count and divine roles automatically to maintain game balance.
 
 ### Custom Configuration
 
@@ -165,10 +166,12 @@ cp configs/players.yaml my-game.yaml
 Example `my-game.yaml`:
 
 ```yaml
-preset: 6-players        # Choose a preset configuration
 language: en-US          # Language code (en-US, zh-TW, zh-CN)
 
 players:
+  # The game will automatically assign roles based on the number of players
+  # 6 players example below will get: 2 Werewolves + Seer + Witch + 2 Villagers
+
   - name: GPT-4o Detective
     model: gpt-4o
     base_url: https://api.openai.com/v1
@@ -225,9 +228,8 @@ players:
 
 **Configuration Description:**
 
-- `preset`: Required, determines the game's role configuration and number of players.
 - `language`: Optional, defaults to `en-US`, sets the game language (e.g., `en-US`, `zh-TW`, `zh-CN`).
-- `players`: Required, list of players, the number must match `num_players` in the preset.
+- `players`: Required, list of players (6-20 players). The game will automatically generate balanced role compositions based on player count.
 
 **Player Configuration Fields:**
 
@@ -430,7 +432,7 @@ src/llm_werewolf/
 │   │   └── werewolf.py   # Werewolf faction actions
 │   ├── config/           # Configuration system
 │   │   ├── game_config.py    # Game configuration model
-│   │   └── presets.py        # Role preset configurations
+│   │   └── presets.py        # Auto role generation based on player count
 │   ├── types/            # Type definitions
 │   │   ├── enums.py      # Enums (Camp, Phase, Status, etc.)
 │   │   ├── models.py     # Data models
@@ -457,7 +459,7 @@ src/llm_werewolf/
 - **ai/**: LLM agent implementation and configuration models (PlayerConfig, PlayersConfig).
 - **core/agent.py**: Base agent protocol and built-in agents (HumanAgent, DemoAgent).
 - **core/actions/**: Action system with base classes and faction-specific actions.
-- **core/config/**: Configuration system, containing game parameters and role presets.
+- **core/config/**: Configuration system, containing game parameters and automatic role generation.
 - **core/types/**: Type definitions including enums, data models, and protocol definitions.
 - **core/**: Core game logic, including roles, players, game state, action selection, events, and victory checking.
 - **ui/**: Terminal user interface based on the Textual framework.
@@ -483,7 +485,7 @@ src/llm_werewolf/
 
 ### How do I add more players?
 
-Edit your YAML configuration file, adjust the `preset` to match the number of players, and add player configurations to the `players` list. Remember that the number of players must match `num_players` in the preset.
+Edit your YAML configuration file and add player configurations to the `players` list. The game will automatically generate balanced role compositions based on the total number of players (6-20 supported).
 
 ### Can I mix different LLM models?
 
@@ -507,7 +509,7 @@ You do not need to set `api_key_env`.
 
 ### How do I customize game settings?
 
-The game uses preset configurations (like `6-players`, `9-players`, etc.) defined in the YAML file. Each preset includes predefined role combinations and time limits. To adjust settings, you can modify the preset configuration or create a custom one. For advanced customization, see the project's configuration system in `src/llm_werewolf/core/config/`.
+The game automatically generates balanced role compositions based on player count (6-20). Role assignments and timeouts are automatically adjusted as the number of players increases. For advanced customization of the role generation logic, see `create_game_config_from_player_count()` in `src/llm_werewolf/core/config/presets.py`.
 
 ## License
 

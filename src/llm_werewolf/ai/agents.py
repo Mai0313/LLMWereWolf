@@ -119,12 +119,6 @@ class LLMAgent(BaseAgent):
 class PlayersConfig(BaseModel):
     """Root configuration containing all players and optional game settings."""
 
-    preset: str | None = Field(
-        default=None,
-        title="Preset for roles",
-        description="Optional preset name for roles.",
-        examples=["6-players", "9-players", "12-players", "15-players"],
-    )
     language: str = Field(
         default="en-US",
         title="Language",
@@ -135,8 +129,8 @@ class PlayersConfig(BaseModel):
         ...,
         title="Player List",
         description="List of player configs, you should define it under ./configs/<name>.yaml",
-        min_length=1,
-        max_length=15,
+        min_length=6,
+        max_length=20,
     )
 
     @field_validator("players")

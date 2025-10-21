@@ -5,7 +5,7 @@ import logfire
 from llm_werewolf.ui import run_tui
 from llm_werewolf.core import GameEngine
 from llm_werewolf.ai.agents import load_config, create_agent
-from llm_werewolf.core.config import get_preset_by_name
+from llm_werewolf.core.config import create_game_config_from_player_count
 from llm_werewolf.core.role_registry import create_roles
 
 
@@ -18,15 +18,9 @@ def main(config: str) -> None:
     config_path = Path(config)
     players_config = load_config(config_path=config_path)
 
-    game_config = get_preset_by_name(players_config.preset)
-    if len(players_config.players) != game_config.num_players:
-        logfire.error(
-            "player_count_mismatch",
-            configured_players=len(players_config.players),
-            required_players=game_config.num_players,
-            preset=players_config.preset,
-        )
-        raise ValueError
+    # Automatically generate game config based on player count
+    num_players = len(players_config.players)
+    game_config = create_game_config_from_player_count(num_players)
 
     players = [
         create_agent(player_cfg, language=players_config.language)
@@ -36,20 +30,18 @@ def main(config: str) -> None:
 
     engine = GameEngine(game_config, language=players_config.language)
     engine.setup_game(players=players, roles=roles)
-    logfire.info("tui_started", config_path=str(config_path), preset=players_config.preset)
+    logfire.info("tui_started", config_path=str(config_path), num_players=num_players)
 
     try:
         run_tui(engine)
     except KeyboardInterrupt:
-        logfire.info(
-            "tui_aborted_by_user", config_path=str(config_path), preset=players_config.preset
-        )
+        logfire.info("tui_aborted_by_user", config_path=str(config_path), num_players=num_players)
     except Exception as exc:
         logfire.error(
             "tui_execution_error",
             error=str(exc),
             config_path=str(config_path),
-            preset=players_config.preset,
+            num_players=num_players,
         )
         raise
 

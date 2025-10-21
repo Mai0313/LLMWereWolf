@@ -5,7 +5,7 @@ from rich.console import Console
 
 from llm_werewolf.core import GameEngine
 from llm_werewolf.ai.agents import load_config, create_agent
-from llm_werewolf.core.config import get_preset_by_name
+from llm_werewolf.core.config import create_game_config_from_player_count
 from llm_werewolf.core.locale import Locale
 from llm_werewolf.core.role_registry import create_roles
 
@@ -21,15 +21,9 @@ def main(config: str) -> None:
     config_path = Path(config)
     players_config = load_config(config_path=config_path)
 
-    game_config = get_preset_by_name(players_config.preset)
-    if len(players_config.players) != game_config.num_players:
-        logfire.error(
-            "player_count_mismatch",
-            configured_players=len(players_config.players),
-            required_players=game_config.num_players,
-            preset=players_config.preset,
-        )
-        raise ValueError
+    # Automatically generate game config based on player count
+    num_players = len(players_config.players)
+    game_config = create_game_config_from_player_count(num_players)
 
     players = [
         create_agent(player_cfg, language=players_config.language)
@@ -41,12 +35,12 @@ def main(config: str) -> None:
     locale = Locale(players_config.language)
     engine = GameEngine(game_config, language=players_config.language)
     engine.setup_game(players=players, roles=roles)
-    logfire.info("game_created", config_path=str(config_path), preset=players_config.preset)
+    logfire.info("game_created", config_path=str(config_path), num_players=num_players)
 
     console.print(
         f"[green]{locale.get('config_loaded', config_path=config_path.resolve())}[/green]"
     )
-    console.print(f"[cyan]{locale.get('preset_info', preset=players_config.preset)}[/cyan]")
+    console.print(f"[cyan]{locale.get('player_count_info', num_players=num_players)}[/cyan]")
     console.print(f"[cyan]{locale.get('interface_mode')}[/cyan]")
 
     try:
@@ -82,7 +76,7 @@ def main(config: str) -> None:
             "game_execution_error",
             error=str(exc),
             config_path=str(config_path),
-            preset=players_config.preset,
+            num_players=num_players,
         )
         # Use locale for error message
         if players_config.language == "zh-TW":

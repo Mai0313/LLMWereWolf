@@ -1,12 +1,12 @@
 from llm_werewolf.core import GameEngine
 from llm_werewolf.core.agent import DemoAgent
+from llm_werewolf.core.config import create_game_config_from_player_count
 from llm_werewolf.core.role_registry import create_roles
-from llm_werewolf.core.config.presets import PRESET_6_PLAYERS
 
 
 def test_game_initialization() -> None:
     """Test initializing a game."""
-    config = PRESET_6_PLAYERS
+    config = create_game_config_from_player_count(6)
     engine = GameEngine(config)
 
     # Create players
@@ -26,7 +26,7 @@ def test_game_initialization() -> None:
 
 def test_game_state_initialization() -> None:
     """Test game state after initialization."""
-    config = PRESET_6_PLAYERS
+    config = create_game_config_from_player_count(6)
     engine = GameEngine(config)
 
     players = [DemoAgent(name=f"Player{i}", model="demo") for i in range(config.num_players)]
@@ -41,7 +41,7 @@ def test_game_state_initialization() -> None:
 
 def test_role_assignment() -> None:
     """Test that roles are properly assigned."""
-    config = PRESET_6_PLAYERS
+    config = create_game_config_from_player_count(6)
     engine = GameEngine(config)
 
     players = [DemoAgent(name=f"Player{i}", model="demo") for i in range(config.num_players)]
@@ -61,7 +61,7 @@ def test_role_assignment() -> None:
 
 def test_victory_checker() -> None:
     """Test victory condition checking."""
-    config = PRESET_6_PLAYERS
+    config = create_game_config_from_player_count(6)
     engine = GameEngine(config)
 
     players = [DemoAgent(name=f"Player{i}", model="demo") for i in range(config.num_players)]

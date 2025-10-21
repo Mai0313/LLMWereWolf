@@ -1,5 +1,5 @@
 from llm_werewolf.core.types import GamePhase
-from llm_werewolf.core.config import GameConfig, get_preset, get_preset_by_name
+from llm_werewolf.core.config import GameConfig, create_game_config_from_player_count
 from llm_werewolf.core.engine import GameEngine
 from llm_werewolf.core.player import Player
 from llm_werewolf.core.victory import VictoryChecker
@@ -12,6 +12,5 @@ __all__ = [
     "GameState",
     "Player",
     "VictoryChecker",
-    "get_preset",
-    "get_preset_by_name",
+    "create_game_config_from_player_count",
 ]

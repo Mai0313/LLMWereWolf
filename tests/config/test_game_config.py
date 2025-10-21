@@ -1,9 +1,8 @@
 import pytest
 from pydantic import ValidationError
 
-from llm_werewolf.core.config import GameConfig, get_preset, get_preset_by_name
+from llm_werewolf.core.config import GameConfig, create_game_config_from_player_count
 from llm_werewolf.core.role_registry import create_roles
-from llm_werewolf.core.config.presets import PRESET_6_PLAYERS
 
 
 def test_valid_game_config() -> None:
@@ -56,26 +55,38 @@ def test_no_werewolf() -> None:
 
 def test_config_to_role_list() -> None:
     """Test converting config to role instances."""
-    config = PRESET_6_PLAYERS
+    config = create_game_config_from_player_count(6)
     roles = create_roles(config.role_names)
 
     assert len(roles) == 6
     assert all(hasattr(role, "name") for role in roles)
 
 
-def test_get_preset() -> None:
-    """Test getting preset by player count."""
-    preset = get_preset(9)
-    assert preset.num_players == 9
+def test_create_game_config_from_player_count() -> None:
+    """Test auto-generating game config by player count."""
+    config = create_game_config_from_player_count(9)
+    assert config.num_players == 9
+    assert len(config.role_names) == 9
+    # 9 players should have 2-3 werewolves
+    werewolf_count = sum(1 for role in config.role_names if "Wolf" in role or role == "Werewolf")
+    assert 2 <= werewolf_count <= 3
 
 
-def test_invalid_preset() -> None:
-    """Test getting preset with invalid player count."""
+def test_invalid_player_count_config() -> None:
+    """Test auto-config with invalid player count."""
     with pytest.raises(ValueError, match="Maximum 20 players supported"):
-        get_preset(100)
+        create_game_config_from_player_count(100)
+
+    with pytest.raises(ValueError, match="Minimum 6 players required"):
+        create_game_config_from_player_count(3)
 
 
-def test_get_preset_by_name() -> None:
-    """Test getting preset by name."""
-    preset = get_preset_by_name("9-players")
-    assert preset.num_players == 9
+def test_config_scaling() -> None:
+    """Test that role composition scales with player count."""
+    config_6 = create_game_config_from_player_count(6)
+    config_12 = create_game_config_from_player_count(12)
+
+    # More players should mean more werewolves
+    werewolves_6 = sum(1 for role in config_6.role_names if "Wolf" in role or role == "Werewolf")
+    werewolves_12 = sum(1 for role in config_12.role_names if "Wolf" in role or role == "Werewolf")
+    assert werewolves_12 >= werewolves_6

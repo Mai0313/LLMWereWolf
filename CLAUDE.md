@@ -101,7 +101,7 @@ The agent system is designed for extensibility:
 **Configuration System:**
 
 - `GameConfig` (`core/config/game_config.py`): Role composition, timeouts, and game rules
-- Presets (`core/config/presets.py`): Pre-configured role sets (6-players, 9-players, 12-players, etc.)
+- `create_game_config_from_player_count()` (`core/config/presets.py`): Automatically generates balanced role configurations based on player count (6-20)
 - `PlayersConfig` (`ai/agents.py`): YAML-based player configuration with agent types
 - `create_agent()` factory function routes model types to appropriate agent classes
 
@@ -158,7 +158,7 @@ Night actions execute in order defined by `ActionPriority` enum (0=highest prior
    - `get_config()`: Return `RoleConfig` with name, camp, description, priority
    - `get_night_actions()`: **Required** - All roles must implement this method. If the role has no night actions, return an empty list `[]`. If the role has night actions, return a list of `Action` objects.
 3. Register in `role_registry.py` ROLE_CLASSES dict
-4. Add to preset configurations in `config/presets.py`
+4. Optionally update the automatic role assignment logic in `create_game_config_from_player_count()` if you want this role to be auto-assigned for specific player counts
 5. Add tests in `tests/core/test_roles.py`
 
 **Note**: The `get_night_actions()` method is an abstract method that **must** be implemented by all roles. This design forces developers to explicitly consider whether a role has night abilities, preventing bugs where developers forget to implement night actions for roles that should have them. Roles without night abilities (like Villager, Hunter, Idiot) should return an empty list.

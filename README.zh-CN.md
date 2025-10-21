@@ -75,9 +75,8 @@ uv run werewolf configs/demo.yaml
 
 YAML 配置文件选项：
 
-- `preset: <preset-name>` 指定角色预设配置（如 `6-players`、`9-players`、`12-players`、`15-players`、`expert`、`chaos`）
 - `language: <language-code>` 设置游戏语言（如 `en-US`、`zh-TW`、`zh-CN`）。默认：`en-US`
-- `players: [...]` 定义玩家列表
+- `players: [...]` 定义玩家列表。玩家人数（6-20 人）会自动决定角色配置
 
 ### 环境配置
 
@@ -136,16 +135,18 @@ XAI_API_KEY=xai-...
 
 ## 配置
 
-### 使用预设配置
+### 自动角色分配
 
-在配置文件中调整 `preset` 字段即可应用内置角色组合，可选项：
+游戏会根据玩家人数（6-20 人）自动生成平衡的角色配置，无需手动设置预设组合！
 
-- `6-players`：新手局（6 人）- 2 狼人 + 预言家、女巫、2 平民
-- `9-players`：标准局（9 人）- 2 狼人 + 预言家、女巫、猎人、守卫、3 平民
-- `12-players`：进阶局（12 人）- 3 狼人（2 狼人 + 狼王）+ 预言家、女巫、猎人、守卫、丘比特、白痴、3 平民
-- `15-players`：完整局（15 人）- 4 狼人（2 狼人 + 狼王 + 白狼王）+ 预言家、女巫、猎人、守卫、丘比特、白痴、长老、乌鸦、3 平民
-- `expert`：专家配置（12 人）- 3 狼人（狼人 + 狼王 + 白狼王）+ 预言家、女巫、猎人、守卫、丘比特、骑士、魔术师、长老、平民
-- `chaos`：混乱角色组合（10 人）- 3 特殊狼人（白狼王 + 狼美人 + 隐狼）+ 预言家、女巫、猎人、白痴、长老、乌鸦、平民
+**运作方式：**
+
+- **6-8 人**：2 狼人 + 预言家、女巫 + 平民
+- **9-11 人**：3 狼人（含狼王）+ 预言家、女巫、猎人、守卫 + 平民
+- **12-14 人**：4 狼人（含狼王、白狼王）+ 预言家、女巫、猎人、守卫、丘比特、白痴 + 平民
+- **15+ 人**：5 狼人 + 更多神职（长老、骑士、乌鸦等）+ 平民
+
+系统会自动调整狼人数量与神职角色，维持游戏平衡。
 
 ### 自定义配置
 
@@ -165,10 +166,12 @@ cp configs/players.yaml my-game.yaml
 范例 `my-game.yaml`：
 
 ```yaml
-preset: 6-players        # 选择预设配置
 language: zh-CN          # 语言代码（en-US, zh-TW, zh-CN）
 
 players:
+  # 游戏会根据玩家人数自动分配角色
+  # 以下 6 人范例会得到：2 狼人 + 预言家 + 女巫 + 2 平民
+
   - name: GPT-4o 侦探
     model: gpt-4o
     base_url: https://api.openai.com/v1
@@ -225,9 +228,8 @@ players:
 
 **配置说明：**
 
-- `preset`：必填，决定游戏的角色配置和玩家数量
 - `language`：选填，默认为 `en-US`，设置游戏语言（如 `en-US`、`zh-TW`、`zh-CN`）
-- `players`：必填，玩家列表，数量必须与 preset 的 `num_players` 一致
+- `players`：必填，玩家列表（支持 6-20 人）。游戏会根据玩家数量自动生成平衡的角色配置
 
 **玩家配置字段：**
 
@@ -430,7 +432,7 @@ src/llm_werewolf/
 │   │   └── werewolf.py   # 狼人阵营动作
 │   ├── config/           # 配置系统
 │   │   ├── game_config.py    # 游戏配置模型
-│   │   └── presets.py        # 角色预设配置
+│   │   └── presets.py        # 根据人数自动生成角色配置
 │   ├── types/            # 类型定义
 │   │   ├── enums.py      # 枚举（阵营、阶段、状态等）
 │   │   ├── models.py     # 数据模型
@@ -456,7 +458,7 @@ src/llm_werewolf/
 - **ai/**：LLM 代理实现和配置模型（PlayerConfig、PlayersConfig）
 - **core/agent.py**：基础代理协议和内置代理（HumanAgent、DemoAgent）
 - **core/actions/**：动作系统，包含基础类和阵营特定动作
-- **core/config/**：配置系统，包含游戏参数和角色预设
+- **core/config/**：配置系统，包含游戏参数和自动角色生成
 - **core/types/**：类型定义，包含枚举、数据模型和协议定义
 - **core/**：游戏核心逻辑，包含角色、玩家、游戏状态、动作选择、事件和胜利检查
 - **ui/**：基于 Textual 框架的终端用户界面
@@ -482,7 +484,7 @@ src/llm_werewolf/
 
 ### 如何新增更多玩家？
 
-编辑您的 YAML 配置文件，调整 `preset` 以匹配玩家数量，并在 `players` 列表中新增玩家配置。记得玩家数量必须与 preset 的 `num_players` 一致。
+编辑您的 YAML 配置文件，在 `players` 列表中新增玩家配置。游戏会根据玩家总数（支持 6-20 人）自动生成平衡的角色配置。
 
 ### 可以混合不同的 LLM 模型吗？
 
@@ -506,7 +508,7 @@ src/llm_werewolf/
 
 ### 如何自定义游戏设定？
 
-游戏使用在 YAML 文件中定义的预设配置（如 `6-players`、`9-players` 等）。每个预设包含预定义的角色组合和时间限制。要调整设定，您可以修改预设配置或创建自定义配置。如需高级自定义，请参阅项目的配置系统 `src/llm_werewolf/core/config/`。
+游戏会根据玩家人数（6-20 人）自动生成平衡的角色配置。角色分配和时间限制会随玩家数量增加而自动调整。如需高级自定义角色生成逻辑，请参阅 `src/llm_werewolf/core/config/presets.py` 中的 `create_game_config_from_player_count()` 函数。
 
 ## 授权
 

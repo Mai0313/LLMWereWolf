@@ -4,7 +4,7 @@ from llm_werewolf.ai import LLMAgent
 from llm_werewolf.core.agent import DemoAgent
 
 
-def test_demo_agent_response():
+def test_demo_agent_response() -> None:
     """Demo agent should always return some canned text."""
     agent = DemoAgent()
     assert agent.model_name == "demo"
@@ -14,13 +14,13 @@ def test_demo_agent_response():
     assert response
 
 
-def test_demo_agent_repr():
+def test_demo_agent_repr() -> None:
     """Demo agent repr returns the model name."""
     agent = DemoAgent()
     assert repr(agent) == "demo"
 
 
-def test_llm_agent_history_helpers():
+def test_llm_agent_history_helpers() -> None:
     """LLM agent exposes conversation history helpers."""
     agent = LLMAgent(model_name="dummy-model")
 

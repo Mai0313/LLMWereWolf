@@ -8,7 +8,7 @@ from llm_werewolf.core.role_registry import create_roles
 from llm_werewolf.core.config.presets import PRESET_6_PLAYERS
 
 
-def test_valid_game_config():
+def test_valid_game_config() -> None:
     """Test creating a valid game configuration."""
     config = GameConfig(
         num_players=9,
@@ -29,7 +29,7 @@ def test_valid_game_config():
     assert len(config.role_names) == 9
 
 
-def test_invalid_player_count():
+def test_invalid_player_count() -> None:
     """Test invalid player count."""
     with pytest.raises(ValidationError):
         GameConfig(
@@ -38,7 +38,7 @@ def test_invalid_player_count():
         )
 
 
-def test_role_count_mismatch():
+def test_role_count_mismatch() -> None:
     """Test role count not matching player count."""
     with pytest.raises(ValidationError):
         GameConfig(
@@ -47,7 +47,7 @@ def test_role_count_mismatch():
         )
 
 
-def test_no_werewolf():
+def test_no_werewolf() -> None:
     """Test configuration with no werewolves."""
     with pytest.raises(ValidationError):
         GameConfig(
@@ -56,7 +56,7 @@ def test_no_werewolf():
         )
 
 
-def test_config_to_role_list():
+def test_config_to_role_list() -> None:
     """Test converting config to role instances."""
     config = PRESET_6_PLAYERS
     roles = create_roles(config.role_names)
@@ -65,19 +65,19 @@ def test_config_to_role_list():
     assert all(hasattr(role, "name") for role in roles)
 
 
-def test_get_preset():
+def test_get_preset() -> None:
     """Test getting preset by player count."""
     preset = get_preset(9)
     assert preset.num_players == 9
 
 
-def test_invalid_preset():
+def test_invalid_preset() -> None:
     """Test getting preset with invalid player count."""
     with pytest.raises(ValueError, match="Maximum 20 players supported"):
         get_preset(100)
 
 
-def test_get_preset_by_name():
+def test_get_preset_by_name() -> None:
     """Test getting preset by name."""
     preset = get_preset_by_name("9-players")
     assert preset.num_players == 9

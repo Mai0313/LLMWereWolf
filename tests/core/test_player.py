@@ -4,7 +4,7 @@ from llm_werewolf.core.roles import Villager, Werewolf
 from llm_werewolf.core.player import Player, PlayerStatus
 
 
-def test_player_creation():
+def test_player_creation() -> None:
     """Test creating a player."""
     player = Player("p1", "Alice", Villager)
 
@@ -14,7 +14,7 @@ def test_player_creation():
     assert player.can_vote()
 
 
-def test_player_death():
+def test_player_death() -> None:
     """Test player death."""
     player = Player("p1", "Alice", Villager)
 
@@ -23,7 +23,7 @@ def test_player_death():
     assert player.has_status(PlayerStatus.DEAD)
 
 
-def test_player_revive():
+def test_player_revive() -> None:
     """Test player revival."""
     player = Player("p1", "Alice", Villager)
 
@@ -35,7 +35,7 @@ def test_player_revive():
     assert player.has_status(PlayerStatus.ALIVE)
 
 
-def test_player_status():
+def test_player_status() -> None:
     """Test player status management."""
     player = Player("p1", "Alice", Villager)
 
@@ -46,7 +46,7 @@ def test_player_status():
     assert not player.has_status(PlayerStatus.PROTECTED)
 
 
-def test_player_voting_rights():
+def test_player_voting_rights() -> None:
     """Test player voting rights."""
     player = Player("p1", "Alice", Villager)
 
@@ -57,7 +57,7 @@ def test_player_voting_rights():
     assert player.has_status(PlayerStatus.NO_VOTE)
 
 
-def test_player_lover_status():
+def test_player_lover_status() -> None:
     """Test player lover status."""
     player = Player("p1", "Alice", Villager)
 
@@ -68,7 +68,7 @@ def test_player_lover_status():
     assert player.lover_partner_id == "p2"
 
 
-def test_player_public_info():
+def test_player_public_info() -> None:
     """Test getting public player info."""
     player = Player("p1", "Bob", Werewolf, ai_model="gpt-4")
 

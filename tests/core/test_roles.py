@@ -15,7 +15,7 @@ from llm_werewolf.core.actions import (
 from llm_werewolf.core.game_state import GameState
 
 
-def test_villager_role():
+def test_villager_role() -> None:
     """Test villager role creation."""
     player = Player("p1", "Alice", Villager)
     villager = player.role
@@ -25,7 +25,7 @@ def test_villager_role():
     assert not villager.config.can_act_day
 
 
-def test_werewolf_role():
+def test_werewolf_role() -> None:
     """Test werewolf role creation."""
     player = Player("p1", "Alice", Werewolf)
     werewolf = player.role
@@ -35,7 +35,7 @@ def test_werewolf_role():
     assert werewolf.config.priority is not None
 
 
-def test_seer_role():
+def test_seer_role() -> None:
     """Test seer role creation."""
     player = Player("p1", "Alice", Seer)
     seer = player.role
@@ -44,7 +44,7 @@ def test_seer_role():
     assert seer.config.can_act_night
 
 
-def test_witch_role():
+def test_witch_role() -> None:
     """Test witch role with potions."""
     player = Player("p1", "Alice", Witch)
     witch: Witch = player.role
@@ -54,7 +54,7 @@ def test_witch_role():
     assert witch.has_poison_potion
 
 
-def test_role_string_representation():
+def test_role_string_representation() -> None:
     """Test role string representation."""
     player = Player("p1", "Alice", Villager)
     villager = player.role
@@ -62,7 +62,7 @@ def test_role_string_representation():
     assert "Villager" in repr(villager)
 
 
-def test_werewolf_get_night_actions():
+def test_werewolf_get_night_actions() -> None:
     """Test Werewolf get_night_actions method."""
     werewolf_player = Player("p1", "Werewolf", Werewolf, agent=DemoAgent())
     villager_player = Player("p2", "Villager", Villager, agent=DemoAgent())
@@ -80,7 +80,7 @@ def test_werewolf_get_night_actions():
         assert actions[0].target == villager_player
 
 
-def test_seer_get_night_actions():
+def test_seer_get_night_actions() -> None:
     """Test Seer get_night_actions method."""
     seer_player = Player("p1", "Seer", Seer, agent=DemoAgent())
     villager_player = Player("p2", "Villager", Villager, agent=DemoAgent())
@@ -97,7 +97,7 @@ def test_seer_get_night_actions():
         assert actions[0].target == villager_player
 
 
-def test_witch_get_night_actions_save():
+def test_witch_get_night_actions_save() -> None:
     """Test Witch get_night_actions method for saving."""
     witch_player = Player("p1", "Witch", Witch, agent=DemoAgent())
     villager_player = Player("p2", "Villager", Villager, agent=DemoAgent())
@@ -112,7 +112,7 @@ def test_witch_get_night_actions_save():
         assert actions[0].target == villager_player
 
 
-def test_witch_get_night_actions_poison():
+def test_witch_get_night_actions_poison() -> None:
     """Test Witch get_night_actions method for poisoning."""
     witch_player = Player("p1", "Witch", Witch)
     villager_player = Player("p2", "Villager", Villager)
@@ -128,7 +128,7 @@ def test_witch_get_night_actions_poison():
             assert actions[0].target == villager_player
 
 
-def test_guard_get_night_actions():
+def test_guard_get_night_actions() -> None:
     """Test Guard get_night_actions method."""
     guard_player = Player("p1", "Guard", Guard, agent=DemoAgent())
     villager_player = Player("p2", "Villager", Villager, agent=DemoAgent())

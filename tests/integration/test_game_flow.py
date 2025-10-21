@@ -6,7 +6,7 @@ from llm_werewolf.core.role_registry import create_roles
 from llm_werewolf.core.config.presets import PRESET_6_PLAYERS
 
 
-def test_game_initialization():
+def test_game_initialization() -> None:
     """Test initializing a game."""
     config = PRESET_6_PLAYERS
     engine = GameEngine(config)
@@ -26,7 +26,7 @@ def test_game_initialization():
     assert len(engine.game_state.players) == 6
 
 
-def test_game_state_initialization():
+def test_game_state_initialization() -> None:
     """Test game state after initialization."""
     config = PRESET_6_PLAYERS
     engine = GameEngine(config)
@@ -41,7 +41,7 @@ def test_game_state_initialization():
     assert len(engine.game_state.get_alive_players()) == 6
 
 
-def test_role_assignment():
+def test_role_assignment() -> None:
     """Test that roles are properly assigned."""
     config = PRESET_6_PLAYERS
     engine = GameEngine(config)
@@ -61,7 +61,7 @@ def test_role_assignment():
         assert player.get_role_name() == role_name
 
 
-def test_victory_checker():
+def test_victory_checker() -> None:
     """Test victory condition checking."""
     config = PRESET_6_PLAYERS
     engine = GameEngine(config)

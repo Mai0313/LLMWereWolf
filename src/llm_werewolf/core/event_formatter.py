@@ -34,6 +34,7 @@ class EventFormatter:
         EventType.PLAYER_ELIMINATED: "bold red",
         EventType.PLAYER_SPEECH: "cyan",
         EventType.PLAYER_DISCUSSION: "blue",
+        EventType.MESSAGE: "dim italic",
         EventType.ERROR: "bold red",
     }
 

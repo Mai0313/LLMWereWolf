@@ -85,6 +85,17 @@ class VotingPhaseMixin:
                 continue
 
             if player.agent:
+                # Log that player is preparing to vote
+                self._log_event(
+                    EventType.MESSAGE,
+                    f"🗳️  {player.name}（{player.agent.model}）正在思考投票...",
+                    data={
+                        "player_id": player.player_id,
+                        "player_name": player.name,
+                        "action": "preparing_vote",
+                    },
+                )
+
                 context = self._build_voting_context(player)
                 target_player = ActionSelector.get_target_from_agent(
                     agent=player.agent,

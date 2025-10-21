@@ -156,11 +156,12 @@ Night actions execute in order defined by `ActionPriority` enum (0=highest prior
 1. Create role class in appropriate file (`roles/werewolf.py`, `roles/villager.py`, `roles/neutral.py`)
 2. Inherit from `Role` and implement:
    - `get_config()`: Return `RoleConfig` with name, camp, description, priority
-   - `can_act_tonight()`: Define when role can act (e.g., every night, once per game)
-   - `perform_action()`: Implement role's night action logic
+   - `get_night_actions()`: **Required** - All roles must implement this method. If the role has no night actions, return an empty list `[]`. If the role has night actions, return a list of `Action` objects.
 3. Register in `role_registry.py` ROLE_CLASSES dict
 4. Add to preset configurations in `config/presets.py`
 5. Add tests in `tests/core/test_roles.py`
+
+**Note**: The `get_night_actions()` method is an abstract method that **must** be implemented by all roles. This design forces developers to explicitly consider whether a role has night abilities, preventing bugs where developers forget to implement night actions for roles that should have them. Roles without night abilities (like Villager, Hunter, Idiot) should return an empty list.
 
 ### Adding a New Agent Type
 

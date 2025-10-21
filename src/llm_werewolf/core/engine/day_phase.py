@@ -74,6 +74,11 @@ class DayPhaseMixin:
         messages = []
         self.game_state.set_phase(GamePhase.DAY_DISCUSSION)
 
+        # Narrator: Daybreak
+        self._log_event(
+            EventType.MESSAGE, self.locale.get("narrator_daybreak"), data={"action": "daybreak"}
+        )
+
         self._log_event(
             EventType.PHASE_CHANGED,
             self.locale.get("day_begins", round_number=self.game_state.round_number),
@@ -95,6 +100,17 @@ class DayPhaseMixin:
 
         for player in alive_players:
             if player.agent:
+                # Log that player is preparing to speak
+                self._log_event(
+                    EventType.MESSAGE,
+                    f"💬 {player.name}（{player.agent.model}）正在思考發言...",
+                    data={
+                        "player_id": player.player_id,
+                        "player_name": player.name,
+                        "action": "preparing_speech",
+                    },
+                )
+
                 game_context = self._build_discussion_context(player)
 
                 try:
@@ -112,6 +128,11 @@ class DayPhaseMixin:
 
                     messages.append(f"{player.name}: {speech}")
                 except Exception as e:
+                    self._log_event(
+                        EventType.ERROR,
+                        f"{player.name}: [發言失敗 - {e}]",
+                        data={"player_id": player.player_id, "error": str(e)},
+                    )
                     messages.append(f"{player.name}: [Unable to speak - {e}]")
 
         return messages

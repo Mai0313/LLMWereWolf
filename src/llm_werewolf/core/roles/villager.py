@@ -303,6 +303,10 @@ class Idiot(Role):
             can_act_day=False,
         )
 
+    def get_night_actions(self, game_state: GameState) -> list["Action"]:
+        """Idiot has no night actions."""
+        return []
+
 
 class Elder(Role):
     """Elder role.
@@ -330,6 +334,10 @@ class Elder(Role):
             can_act_night=False,
             can_act_day=False,
         )
+
+    def get_night_actions(self, game_state: GameState) -> list["Action"]:
+        """Elder has no night actions."""
+        return []
 
 
 class Knight(Role):

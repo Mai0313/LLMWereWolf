@@ -3,7 +3,7 @@
 import random
 from typing import TYPE_CHECKING
 
-from llm_werewolf.core.types import EventType, GamePhase
+from llm_werewolf.core.types import Camp, EventType, GamePhase
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -21,6 +21,98 @@ class NightPhaseMixin:
     _log_event: "Callable"
     process_actions: "Callable"
     resolve_deaths: "Callable"
+
+    def _run_werewolf_discussion(self) -> list[str]:
+        """Run werewolf discussion phase where werewolves discuss their target.
+
+        Returns:
+            list[str]: Messages from the discussion.
+        """
+        if not self.game_state:
+            return []
+
+        messages: list[str] = []
+        werewolves = [
+            p for p in self.game_state.get_players_by_camp(Camp.WEREWOLF) if p.is_alive()
+        ]
+
+        if len(werewolves) <= 1:
+            # If only one werewolf, skip discussion
+            return messages
+
+        # Narrator: Werewolves wake up
+        self._log_event(
+            EventType.MESSAGE,
+            self.locale.get("narrator_werewolves_wake"),
+            data={"action": "werewolves_wake"},
+        )
+
+        # Get possible targets
+        possible_targets = [
+            p for p in self.game_state.get_alive_players() if p.get_camp() != Camp.WEREWOLF
+        ]
+
+        if not possible_targets:
+            return messages
+
+        target_names = [p.name for p in possible_targets]
+        werewolf_names = [w.name for w in werewolves]
+
+        # Each werewolf discusses
+        for werewolf in werewolves:
+            if werewolf.agent:
+                # Log preparing
+                self._log_event(
+                    EventType.MESSAGE,
+                    f"💬 {werewolf.name}（狼人）正在思考...",
+                    data={
+                        "player_id": werewolf.player_id,
+                        "player_name": werewolf.name,
+                        "action": "preparing_speech",
+                    },
+                )
+
+                # Build discussion context
+                context = (
+                    f"You are {werewolf.name}, a Werewolf.\n"
+                    f"You are working with these werewolves: {', '.join(werewolf_names)}.\n"
+                    f"Available targets: {', '.join(target_names)}.\n"
+                    f"\nDiscuss with your fellow werewolves who should be eliminated tonight.\n"
+                    f"Share your thoughts and suggestions (1-2 sentences)."
+                )
+
+                try:
+                    speech = "".join(werewolf.agent.get_response(context))
+
+                    self._log_event(
+                        EventType.PLAYER_DISCUSSION,
+                        self.locale.get(
+                            "werewolf_discussion", player=werewolf.name, speech=speech
+                        ),
+                        data={
+                            "player_id": werewolf.player_id,
+                            "player_name": werewolf.name,
+                            "speech": speech,
+                            "role": "Werewolf",
+                        },
+                    )
+
+                    messages.append(f"🐺 {werewolf.name}: {speech}")
+                except Exception as e:
+                    self._log_event(
+                        EventType.ERROR,
+                        f"{werewolf.name}: [討論失敗 - {e}]",
+                        data={"player_id": werewolf.player_id, "error": str(e)},
+                    )
+
+        # Narrator: Time to vote
+        self._log_event(
+            EventType.MESSAGE,
+            self.locale.get("narrator_werewolves_vote"),
+            data={"action": "werewolves_vote"},
+        )
+
+        return messages
 
     def _resolve_werewolf_votes(self) -> list[str]:
         """Resolve werewolf voting to determine kill target.
@@ -70,6 +162,13 @@ class NightPhaseMixin:
         messages = []
         self.game_state.set_phase(GamePhase.NIGHT)
 
+        # Narrator: Night falls
+        self._log_event(
+            EventType.MESSAGE,
+            self.locale.get("narrator_night_falls"),
+            data={"action": "night_falls"},
+        )
+
         self._log_event(
             EventType.PHASE_CHANGED,
             self.locale.get("night_begins", round_number=self.game_state.round_number),
@@ -78,6 +177,11 @@ class NightPhaseMixin:
 
         messages.append("")
 
+        # Run werewolf discussion phase (if multiple werewolves exist)
+        discussion_messages = self._run_werewolf_discussion()
+        messages.extend(discussion_messages)
+
+        # Get players with night actions (non-werewolf roles)
         players_with_night_actions = self.game_state.get_players_with_night_actions()
 
         night_actions: list[Action] = []
@@ -102,5 +206,12 @@ class NightPhaseMixin:
 
         death_messages = self.resolve_deaths()
         messages.extend(death_messages)
+
+        # Narrator: Werewolves sleep (end of night)
+        self._log_event(
+            EventType.MESSAGE,
+            self.locale.get("narrator_werewolves_sleep"),
+            data={"action": "werewolves_sleep"},
+        )
 
         return messages

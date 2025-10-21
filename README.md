@@ -370,12 +370,28 @@ The game runs automatically once started - no manual intervention is required.
 
 If you prefer not to use the TUI, you can use the `llm-werewolf` or `werewolf` command, and the game will run automatically with output as plain text logs in the terminal.
 
+Console mode displays real-time status indicators to help you track game progress:
+
+- 🎬 **Night Phase**: Shows each role taking action (e.g., `🎬 Seer(gpt-4) is acting...`)
+- 💬 **Day Discussion**: Shows each player preparing their speech (e.g., `💬 Alice(gpt-4) is thinking...`)
+- 🗳️ **Voting Phase**: Shows each player preparing their vote (e.g., `🗳️ Bob(gpt-4) is thinking about voting...`)
+
+These indicators help you understand the game is waiting for LLM API responses, not frozen. LLM responses typically take several seconds to tens of seconds.
+
 ## Game Flow
 
 1. **Preparation Phase**: Players are randomly assigned roles.
-2. **Night Phase**: Roles with night abilities act in order of priority.
-3. **Day Discussion**: Players discuss and share information.
-4. **Day Voting**: Players vote to eliminate a suspect.
+2. **Night Phase**:
+   - 🌙 **Narrator**: "Night falls, everyone close your eyes..."
+   - 🐺 **Werewolf Discussion**: Multiple werewolves discuss who to eliminate (skipped if only one werewolf)
+   - 🐺 **Werewolf Vote**: Werewolves vote for their target
+   - 🎬 **Other Roles Act**: Other roles with night abilities act in priority order (Seer, Witch, Guard, etc.)
+   - 🌙 **Narrator**: "Werewolves, close your eyes..."
+3. **Day Discussion**:
+   - ☀️ **Narrator**: "The sun rises, everyone open your eyes..."
+   - 💬 Players speak in turn, discussing and sharing information
+4. **Day Voting**:
+   - 🗳️ Players vote to eliminate a suspect
 5. **Victory Check**: The game checks if any faction has won.
 6. Repeat steps 2-5 until victory conditions are met.
 

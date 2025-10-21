@@ -1,4 +1,4 @@
-preset: 6-players
+preset: 12-players
 language: zh-TW
 
 players:
@@ -38,6 +38,48 @@ players:
     max_tokens: null
 
   - name: gpt-5-chat-5
+    model: gpt-5-chat
+    base_url: https://api.mai0313.com
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: null
+
+  - name: gpt-5-chat-6
+    model: gpt-5-chat
+    base_url: https://api.mai0313.com
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: null
+
+  - name: gpt-5-chat-7
+    model: gpt-5-chat
+    base_url: https://api.mai0313.com
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: null
+
+  - name: gpt-5-chat-8
+    model: gpt-5-chat
+    base_url: https://api.mai0313.com
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: null
+
+  - name: gpt-5-chat-9
+    model: gpt-5-chat
+    base_url: https://api.mai0313.com
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: null
+
+  - name: gpt-5-chat-10
+    model: gpt-5-chat
+    base_url: https://api.mai0313.com
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: null
+
+  - name: gpt-5-chat-11
     model: gpt-5-chat
     base_url: https://api.mai0313.com
     api_key_env: OPENAI_API_KEY

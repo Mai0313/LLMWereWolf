@@ -37,8 +37,15 @@ class Locale:
             "vote_count": "  {target}: {count} vote(s) - {voters}",
             "vote_tied": "Vote tied. No one is eliminated.",
             "no_votes": "No votes cast.",
+            # Narrator messages
+            "narrator_night_falls": "🌙 Night falls, everyone close your eyes...",
+            "narrator_werewolves_wake": "🐺 Werewolves, please open your eyes and discuss...",
+            "narrator_werewolves_vote": "🐺 Werewolves, please vote for your target...",
+            "narrator_werewolves_sleep": "🐺 Werewolves, close your eyes...",
+            "narrator_daybreak": "☀️ The sun rises, everyone open your eyes...",
             # Role actions
             "role_acting": "🎬 {role} ({player}) is acting...",
+            "werewolf_discussion": "🐺 {player} (Werewolf): {speech}",
             "werewolf_voting": "🐺 Werewolves are discussing their target...",
             "werewolf_target": "🐺 Werewolves targeted {target}",
             "witch_saved": "💊 Witch saved {target}",
@@ -93,8 +100,15 @@ class Locale:
             "vote_count": "  {target}：{count} 票 - {voters}",
             "vote_tied": "投票平手，無人被淘汰。",
             "no_votes": "無人投票。",
+            # Narrator messages
+            "narrator_night_falls": "🌙 天黑請閉眼...",
+            "narrator_werewolves_wake": "🐺 狼人請睜眼，請討論並選擇目標...",
+            "narrator_werewolves_vote": "🐺 狼人請投票...",
+            "narrator_werewolves_sleep": "🐺 狼人請閉眼...",
+            "narrator_daybreak": "☀️ 天亮了，所有人請睜眼...",
             # Role actions
             "role_acting": "🎬 {role}（{player}）正在行動...",
+            "werewolf_discussion": "🐺 {player}（狼人）：{speech}",
             "werewolf_voting": "🐺 狼人正在討論目標...",
             "werewolf_target": "🐺 狼人選擇了 {target}",
             "witch_saved": "💊 女巫救了 {target}",
@@ -149,8 +163,15 @@ class Locale:
             "vote_count": "  {target}：{count} 票 - {voters}",
             "vote_tied": "投票平手，无人被淘汰。",
             "no_votes": "无人投票。",
+            # Narrator messages
+            "narrator_night_falls": "🌙 天黑请闭眼...",
+            "narrator_werewolves_wake": "🐺 狼人请睁眼，请讨论并选择目标...",
+            "narrator_werewolves_vote": "🐺 狼人请投票...",
+            "narrator_werewolves_sleep": "🐺 狼人请闭眼...",
+            "narrator_daybreak": "☀️ 天亮了，所有人请睁眼...",
             # Role actions
             "role_acting": "🎬 {role}（{player}）正在行动...",
+            "werewolf_discussion": "🐺 {player}（狼人）：{speech}",
             "werewolf_voting": "🐺 狼人正在讨论目标...",
             "werewolf_target": "🐺 狼人选择了 {target}",
             "witch_saved": "💊 女巫救了 {target}",

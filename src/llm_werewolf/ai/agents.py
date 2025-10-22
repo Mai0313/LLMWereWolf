@@ -97,7 +97,7 @@ class LLMAgent(BaseAgent):
         message += f"\nPlease respond in {self.language}."
         self.chat_history.append({"role": "user", "content": message})
 
-        stream = self.client.chat.completions.create(
+        responses = self.client.chat.completions.create(
             model=self.model,
             messages=self.chat_history,
             temperature=self.temperature,
@@ -107,9 +107,9 @@ class LLMAgent(BaseAgent):
         )
 
         full_response = ""
-        for chunk in stream:
-            if chunk.choices[0].delta.content:
-                content = chunk.choices[0].delta.content
+        for response in responses:
+            if response.choices[0].delta.content:
+                content = response.choices[0].delta.content
                 full_response += content
                 yield content
 

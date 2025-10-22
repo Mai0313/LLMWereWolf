@@ -38,7 +38,7 @@ make clean                                # Remove generated files, cache, etc.
 ```bash
 # TUI Mode (Interactive Terminal Interface)
 uv run llm-werewolf-tui configs/demo.yaml           # Demo agents (no API key needed)
-uv run llm-werewolf-tui configs/players.yaml        # LLM agents (requires API keys)
+uv run llm-werewolf-tui configs/gpt-5-chaos.yaml.yaml        # LLM agents (requires API keys)
 
 # Console Mode (Auto-play with text logs)
 uv run llm-werewolf configs/demo.yaml

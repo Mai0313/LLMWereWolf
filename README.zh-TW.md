@@ -54,7 +54,7 @@ uv sync
 uv run llm-werewolf-tui configs/demo.yaml
 
 # 使用 LLM 玩家配置（需先設定 API 金鑰）
-uv run llm-werewolf-tui configs/players.yaml
+uv run llm-werewolf-tui configs/gpt-5-chaos.yaml.yaml
 
 # 若已全域安裝套件
 llm-werewolf-tui configs/demo.yaml
@@ -157,10 +157,10 @@ XAI_API_KEY=xai-...
 cp configs/demo.yaml my-game.yaml
 
 # 或由支援 LLM 的樣板開始
-cp configs/players.yaml my-game.yaml
+cp configs/gpt-5-chaos.yaml.yaml my-game.yaml
 
 # 編輯設定檔
-# configs/players.yaml 含有欄位說明與範例
+# configs/gpt-5-chaos.yaml.yaml 含有欄位說明與範例
 ```
 
 範例 `my-game.yaml`：

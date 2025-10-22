@@ -54,7 +54,7 @@ The project offers two execution modes, selectable through different command-lin
 uv run llm-werewolf-tui configs/demo.yaml
 
 # Use LLM player configuration (requires setting API keys first)
-uv run llm-werewolf-tui configs/players.yaml
+uv run llm-werewolf-tui configs/gpt-5-chaos.yaml.yaml
 
 # If the package is installed globally
 llm-werewolf-tui configs/demo.yaml
@@ -157,10 +157,10 @@ The system scales werewolf count and divine roles automatically to maintain game
 cp configs/demo.yaml my-game.yaml
 
 # Or start from a template that supports LLMs
-cp configs/players.yaml my-game.yaml
+cp configs/gpt-5-chaos.yaml.yaml my-game.yaml
 
 # Edit the configuration file
-# configs/players.yaml contains field descriptions and examples
+# configs/gpt-5-chaos.yaml.yaml contains field descriptions and examples
 ```
 
 Example `my-game.yaml`:

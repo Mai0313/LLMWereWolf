@@ -90,3 +90,149 @@ def test_config_scaling() -> None:
     werewolves_6 = sum(1 for role in config_6.role_names if "Wolf" in role or role == "Werewolf")
     werewolves_12 = sum(1 for role in config_12.role_names if "Wolf" in role or role == "Werewolf")
     assert werewolves_12 >= werewolves_6
+
+
+def test_6_players_config() -> None:
+    """Test config for 6 players (minimum)."""
+    config = create_game_config_from_player_count(6)
+    assert config.num_players == 6
+    assert len(config.role_names) == 6
+    # 6 players: 2 werewolves, Seer, Witch, 2 villagers
+    werewolves = sum(1 for role in config.role_names if "Wolf" in role or role == "Werewolf")
+    assert werewolves == 2
+    assert "Seer" in config.role_names
+    assert "Witch" in config.role_names
+    assert "Guard" not in config.role_names  # Guard at 7+
+    # Check timeouts
+    assert config.night_timeout == 45
+    assert config.day_timeout == 180
+    assert config.vote_timeout == 45
+
+
+def test_7_players_config() -> None:
+    """Test config for 7 players (Guard threshold)."""
+    config = create_game_config_from_player_count(7)
+    assert config.num_players == 7
+    assert len(config.role_names) == 7
+    # Should have Guard now
+    assert "Guard" in config.role_names
+    assert "Hunter" not in config.role_names  # Hunter at 9+
+
+
+def test_8_players_config() -> None:
+    """Test config for 8 players."""
+    config = create_game_config_from_player_count(8)
+    assert config.num_players == 8
+    assert len(config.role_names) == 8
+    # Still 2 werewolves
+    werewolves = sum(1 for role in config.role_names if "Wolf" in role or role == "Werewolf")
+    assert werewolves == 2
+    # Timeouts should still be small game settings
+    assert config.night_timeout == 45
+    assert config.day_timeout == 180
+
+
+def test_9_players_config() -> None:
+    """Test config for 9 players (AlphaWolf threshold)."""
+    config = create_game_config_from_player_count(9)
+    assert config.num_players == 9
+    assert len(config.role_names) == 9
+    # Should have 3 werewolves now (2 + AlphaWolf)
+    werewolves = sum(1 for role in config.role_names if "Wolf" in role or role == "Werewolf")
+    assert werewolves == 3
+    assert "AlphaWolf" in config.role_names
+    assert "Hunter" in config.role_names
+    # Timeouts should transition to medium game settings
+    assert config.night_timeout == 60
+    assert config.day_timeout == 300
+
+
+def test_11_players_config() -> None:
+    """Test config for 11 players (Cupid threshold)."""
+    config = create_game_config_from_player_count(11)
+    assert config.num_players == 11
+    assert len(config.role_names) == 11
+    # Should have Cupid now
+    assert "Cupid" in config.role_names
+    # Still 3 werewolves
+    werewolves = sum(1 for role in config.role_names if "Wolf" in role or role == "Werewolf")
+    assert werewolves == 3
+
+
+def test_12_players_config() -> None:
+    """Test config for 12 players (WhiteWolf threshold)."""
+    config = create_game_config_from_player_count(12)
+    assert config.num_players == 12
+    assert len(config.role_names) == 12
+    # Should have 4 werewolves now (2 + AlphaWolf + WhiteWolf)
+    werewolves = sum(1 for role in config.role_names if "Wolf" in role or role == "Werewolf")
+    assert werewolves == 4
+    assert "WhiteWolf" in config.role_names
+    # Still medium game timeouts
+    assert config.night_timeout == 60
+    assert config.day_timeout == 300
+
+
+def test_13_players_config() -> None:
+    """Test config for 13 players (Idiot threshold)."""
+    config = create_game_config_from_player_count(13)
+    assert config.num_players == 13
+    assert len(config.role_names) == 13
+    # Should have Idiot now
+    assert "Idiot" in config.role_names
+    # Timeouts should transition to large game settings
+    assert config.night_timeout == 90
+    assert config.day_timeout == 400
+
+
+def test_15_players_config() -> None:
+    """Test config for 15 players (WolfBeauty and Elder threshold)."""
+    config = create_game_config_from_player_count(15)
+    assert config.num_players == 15
+    assert len(config.role_names) == 15
+    # Should have 5 werewolves now (2 + AlphaWolf + WhiteWolf + WolfBeauty)
+    werewolves = sum(1 for role in config.role_names if "Wolf" in role or role == "Werewolf")
+    assert werewolves == 5
+    assert "WolfBeauty" in config.role_names
+    assert "Elder" in config.role_names
+
+
+def test_17_players_config() -> None:
+    """Test config for 17 players (Knight threshold)."""
+    config = create_game_config_from_player_count(17)
+    assert config.num_players == 17
+    assert len(config.role_names) == 17
+    # Should have Knight now
+    assert "Knight" in config.role_names
+
+
+def test_19_players_config() -> None:
+    """Test config for 19 players (Raven threshold)."""
+    config = create_game_config_from_player_count(19)
+    assert config.num_players == 19
+    assert len(config.role_names) == 19
+    # Should have Raven now
+    assert "Raven" in config.role_names
+
+
+def test_20_players_config() -> None:
+    """Test config for 20 players (maximum)."""
+    config = create_game_config_from_player_count(20)
+    assert config.num_players == 20
+    assert len(config.role_names) == 20
+    # Should have all roles
+    assert "Raven" in config.role_names
+    # Large game timeouts
+    assert config.night_timeout == 90
+    assert config.day_timeout == 400
+    assert config.vote_timeout == 90
+
+
+def test_villager_count() -> None:
+    """Test that villagers fill remaining slots correctly."""
+    for num_players in range(6, 21):
+        config = create_game_config_from_player_count(num_players)
+        villager_count = sum(1 for role in config.role_names if role == "Villager")
+        special_roles = sum(1 for role in config.role_names if role != "Villager")
+        assert villager_count + special_roles == num_players
+        assert villager_count >= 0

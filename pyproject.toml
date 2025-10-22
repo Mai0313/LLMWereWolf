@@ -53,7 +53,7 @@ directory = "./.github/coverage_html_report"
 
 [tool.coverage.run]
 data_file = './.github/reports/.coverage'
-omit = []
+omit = ["*/__init__.py"]
 
 # ================== #
 #        uv          #

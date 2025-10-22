@@ -36,6 +36,8 @@ repos:
       - id: check-toml
       - id: check-json
         exclude: .vscode/launch.json
+      - id: pretty-format-json
+        args: ["--autofix", "--indent=2", "--no-sort-keys"]
       - id: check-merge-conflict
       - id: check-case-conflict
       - id: destroyed-symlinks

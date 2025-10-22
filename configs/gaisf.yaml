@@ -1,0 +1,93 @@
+language: zh-TW
+
+players:
+  - name: gpt-4o
+    model: azure/aide-gpt-4o
+    base_url: https://mlop-azure-gateway.mediatek.inc/v1
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: null
+
+  - name: gpt-4.1
+    model: azure/aide-gpt-4.1
+    base_url: https://mlop-azure-gateway.mediatek.inc/v1
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: null
+
+  - name: gpt-5-minimal
+    model: azure/aide-gpt-5
+    base_url: https://mlop-azure-gateway.mediatek.inc/v1
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: minimal
+
+  - name: gpt-5-low
+    model: azure/aide-gpt-5
+    base_url: https://mlop-azure-gateway.mediatek.inc/v1
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: low
+
+  - name: gpt-5-medium
+    model: azure/aide-gpt-5
+    base_url: https://mlop-azure-gateway.mediatek.inc/v1
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: medium
+
+  - name: gpt-5-high
+    model: azure/aide-gpt-5
+    base_url: https://mlop-azure-gateway.mediatek.inc/v1
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: high
+
+  - name: o4-mini
+    model: azure/aide-o4-mini
+    base_url: https://mlop-azure-gateway.mediatek.inc/v1
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: null
+
+  - name: gemini-2.5-flash
+    model: google/gemini-2.5-flash
+    base_url: https://mlop-azure-gateway.mediatek.inc/v1
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: null
+
+  - name: gemini-2.5-pro
+    model: google/gemini-2.5-pro
+    base_url: https://mlop-azure-gateway.mediatek.inc/v1
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: null
+
+  - name: claude-3-7-sonnet
+    model: aws/anthropic.claude-3-7-sonnet-20250219-v1:0
+    base_url: https://mlop-azure-gateway.mediatek.inc/v1
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: null
+
+  - name: claude-sonnet-4
+    model: aws/anthropic.claude-sonnet-4-20250514-v1:0
+    base_url: https://mlop-azure-gateway.mediatek.inc/v1
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: null
+
+  - name: claude-sonnet-4-5
+    model: aws/anthropic.claude-sonnet-4-5-20250929-v1:0
+    base_url: https://mlop-azure-gateway.mediatek.inc/v1
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: null
+
+  - name: claude-haiku-4-5
+    model: aws/anthropic.claude-haiku-4-5-20251001-v1:0
+    base_url: https://mlop-azure-gateway.mediatek.inc/v1
+    api_key_env: OPENAI_API_KEY
+    temperature: 0.7
+    max_tokens: null

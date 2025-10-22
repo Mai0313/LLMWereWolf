@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 from functools import cached_property
-from collections.abc import Iterator
 
 import yaml
 import dotenv
@@ -66,6 +65,7 @@ class LLMAgent(BaseAgent):
     reasoning_effort: ReasoningEffort | None = Field(default=None)
     language: str = Field(...)
     chat_history: list[dict[str, str]] = Field(default=[])
+    decision_history: list[str] = Field(default=[])
 
     @computed_field
     @cached_property
@@ -73,38 +73,53 @@ class LLMAgent(BaseAgent):
         client = OpenAI(api_key=self.api_key, base_url=self.base_url)
         return client
 
-    def get_response(self, message: str) -> Iterator[str]:
-        """Get a streaming response from the LLM.
+    def get_response(self, message: str) -> str:
+        """Get a response from the LLM.
 
         Args:
             message: The prompt message.
 
-        Yields:
-            str: Chunks of the response as they arrive.
+        Returns:
+            str: The complete response from the LLM.
         """
         message += f"\nPlease respond in {self.language}."
         self.chat_history.append({"role": "user", "content": message})
 
         if self.reasoning_effort:
-            responses = self.client.chat.completions.create(
+            response = self.client.chat.completions.create(
                 model=self.model,
                 messages=self.chat_history,
                 reasoning_effort=self.reasoning_effort,
-                stream=True,
+                stream=False,
             )
         else:
-            responses = self.client.chat.completions.create(
-                model=self.model, messages=self.chat_history, stream=True
+            response = self.client.chat.completions.create(
+                model=self.model, messages=self.chat_history, stream=False
             )
 
-        full_response = ""
-        for response in responses:
-            if response.choices[0].delta.content:
-                content = response.choices[0].delta.content
-                full_response += content
-                yield content
-
+        full_response = response.choices[0].message.content or ""
         self.chat_history.append({"role": "assistant", "content": full_response})
+        return full_response
+
+    def add_decision(self, decision: str) -> None:
+        """Add a decision to the decision history.
+
+        This records WHAT the agent decided without sensitive context.
+
+        Args:
+            decision: A safe summary of the decision (e.g., "Round 1: Checked Bob, result: villager")
+        """
+        self.decision_history.append(decision)
+
+    def get_decision_context(self) -> str:
+        """Get a formatted string of decision history for context.
+
+        Returns:
+            str: Formatted decision history without sensitive information.
+        """
+        if not self.decision_history:
+            return ""
+        return "\n\nYour previous actions:\n" + "\n".join(f"- {d}" for d in self.decision_history)
 
 
 class PlayersConfig(BaseModel):

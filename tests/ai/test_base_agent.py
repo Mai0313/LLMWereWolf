@@ -7,8 +7,8 @@ def test_demo_agent_response() -> None:
     assert agent.model == "demo"
     assert agent.name == "TestAgent"
 
-    # get_response now returns an iterator
-    response = "".join(agent.get_response("Test message"))
+    # get_response returns a string
+    response = agent.get_response("Test message")
     assert isinstance(response, str)
     assert response
 

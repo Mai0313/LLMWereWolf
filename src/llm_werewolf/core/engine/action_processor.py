@@ -63,12 +63,22 @@ class ActionProcessorMixin:
                         self.locale.get("guard_protected", target=action.target.name),
                         data={"target_id": action.target.player_id},
                     )
+                    # Record decision
+                    if action.actor.agent and self.game_state:
+                        action.actor.agent.add_decision(
+                            f"Round {self.game_state.round_number}: Protected {action.target.name}"
+                        )
                 elif isinstance(action, WitchSaveAction):
                     self._log_event(
                         EventType.WITCH_SAVED,
                         self.locale.get("witch_saved", target=action.target.name),
                         data={"target_id": action.target.player_id},
                     )
+                    # Record decision (without revealing who attacked)
+                    if action.actor.agent and self.game_state:
+                        action.actor.agent.add_decision(
+                            f"Round {self.game_state.round_number}: Used save potion on {action.target.name}"
+                        )
                 elif isinstance(action, WitchPoisonAction):
                     self._log_event(
                         EventType.WITCH_POISONED,
@@ -80,6 +90,11 @@ class ActionProcessorMixin:
                         action.target.kill()
                         self.game_state.night_deaths.add(action.target.player_id)
                         self.game_state.death_causes[action.target.player_id] = "witch_poison"
+                    # Record decision
+                    if action.actor.agent and self.game_state:
+                        action.actor.agent.add_decision(
+                            f"Round {self.game_state.round_number}: Used poison on {action.target.name}"
+                        )
                 elif isinstance(action, SeerCheckAction):
                     result = action.target.get_camp()
                     # HiddenWolf appears as villager to Seer
@@ -91,6 +106,11 @@ class ActionProcessorMixin:
                         data={"target_id": action.target.player_id, "result": result},
                         visible_to=[action.actor.player_id],  # Only seer sees this
                     )
+                    # Record decision (safe summary without werewolf team info)
+                    if action.actor.agent and self.game_state:
+                        action.actor.agent.add_decision(
+                            f"Round {self.game_state.round_number}: Checked {action.target.name}, result: {result}"
+                        )
                 elif isinstance(action, CupidLinkAction):
                     self._log_event(
                         EventType.LOVERS_LINKED,
@@ -102,6 +122,11 @@ class ActionProcessorMixin:
                             "player2_id": action.target2.player_id,
                         },
                     )
+                    # Record decision
+                    if action.actor.agent and self.game_state:
+                        action.actor.agent.add_decision(
+                            f"Round {self.game_state.round_number}: Linked {action.target1.name} and {action.target2.name} as lovers"
+                        )
                 elif isinstance(action, WhiteWolfKillAction):
                     self._log_event(
                         EventType.MESSAGE,

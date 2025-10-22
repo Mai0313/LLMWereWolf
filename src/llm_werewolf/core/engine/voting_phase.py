@@ -57,6 +57,12 @@ class VotingPhaseMixin:
         alive_players = [p.name for p in self.game_state.get_alive_players()]
         context_parts.append(f"\nAlive players: {', '.join(alive_players)}")
 
+        # Include player's decision history (safe, no sensitive info)
+        if player.agent:
+            decision_context = player.agent.get_decision_context()
+            if decision_context:
+                context_parts.append(decision_context)
+
         # Include the full discussion history for informed voting
         discussion_history = self._get_public_discussion_context()
         if discussion_history:
@@ -114,6 +120,10 @@ class VotingPhaseMixin:
 
                 if target_player:
                     vote_actions.append(VoteAction(player, target_player, self.game_state))
+                    # Record voting decision
+                    player.agent.add_decision(
+                        f"Round {self.game_state.round_number}: Voted for {target_player.name}"
+                    )
 
         return vote_actions
 

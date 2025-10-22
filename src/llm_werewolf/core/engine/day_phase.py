@@ -51,6 +51,12 @@ class DayPhaseMixin:
         alive_players = [p.name for p in self.game_state.get_alive_players()]
         context_parts.append(f"\nAlive players: {', '.join(alive_players)}")
 
+        # Include player's decision history (safe, no sensitive info)
+        if player.agent:
+            decision_context = player.agent.get_decision_context()
+            if decision_context:
+                context_parts.append(decision_context)
+
         # Include previous discussion history
         discussion_history = self._get_public_discussion_context()
         if discussion_history:
@@ -120,7 +126,7 @@ class DayPhaseMixin:
                 game_context = self._build_discussion_context(player)
 
                 try:
-                    speech = "".join(player.agent.get_response(game_context))
+                    speech = player.agent.get_response(game_context)
 
                     self._log_event(
                         EventType.PLAYER_SPEECH,
@@ -136,6 +142,11 @@ class DayPhaseMixin:
 
                     # Add to global public discussion history
                     self.public_discussion_history.append(f"{player.name}: {speech}")
+
+                    # Record player's own speech in decision history
+                    player.agent.add_decision(
+                        f"Round {self.game_state.round_number} (Day discussion): You said: {speech}"
+                    )
                 except Exception as e:
                     self._log_event(
                         EventType.ERROR,

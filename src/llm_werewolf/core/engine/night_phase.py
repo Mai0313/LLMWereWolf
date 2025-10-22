@@ -96,7 +96,7 @@ class NightPhaseMixin:
                 context = "\n".join(context_parts)
 
                 try:
-                    speech = "".join(werewolf.agent.get_response(context))
+                    speech = werewolf.agent.get_response(context)
 
                     self._log_event(
                         EventType.PLAYER_DISCUSSION,
@@ -115,6 +115,12 @@ class NightPhaseMixin:
 
                     # Add to global werewolf discussion history
                     self.werewolf_discussion_history.append(f"{werewolf.name}: {speech}")
+
+                    # Record werewolf's own speech in decision history
+                    # This is safe: only records what they said, not sensitive context
+                    werewolf.agent.add_decision(
+                        f"Round {self.game_state.round_number} (Werewolf discussion): You said: {speech}"
+                    )
                 except Exception as e:
                     self._log_event(
                         EventType.ERROR,

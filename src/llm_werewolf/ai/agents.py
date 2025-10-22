@@ -43,16 +43,6 @@ class PlayerConfig(BaseModel):
         description="Environment variable name containing the API key (e.g., OPENAI_API_KEY)",
         examples=["OPENAI_API_KEY", "ANTHROPIC_API_KEY"],
     )
-    temperature: float = Field(
-        default=0.7,
-        title="Temperature",
-        description="The temperature of your player",
-        ge=0.0,
-        le=2.0,
-    )
-    max_tokens: int | None = Field(
-        default=None, title="Max Tokens", description="Maximum response tokens"
-    )
     reasoning_effort: ReasoningEffort | None = Field(
         default=None, title="Reasoning Effort", description="Reasoning effort level for LLM"
     )
@@ -73,8 +63,6 @@ class LLMAgent(BaseAgent):
 
     api_key: str
     base_url: str
-    temperature: float = Field(default=0.7)
-    max_tokens: int | None
     reasoning_effort: ReasoningEffort | None = Field(default=None)
     language: str = Field(...)
     chat_history: list[dict[str, str]] = Field(default=[])
@@ -97,14 +85,17 @@ class LLMAgent(BaseAgent):
         message += f"\nPlease respond in {self.language}."
         self.chat_history.append({"role": "user", "content": message})
 
-        responses = self.client.chat.completions.create(
-            model=self.model,
-            messages=self.chat_history,
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
-            reasoning_effort=self.reasoning_effort,
-            stream=True,
-        )
+        if self.reasoning_effort:
+            responses = self.client.chat.completions.create(
+                model=self.model,
+                messages=self.chat_history,
+                reasoning_effort=self.reasoning_effort,
+                stream=True,
+            )
+        else:
+            responses = self.client.chat.completions.create(
+                model=self.model, messages=self.chat_history, stream=True
+            )
 
         full_response = ""
         for response in responses:
@@ -181,8 +172,6 @@ def create_agent(
         model=config.model,
         api_key=api_key,
         base_url=config.base_url,
-        temperature=config.temperature,
-        max_tokens=config.max_tokens,
         language=language,
     )
 

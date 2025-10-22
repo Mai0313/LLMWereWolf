@@ -176,43 +176,31 @@ players:
     model: gpt-4o
     base_url: https://api.openai.com/v1
     api_key_env: OPENAI_API_KEY
-    temperature: 0.7
-    max_tokens:
 
   - name: GPT-4o-mini 玩家
     model: gpt-4o-mini
     base_url: https://api.openai.com/v1
     api_key_env: OPENAI_API_KEY
-    temperature: 0.7
-    max_tokens:
 
   - name: GPT-4 分析师
     model: gpt-4
     base_url: https://api.openai.com/v1
     api_key_env: OPENAI_API_KEY
-    temperature: 0.7
-    max_tokens:
 
   - name: Claude Sonnet
     model: claude-sonnet-4-20250514
     base_url: https://api.anthropic.com/v1
     api_key_env: ANTHROPIC_API_KEY
-    temperature: 0.7
-    max_tokens: 500
 
   - name: DeepSeek 思考者
     model: deepseek-reasoner
     base_url: https://api.deepseek.com/v1
     api_key_env: DEEPSEEK_API_KEY
-    temperature: 0.7
-    max_tokens: 500
 
   - name: Claude Haiku
     model: claude-haiku-4-5-20251001
     base_url: https://api.anthropic.com/v1
     api_key_env: ANTHROPIC_API_KEY
-    temperature: 0.7
-    max_tokens: 500
 
   - name: 人类玩家
     model: human          # 真人玩家
@@ -240,8 +228,6 @@ players:
   - LLM 模型名称：如 `gpt-4o`、`gpt-4o-mini`、`claude-sonnet-4-20250514`、`claude-haiku-4-20250514`、`deepseek-reasoner`、`llama3` 或任何 OpenAI 兼容模型
 - `base_url`：API 端点（LLM 模型必填）
 - `api_key_env`：环境变量名称（有验证的端点必填）
-- `temperature`：选填，默认 0.7
-- `max_tokens`：选填，默认 `null`（无限制）
 - `reasoning_effort`：选填，支持推理的模型的推理努力等级（如 "low"、"medium"、"high"）
 
 **支持的模型类型：**
@@ -258,8 +244,6 @@ players:
   - name: Ollama Llama3
     model: llama3
     base_url: http://localhost:11434/v1
-    temperature: 0.7
-    max_tokens: 500
 ```
 
 ## 代理系统

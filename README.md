@@ -176,43 +176,31 @@ players:
     model: gpt-4o
     base_url: https://api.openai.com/v1
     api_key_env: OPENAI_API_KEY
-    temperature: 0.7
-    max_tokens:
 
   - name: GPT-4o-mini Player
     model: gpt-4o-mini
     base_url: https://api.openai.com/v1
     api_key_env: OPENAI_API_KEY
-    temperature: 0.7
-    max_tokens:
 
   - name: GPT-4 Analyst
     model: gpt-4
     base_url: https://api.openai.com/v1
     api_key_env: OPENAI_API_KEY
-    temperature: 0.7
-    max_tokens:
 
   - name: Claude Sonnet
     model: claude-sonnet-4-20250514
     base_url: https://api.anthropic.com/v1
     api_key_env: ANTHROPIC_API_KEY
-    temperature: 0.7
-    max_tokens: 500
 
   - name: DeepSeek Thinker
     model: deepseek-reasoner
     base_url: https://api.deepseek.com/v1
     api_key_env: DEEPSEEK_API_KEY
-    temperature: 0.7
-    max_tokens: 500
 
   - name: Claude Haiku
     model: claude-haiku-4-5-20251001
     base_url: https://api.anthropic.com/v1
     api_key_env: ANTHROPIC_API_KEY
-    temperature: 0.7
-    max_tokens: 500
 
   - name: Human Player
     model: human          # Human player
@@ -240,8 +228,6 @@ players:
   - LLM model name: e.g., `gpt-4o`, `gpt-4o-mini`, `claude-sonnet-4-20250514`, `claude-haiku-4-20250514`, `deepseek-reasoner`, `llama3`, or any OpenAI-compatible model.
 - `base_url`: API endpoint (required for LLM models).
 - `api_key_env`: Environment variable name (required for authenticated endpoints).
-- `temperature`: Optional, defaults to 0.7.
-- `max_tokens`: Optional, defaults to `null` (no limit).
 - `reasoning_effort`: Optional, reasoning effort level for models that support it (e.g., "low", "medium", "high").
 
 **Supported Model Types:**
@@ -258,8 +244,6 @@ If using a local model like Ollama, you can omit `api_key_env`:
   - name: Ollama Llama3
     model: llama3
     base_url: http://localhost:11434/v1
-    temperature: 0.7
-    max_tokens: 500
 ```
 
 ## Agent System

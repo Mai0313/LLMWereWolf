@@ -88,7 +88,12 @@ def main(config: str) -> None:
         raise
 
 
-if __name__ == "__main__":
+def entry() -> None:
+    """Entry point for the werewolf console command."""
     import fire
 
     fire.Fire(main)
+
+
+if __name__ == "__main__":
+    entry()

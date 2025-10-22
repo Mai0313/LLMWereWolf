@@ -86,10 +86,10 @@ Homepage = "https://mai0313.github.io/LLMWerewolf"
 Repository = "https://github.com/Mai0313/LLMWerewolf"
 
 [project.scripts]
-llm-werewolf = "llm_werewolf.cli:main"
-llm-werewolf-tui = "llm_werewolf.tui:main"
-werewolf = "llm_werewolf.cli:main"
-werewolf-tui = "llm_werewolf.tui:main"
+llm-werewolf = "llm_werewolf.cli:entry"
+llm-werewolf-tui = "llm_werewolf.tui:entry"
+werewolf = "llm_werewolf.cli:entry"
+werewolf-tui = "llm_werewolf.tui:entry"
 
 [dependency-groups]
 dev = [

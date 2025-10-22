@@ -20,28 +20,32 @@ players:
     base_url: https://mlop-azure-gateway.mediatek.inc/v1
     api_key_env: OPENAI_API_KEY
     temperature: 0.7
-    max_tokens: minimal
+    max_tokens: null
+    reasoning_effort: minimal
 
   - name: gpt-5-low
     model: azure/aide-gpt-5
     base_url: https://mlop-azure-gateway.mediatek.inc/v1
     api_key_env: OPENAI_API_KEY
     temperature: 0.7
-    max_tokens: low
+    max_tokens: null
+    reasoning_effort: low
 
   - name: gpt-5-medium
     model: azure/aide-gpt-5
     base_url: https://mlop-azure-gateway.mediatek.inc/v1
     api_key_env: OPENAI_API_KEY
     temperature: 0.7
-    max_tokens: medium
+    max_tokens: null
+    reasoning_effort: medium
 
   - name: gpt-5-high
     model: azure/aide-gpt-5
     base_url: https://mlop-azure-gateway.mediatek.inc/v1
     api_key_env: OPENAI_API_KEY
     temperature: 0.7
-    max_tokens: high
+    max_tokens: null
+    reasoning_effort: high
 
   - name: o4-mini
     model: azure/aide-o4-mini

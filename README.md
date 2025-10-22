@@ -54,7 +54,7 @@ The project offers two execution modes, selectable through different command-lin
 uv run llm-werewolf-tui configs/demo.yaml
 
 # Use LLM player configuration (requires setting API keys first)
-uv run llm-werewolf-tui configs/gpt-5-chaos.yaml.yaml
+uv run llm-werewolf-tui configs/gpt-5-chaos.yaml
 
 # If the package is installed globally
 llm-werewolf-tui configs/demo.yaml
@@ -157,10 +157,10 @@ The system scales werewolf count and divine roles automatically to maintain game
 cp configs/demo.yaml my-game.yaml
 
 # Or start from a template that supports LLMs
-cp configs/gpt-5-chaos.yaml.yaml my-game.yaml
+cp configs/gpt-5-chaos.yaml my-game.yaml
 
 # Edit the configuration file
-# configs/gpt-5-chaos.yaml.yaml contains field descriptions and examples
+# configs/gpt-5-chaos.yaml contains field descriptions and examples
 ```
 
 Example `my-game.yaml`:
@@ -380,6 +380,55 @@ Console mode displays real-time status indicators to help you track game progres
 
 These indicators help you understand the game is waiting for LLM API responses, not frozen. LLM responses typically take several seconds to tens of seconds.
 
+**Console Mode Example Output:**
+
+```
+🎮 Game Starting with 9 players...
+📋 Role Assignment Complete
+   - Werewolf x2
+   - Seer x1
+   - Witch x1
+   - Hunter x1
+   - Guard x1
+   - Villager x3
+
+🌙 === Round 1: Night Phase ===
+🐺 Werewolves are discussing their target...
+🎬 Guard(gpt-4o) is acting...
+   → Guard protected Alice
+🎬 Seer(claude-sonnet) is acting...
+   → Seer checked Bob: Villager
+🎬 Werewolf(gpt-4o-mini) is acting...
+   → Werewolves killed Charlie
+🎬 Witch(deepseek-reasoner) is acting...
+   → Witch used save potion on Charlie
+
+☀️ === Round 1: Day Phase ===
+💬 Alice(gpt-4o) is thinking...
+💬 Alice: "Last night was quiet, but we need to find the werewolves."
+💬 Bob(claude-sonnet) is thinking...
+💬 Bob: "I noticed David acting suspicious yesterday."
+...
+
+🗳️ === Voting Phase ===
+🗳️ Alice(gpt-4o) is thinking about voting...
+   → Alice voted for David
+🗳️ Bob(claude-sonnet) is thinking about voting...
+   → Bob voted for David
+...
+
+📊 Vote Results:
+   David: 5 votes
+   Eve: 3 votes
+   Frank: 1 vote
+
+💀 David was eliminated (Villager)
+
+🏁 === Game Over ===
+🎉 Werewolves Win!
+   Remaining: Werewolf x2, Villager x2
+```
+
 ## Game Flow
 
 1. **Preparation Phase**: Players are randomly assigned roles.
@@ -448,8 +497,7 @@ src/llm_werewolf/
     └── components/       # TUI components
         ├── player_panel.py
         ├── game_panel.py
-        ├── chat_panel.py
-        └── debug_panel.py
+        └── chat_panel.py
 ```
 
 ### Module Descriptions

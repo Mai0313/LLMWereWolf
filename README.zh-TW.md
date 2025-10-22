@@ -54,7 +54,7 @@ uv sync
 uv run llm-werewolf-tui configs/demo.yaml
 
 # 使用 LLM 玩家配置（需先設定 API 金鑰）
-uv run llm-werewolf-tui configs/gpt-5-chaos.yaml.yaml
+uv run llm-werewolf-tui configs/gpt-5-chaos.yaml
 
 # 若已全域安裝套件
 llm-werewolf-tui configs/demo.yaml
@@ -157,10 +157,10 @@ XAI_API_KEY=xai-...
 cp configs/demo.yaml my-game.yaml
 
 # 或由支援 LLM 的樣板開始
-cp configs/gpt-5-chaos.yaml.yaml my-game.yaml
+cp configs/gpt-5-chaos.yaml my-game.yaml
 
 # 編輯設定檔
-# configs/gpt-5-chaos.yaml.yaml 含有欄位說明與範例
+# configs/gpt-5-chaos.yaml 含有欄位說明與範例
 ```
 
 範例 `my-game.yaml`：
@@ -380,6 +380,55 @@ Console 模式會顯示即時狀態提示，讓你了解遊戲進度：
 
 這些提示能幫助你了解遊戲正在等待 LLM API 回應，而非卡住。LLM 回應通常需要數秒至數十秒不等。
 
+**Console 模式範例輸出：**
+
+```
+🎮 遊戲開始，共 9 名玩家...
+📋 角色分配完成
+   - Werewolf x2
+   - Seer x1
+   - Witch x1
+   - Hunter x1
+   - Guard x1
+   - Villager x3
+
+🌙 === 第 1 回合：夜晚階段 ===
+🐺 狼人正在討論目標...
+🎬 Guard(gpt-4o) 正在行動...
+   → 守衛保護了 Alice
+🎬 Seer(claude-sonnet) 正在行動...
+   → 預言家查驗 Bob：村民
+🎬 Werewolf(gpt-4o-mini) 正在行動...
+   → 狼人殺死了 Charlie
+🎬 Witch(deepseek-reasoner) 正在行動...
+   → 女巫對 Charlie 使用解藥
+
+☀️ === 第 1 回合：白天階段 ===
+💬 Alice(gpt-4o) 正在思考...
+💬 Alice：「昨晚很平靜，但我們需要找出狼人。」
+💬 Bob(claude-sonnet) 正在思考...
+💬 Bob：「我注意到 David 昨天行為可疑。」
+...
+
+🗳️ === 投票階段 ===
+🗳️ Alice(gpt-4o) 正在思考投票...
+   → Alice 投票給 David
+🗳️ Bob(claude-sonnet) 正在思考投票...
+   → Bob 投票給 David
+...
+
+📊 投票結果：
+   David: 5 票
+   Eve: 3 票
+   Frank: 1 票
+
+💀 David 被淘汰（村民）
+
+🏁 === 遊戲結束 ===
+🎉 狼人陣營獲勝！
+   存活：Werewolf x2, Villager x2
+```
+
 ## 遊戲流程
 
 1. **準備階段**：玩家被隨機分配角色
@@ -448,7 +497,7 @@ src/llm_werewolf/
     └── components/       # TUI 元件
         ├── player_panel.py
         ├── game_panel.py
-        ├── chat_panel.py
+        └── chat_panel.py
 ```
 
 ### 模組說明

@@ -262,7 +262,25 @@ players:
 
 TUI (Terminal User Interface) 提供現代化終端介面的即時遊戲視覺化，使用 [Textual](https://textual.textualize.io/) 框架構建。
 
-### 介面預覽
+### 擷取螢幕截圖
+
+要為文件擷取 TUI 截圖：
+
+```bash
+# 方法 1：使用終端截圖工具
+# 以 TUI 模式執行遊戲，並使用終端的截圖功能
+uv run llm-werewolf-tui configs/demo.yaml
+
+# 方法 2：使用 textual 的截圖功能（如有提供）
+# Textual 框架可能提供內建截圖功能
+
+# 方法 3：使用 asciinema 進行終端錄製
+asciinema rec werewolf-demo.cast
+uv run llm-werewolf-tui configs/demo.yaml
+# 按 Ctrl+D 停止錄製
+```
+
+### 介面預覽（文字表示）
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -450,14 +468,23 @@ src/llm_werewolf/
 │   └── agents.py         # LLM 代理實作和配置模型
 ├── core/                 # 核心遊戲邏輯
 │   ├── agent.py          # 基礎代理、HumanAgent 和 DemoAgent
-│   ├── game_engine.py    # 遊戲引擎
 │   ├── game_state.py     # 遊戲狀態管理
 │   ├── player.py         # 玩家類
 │   ├── action_selector.py # 動作選擇邏輯
 │   ├── events.py         # 事件系統
+│   ├── event_formatter.py # 事件格式化顯示
+│   ├── locale.py         # 本地化與語言支援
 │   ├── victory.py        # 勝利條件檢查
 │   ├── serialization.py  # 序列化工具
 │   ├── role_registry.py  # 角色註冊與驗證
+│   ├── engine/           # 遊戲引擎（拆分為多個 mixin）
+│   │   ├── game_engine.py     # 主要遊戲引擎（組合所有 mixin）
+│   │   ├── base.py            # 核心初始化與遊戲迴圈
+│   │   ├── night_phase.py     # 夜晚階段執行邏輯
+│   │   ├── day_phase.py       # 白天討論階段邏輯
+│   │   ├── voting_phase.py    # 投票階段邏輯
+│   │   ├── death_handler.py   # 死亡相關邏輯
+│   │   └── action_processor.py # 處理遊戲動作
 │   ├── actions/          # 動作系統
 │   │   ├── base.py       # 基礎動作類別
 │   │   ├── common.py     # 通用動作
@@ -490,9 +517,19 @@ src/llm_werewolf/
 - **tui.py**：互動模式的 TUI 入口，提供終端使用者介面
 - **ai/**：LLM 代理實作和配置模型（PlayerConfig、PlayersConfig）
 - **core/agent.py**：基礎代理協定和內建代理（HumanAgent、DemoAgent）
+- **core/engine/**：遊戲引擎實作，拆分為多個 mixin 以清楚分離職責：
+  - **game_engine.py**：主要 GameEngine 類別，組合所有 mixin
+  - **base.py**：核心初始化、事件處理與主要遊戲迴圈
+  - **night_phase.py**：夜晚階段執行邏輯（狼人討論、角色行動）
+  - **day_phase.py**：白天討論階段邏輯
+  - **voting_phase.py**：投票階段邏輯
+  - **death_handler.py**：死亡相關邏輯（狼人殺人、戀人殉情等）
+  - **action_processor.py**：處理並套用遊戲動作
 - **core/actions/**：動作系統，包含基礎類別和陣營特定動作
 - **core/config/**：配置系統，包含遊戲參數和自動角色生成
 - **core/types/**：類型定義，包含列舉、資料模型和協議定義
+- **core/event_formatter.py**：集中式事件格式化，確保主控台和 TUI 模式的顯示一致性
+- **core/locale.py**：多語言本地化支援（en-US、zh-TW、zh-CN）
 - **core/**：遊戲核心邏輯，包含角色、玩家、遊戲狀態、動作選擇、事件和勝利檢查
 - **ui/**：基於 Textual 框架的終端使用者介面
 

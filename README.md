@@ -262,7 +262,25 @@ All agents are configured through YAML files (see the [Configuration](#configura
 
 The TUI (Terminal User Interface) provides real-time game visualization with a modern terminal interface, built with the [Textual](https://textual.textualize.io/) framework.
 
-### Interface Preview
+### Capturing Screenshots
+
+To capture TUI screenshots for documentation:
+
+```bash
+# Method 1: Using terminal screenshot tool
+# Run the game in TUI mode and use your terminal's screenshot feature
+uv run llm-werewolf-tui configs/demo.yaml
+
+# Method 2: Using textual's screenshot feature (if available)
+# The Textual framework may provide built-in screenshot capabilities
+
+# Method 3: Using asciinema for terminal recording
+asciinema rec werewolf-demo.cast
+uv run llm-werewolf-tui configs/demo.yaml
+# Press Ctrl+D to stop recording
+```
+
+### Interface Preview (Text Representation)
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -450,14 +468,23 @@ src/llm_werewolf/
 │   └── agents.py         # LLM agent implementation and config models
 ├── core/                 # Core game logic
 │   ├── agent.py          # Base agent, HumanAgent, and DemoAgent
-│   ├── game_engine.py    # Game engine
 │   ├── game_state.py     # Game state management
 │   ├── player.py         # Player class
 │   ├── action_selector.py # Action selection logic
 │   ├── events.py         # Event system
+│   ├── event_formatter.py # Event formatting for display
+│   ├── locale.py         # Localization and language support
 │   ├── victory.py        # Victory condition checking
 │   ├── serialization.py  # Serialization utilities
 │   ├── role_registry.py  # Role registration and validation
+│   ├── engine/           # Game engine (split into mixins)
+│   │   ├── game_engine.py     # Main game engine (combines mixins)
+│   │   ├── base.py            # Core initialization and game loop
+│   │   ├── night_phase.py     # Night phase execution logic
+│   │   ├── day_phase.py       # Day discussion phase logic
+│   │   ├── voting_phase.py    # Voting phase logic
+│   │   ├── death_handler.py   # Death-related logic
+│   │   └── action_processor.py # Processing game actions
 │   ├── actions/          # Action system
 │   │   ├── base.py       # Base action class
 │   │   ├── common.py     # Common actions
@@ -490,9 +517,19 @@ src/llm_werewolf/
 - **tui.py**: TUI entry point for interactive mode with terminal user interface.
 - **ai/**: LLM agent implementation and configuration models (PlayerConfig, PlayersConfig).
 - **core/agent.py**: Base agent protocol and built-in agents (HumanAgent, DemoAgent).
+- **core/engine/**: Game engine implementation split into mixins for clean separation of concerns:
+  - **game_engine.py**: Main GameEngine class that combines all mixins
+  - **base.py**: Core initialization, event handling, and main game loop
+  - **night_phase.py**: Night phase execution logic (werewolf discussion, role actions)
+  - **day_phase.py**: Day discussion phase logic
+  - **voting_phase.py**: Voting phase logic
+  - **death_handler.py**: Death-related logic (werewolf kills, lover deaths, etc.)
+  - **action_processor.py**: Processing and applying game actions
 - **core/actions/**: Action system with base classes and faction-specific actions.
 - **core/config/**: Configuration system, containing game parameters and automatic role generation.
 - **core/types/**: Type definitions including enums, data models, and protocol definitions.
+- **core/event_formatter.py**: Centralized event formatting for consistent display across console and TUI modes.
+- **core/locale.py**: Localization support for multiple languages (en-US, zh-TW, zh-CN).
 - **core/**: Core game logic, including roles, players, game state, action selection, events, and victory checking.
 - **ui/**: Terminal user interface based on the Textual framework.
 

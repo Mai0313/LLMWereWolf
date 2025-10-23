@@ -1,3 +1,3 @@
-from llm_werewolf.ai.agents import LLMAgent
+from llm_werewolf.core.agent import LLMAgent
 
 __all__ = ["LLMAgent"]

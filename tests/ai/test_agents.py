@@ -7,8 +7,9 @@ from unittest.mock import Mock, MagicMock, patch
 import pytest
 from pydantic import ValidationError
 
-from llm_werewolf.ai.agents import LLMAgent, PlayerConfig, PlayersConfig, load_config, create_agent
-from llm_werewolf.core.agent import DemoAgent, HumanAgent
+from llm_werewolf.ai.agents import load_config, create_agent
+from llm_werewolf.core.agent import LLMAgent, DemoAgent, HumanAgent
+from llm_werewolf.core.config import PlayerConfig, PlayersConfig
 
 
 class TestPlayerConfig:
@@ -139,7 +140,7 @@ class TestLLMAgent:
         assert agent.chat_history == []
         assert agent.decision_history == []
 
-    @patch("llm_werewolf.ai.agents.OpenAI")
+    @patch("llm_werewolf.core.agent.OpenAI")
     def test_llm_agent_client_creation(self, mock_openai: Mock) -> None:
         """Test that LLM agent creates OpenAI client."""
         agent = LLMAgent(
@@ -155,7 +156,7 @@ class TestLLMAgent:
             api_key="test-key", base_url="https://api.openai.com/v1"
         )
 
-    @patch("llm_werewolf.ai.agents.OpenAI")
+    @patch("llm_werewolf.core.agent.OpenAI")
     def test_llm_agent_get_response(self, mock_openai: Mock) -> None:
         """Test getting response from LLM agent."""
         mock_client = MagicMock()
@@ -183,7 +184,7 @@ class TestLLMAgent:
         assert agent.chat_history[1]["role"] == "assistant"
         assert agent.chat_history[1]["content"] == "Test response"
 
-    @patch("llm_werewolf.ai.agents.OpenAI")
+    @patch("llm_werewolf.core.agent.OpenAI")
     def test_llm_agent_get_response_with_reasoning(self, mock_openai: Mock) -> None:
         """Test getting response from LLM agent with reasoning effort."""
         mock_client = MagicMock()

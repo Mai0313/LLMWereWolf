@@ -1,7 +1,10 @@
 import random
+from functools import cached_property
 
-from pydantic import Field, BaseModel
+from openai import OpenAI
+from pydantic import Field, BaseModel, ConfigDict, computed_field
 from rich.console import Console
+from openai.types.shared import ReasoningEffort
 
 console = Console()
 
@@ -115,3 +118,72 @@ class HumanAgent(BaseAgent):
         """
         console.print(f"\n{message}")
         return input("Your response: ")
+
+
+class LLMAgent(BaseAgent):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    api_key: str
+    base_url: str
+    reasoning_effort: ReasoningEffort | None = Field(default=None)
+    language: str = Field(...)
+    chat_history: list[dict[str, str]] = Field(default=[])
+    decision_history: list[str] = Field(default=[])
+
+    @computed_field
+    @cached_property
+    def client(self) -> OpenAI:
+        """Create and cache OpenAI client instance.
+
+        Returns:
+            OpenAI: Cached OpenAI client instance.
+        """
+        return OpenAI(api_key=self.api_key, base_url=self.base_url)
+
+    def get_response(self, message: str) -> str:
+        """Get a response from the LLM.
+
+        Args:
+            message: The prompt message.
+
+        Returns:
+            str: The complete response from the LLM.
+        """
+        message += f"\nPlease respond in {self.language}."
+        self.chat_history.append({"role": "user", "content": message})
+
+        if self.reasoning_effort:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=self.chat_history,
+                reasoning_effort=self.reasoning_effort,
+                stream=False,
+            )
+        else:
+            response = self.client.chat.completions.create(
+                model=self.model, messages=self.chat_history, stream=False
+            )
+
+        full_response = response.choices[0].message.content or ""
+        self.chat_history.append({"role": "assistant", "content": full_response})
+        return full_response
+
+    def add_decision(self, decision: str) -> None:
+        """Add a decision to the decision history.
+
+        This records WHAT the agent decided without sensitive context.
+
+        Args:
+            decision: A safe summary of the decision (e.g., "Round 1: Checked Bob, result: villager")
+        """
+        self.decision_history.append(decision)
+
+    def get_decision_context(self) -> str:
+        """Get a formatted string of decision history for context.
+
+        Returns:
+            str: Formatted decision history without sensitive information.
+        """
+        if not self.decision_history:
+            return ""
+        return "\n\nYour previous actions:\n" + "\n".join(f"- {d}" for d in self.decision_history)

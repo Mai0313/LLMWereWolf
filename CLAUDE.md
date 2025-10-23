@@ -103,8 +103,8 @@ The action system (`core/actions/`) separates action logic from role definitions
 **Agent System:**
 The agent system is designed for extensibility:
 
-- `BaseAgent` (`core/agent.py`): Protocol defining `get_response(message: str) -> str`
-- `LLMAgent` (`ai/agents.py`): OpenAI-compatible API client wrapper
+- `BaseAgent` (`core/agent.py`): Base class defining `get_response(message: str) -> str`
+- `LLMAgent` (`core/agent.py`): OpenAI-compatible API client wrapper with cached client instance
 - `HumanAgent` (`core/agent.py`): Console input for human players
 - `DemoAgent` (`core/agent.py`): Random canned responses for testing
 
@@ -112,8 +112,8 @@ The agent system is designed for extensibility:
 
 - `GameConfig` (`core/config/game_config.py`): Role composition, timeouts, and game rules
 - `create_game_config_from_player_count()` (`core/config/presets.py`): Automatically generates balanced role configurations based on player count (6-20)
-- `PlayersConfig` (`ai/agents.py`): YAML-based player configuration with agent types
-- `create_agent()` factory function routes model types to appropriate agent classes
+- `PlayerConfig` and `PlayersConfig` (`core/config/player_config.py`): YAML-based player configuration with agent types and validation
+- `create_agent()` factory function (`ai/agents.py`) routes model types to appropriate agent classes
 
 ### Role System
 
@@ -250,11 +250,13 @@ def setup_game(self, players: list[AgentProtocol], roles: list[RoleProtocol]) ->
 
 1. **Types layer** (`core/types/`): Contains all shared types, enums, models, and protocols. No dependencies on other core modules.
 
-2. **Data layer** (`core/player.py`, `core/game_state.py`): Implements core data structures. Only imports from types layer.
+2. **Data layer** (`core/player.py`, `core/game_state.py`, `core/agent.py`): Implements core data structures and base agent implementations. Only imports from types layer and minimal external dependencies (e.g., `openai` for `LLMAgent`).
 
-3. **Logic layer** (`core/roles/`, `core/actions/`, `core/engine/`): Implements game logic. Imports from types and data layers. Uses Protocols for cross-module dependencies.
+3. **Configuration layer** (`core/config/`): Contains configuration models and presets. Imports from types layer.
 
-4. **Always verify**: After refactoring, verify no circular imports exist:
+4. **Logic layer** (`core/roles/`, `core/actions/`, `core/engine/`): Implements game logic. Imports from types, data, and config layers. Uses Protocols for cross-module dependencies.
+
+5. **Always verify**: After refactoring, verify no circular imports exist:
 
    ```bash
    uv run python -c "from llm_werewolf.core import player, game_state, roles, actions, engine; print('✅ No circular imports!')"
@@ -293,10 +295,10 @@ These are managed in `GameEngineBase` and help agents maintain coherent conversa
 
 ### Adding a New Agent Type
 
-1. Create agent class inheriting from `BaseAgent`
+1. Create agent class inheriting from `BaseAgent` in `core/agent.py`
 2. Implement `get_response(message: str) -> str` method
 3. Update `create_agent()` factory in `ai/agents.py` to route to new agent type
-4. Update `PlayerConfig.model` field validator if needed
+4. Update `PlayerConfig.model` field validator in `core/config/player_config.py` if needed
 5. Add tests in `tests/ai/test_base_agent.py`
 
 ### Game State Management

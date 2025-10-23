@@ -112,6 +112,30 @@ class Player:
         """
         return self.has_status(PlayerStatus.LOVER)
 
+    def is_sheriff(self) -> bool:
+        """Check if the player is the sheriff.
+
+        Returns:
+            bool: True if the player is the sheriff.
+        """
+        return self.has_status(PlayerStatus.SHERIFF)
+
+    def make_sheriff(self) -> None:
+        """Make this player the sheriff."""
+        self.add_status(PlayerStatus.SHERIFF)
+
+    def remove_sheriff(self) -> None:
+        """Remove sheriff status from this player."""
+        self.remove_status(PlayerStatus.SHERIFF)
+
+    def get_vote_weight(self) -> float:
+        """Get the player's vote weight.
+
+        Returns:
+            float: Vote weight (1.5 for sheriff, 1.0 for others).
+        """
+        return 1.5 if self.is_sheriff() else 1.0
+
     def get_public_info(self) -> PlayerInfo:
         """Get public information about the player.
 

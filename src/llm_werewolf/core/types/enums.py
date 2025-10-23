@@ -28,6 +28,7 @@ class GamePhase(str, Enum):
 
     SETUP = "setup"
     NIGHT = "night"
+    SHERIFF_ELECTION = "sheriff_election"
     DAY_DISCUSSION = "day_discussion"
     DAY_VOTING = "day_voting"
     ENDED = "ended"
@@ -47,6 +48,7 @@ class PlayerStatus(str, Enum):
     REVEALED = "revealed"
     NO_VOTE = "no_vote"
     LOVER = "lover"
+    SHERIFF = "sheriff"
 
 
 class ActionType(str, Enum):
@@ -64,6 +66,9 @@ class ActionType(str, Enum):
     NIGHTMARE_BLOCK = "nightmare_block"
 
     VOTE = "vote"
+    SHERIFF_CAMPAIGN = "sheriff_campaign"
+    SHERIFF_VOTE = "sheriff_vote"
+    SHERIFF_TRANSFER = "sheriff_transfer"
     HUNTER_SHOOT = "hunter_shoot"
     KNIGHT_DUEL = "knight_duel"
     ALPHA_WOLF_SHOOT = "alpha_wolf_shoot"
@@ -94,6 +99,14 @@ class EventType(str, Enum):
     VOTE_CAST = "vote_cast"
     VOTE_RESULT = "vote_result"
     PLAYER_ELIMINATED = "player_eliminated"
+
+    SHERIFF_CAMPAIGN_STARTED = "sheriff_campaign_started"
+    SHERIFF_CANDIDATE_SPEECH = "sheriff_candidate_speech"
+    SHERIFF_VOTE_CAST = "sheriff_vote_cast"
+    SHERIFF_ELECTED = "sheriff_elected"
+    SHERIFF_TIE = "sheriff_tie"
+    SHERIFF_BADGE_TRANSFERRED = "sheriff_badge_transferred"
+    SHERIFF_BADGE_TORN = "sheriff_badge_torn"
 
     LOVERS_LINKED = "lovers_linked"
     LOVER_DIED = "lover_died"

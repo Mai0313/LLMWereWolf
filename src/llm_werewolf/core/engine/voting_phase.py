@@ -149,11 +149,11 @@ class VotingPhaseMixin:
                     },
                 )
 
-    def _display_vote_results(self, vote_counts: dict[str, int]) -> None:
+    def _display_vote_results(self, vote_counts: dict[str, float]) -> None:
         """Display vote results summary.
 
         Args:
-            vote_counts: Dictionary mapping player_id to vote count.
+            vote_counts: Dictionary mapping player_id to vote count (float to support sheriff's 1.5 vote).
         """
         if not self.game_state:
             return

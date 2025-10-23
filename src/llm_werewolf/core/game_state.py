@@ -38,6 +38,10 @@ class GameState:
         self.votes: dict[str, str] = {}
         self.raven_marked: str | None = None
 
+        self.sheriff_id: str | None = None
+        self.sheriff_election_done = False
+        self.sheriff_votes: dict[str, str] = {}
+
         self.winner: str | None = None
 
     def reset_deaths(self) -> None:
@@ -73,6 +77,12 @@ class GameState:
             self.phase = GamePhase.NIGHT
             self.round_number = 1
         elif self.phase == GamePhase.NIGHT:
+            # First night ends, go to sheriff election if not done
+            if self.round_number == 1 and not self.sheriff_election_done:
+                self.phase = GamePhase.SHERIFF_ELECTION
+            else:
+                self.phase = GamePhase.DAY_DISCUSSION
+        elif self.phase == GamePhase.SHERIFF_ELECTION:
             self.phase = GamePhase.DAY_DISCUSSION
         elif self.phase == GamePhase.DAY_DISCUSSION:
             self.phase = GamePhase.DAY_VOTING
@@ -180,22 +190,70 @@ class GameState:
         """
         self.votes[voter_id] = target_id
 
-    def get_vote_counts(self) -> dict[str, int]:
+    def get_vote_counts(self) -> dict[str, float]:
         """Get the vote count for each player.
 
         Returns:
-            dict[str, int]: Mapping of player_id to vote count.
+            dict[str, float]: Mapping of player_id to vote count (float to support sheriff's 1.5 vote).
         """
-        vote_counts: dict[str, int] = {}
-        for target_id in self.votes.values():
-            vote_counts[target_id] = vote_counts.get(target_id, 0) + 1
+        vote_counts: dict[str, float] = {}
+        for voter_id, target_id in self.votes.items():
+            voter = self.get_player(voter_id)
+            if voter:
+                vote_weight = voter.get_vote_weight()
+                vote_counts[target_id] = vote_counts.get(target_id, 0.0) + vote_weight
 
+        # Add raven mark (1 extra vote)
         if self.raven_marked and self.raven_marked in vote_counts:
             vote_counts[self.raven_marked] += 1
         elif self.raven_marked:
-            vote_counts[self.raven_marked] = 1
+            vote_counts[self.raven_marked] = 1.0
 
         return vote_counts
+
+    def has_sheriff(self) -> bool:
+        """Check if there is a sheriff.
+
+        Returns:
+            bool: True if there is a sheriff.
+        """
+        return self.sheriff_id is not None
+
+    def get_sheriff(self) -> PlayerProtocol | None:
+        """Get the current sheriff.
+
+        Returns:
+            PlayerProtocol | None: The sheriff player, or None if no sheriff.
+        """
+        if self.sheriff_id:
+            return self.get_player(self.sheriff_id)
+        return None
+
+    def set_sheriff(self, player_id: str) -> None:
+        """Set a player as the sheriff.
+
+        Args:
+            player_id: ID of the player to make sheriff.
+        """
+        # Remove sheriff status from previous sheriff if exists
+        if self.sheriff_id:
+            prev_sheriff = self.get_player(self.sheriff_id)
+            if prev_sheriff:
+                prev_sheriff.remove_sheriff()
+
+        # Set new sheriff
+        self.sheriff_id = player_id
+        player = self.get_player(player_id)
+        if player:
+            player.make_sheriff()
+
+    def remove_sheriff(self) -> None:
+        """Remove the current sheriff (e.g., when badge is torn)."""
+        if self.sheriff_id:
+            sheriff = self.get_player(self.sheriff_id)
+            if sheriff:
+                sheriff.remove_sheriff()
+            self.sheriff_id = None
 
     def get_public_info(self) -> GameStateInfo:
         """Get public information about the game state.

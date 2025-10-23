@@ -132,6 +132,82 @@ class DeathHandlerMixin:
 
         return messages
 
+    def _handle_sheriff_badge_transfer(self) -> list[str]:
+        """Handle sheriff badge transfer when sheriff dies.
+
+        Returns:
+            list[str]: Messages from badge transfer.
+        """
+        if not self.game_state:
+            return []
+
+        from llm_werewolf.core.action_selector import ActionSelector
+
+        messages: list[str] = []
+        all_deaths = self.game_state.night_deaths | self.game_state.day_deaths
+
+        # Check if sheriff died
+        if self.game_state.sheriff_id and self.game_state.sheriff_id in all_deaths:
+            sheriff = self.game_state.get_player(self.game_state.sheriff_id)
+            if not sheriff or sheriff.player_id in self.game_state.death_abilities_used:
+                return messages
+
+            self.game_state.death_abilities_used.add(sheriff.player_id)
+
+            self._log_event(
+                EventType.MESSAGE,
+                f"🎖️ Sheriff {sheriff.name} has died. They may transfer the badge or tear it.",
+                data={"player_id": sheriff.player_id},
+            )
+
+            # Ask sheriff whether to transfer badge
+            possible_targets = self.game_state.get_alive_players()
+            if not possible_targets or not sheriff.agent:
+                # No one to transfer to, or no agent - tear the badge
+                self.game_state.remove_sheriff()
+                self._log_event(
+                    EventType.SHERIFF_BADGE_TORN,
+                    f"🎖️ Sheriff {sheriff.name} tore the badge. There is no sheriff anymore.",
+                    data={"player_id": sheriff.player_id},
+                )
+                return messages
+
+            context = (
+                f"You are {sheriff.name}, the sheriff, and you have died.\n"
+                f"You can choose to:\n"
+                f"1. Transfer the sheriff badge to another living player\n"
+                f"2. Tear the badge (choose 'skip' or 'none')\n\n"
+                f"Living players: {', '.join([p.name for p in possible_targets])}\n"
+            )
+
+            target = ActionSelector.get_target_from_agent(
+                agent=sheriff.agent,
+                role_name="Sheriff",
+                action_description="Choose a player to transfer the sheriff badge to (or skip to tear it)",
+                possible_targets=possible_targets,
+                allow_skip=True,
+                additional_context=context,
+            )
+
+            if target:
+                # Transfer badge to target
+                self.game_state.set_sheriff(target.player_id)
+                self._log_event(
+                    EventType.SHERIFF_BADGE_TRANSFERRED,
+                    f"🎖️ {sheriff.name} transferred the sheriff badge to {target.name}.",
+                    data={"from_player_id": sheriff.player_id, "to_player_id": target.player_id},
+                )
+            else:
+                # Tear the badge
+                self.game_state.remove_sheriff()
+                self._log_event(
+                    EventType.SHERIFF_BADGE_TORN,
+                    f"🎖️ {sheriff.name} tore the sheriff badge. There is no sheriff anymore.",
+                    data={"player_id": sheriff.player_id},
+                )
+
+        return messages
+
     def _handle_death_abilities(self) -> list[str]:
         """Handle abilities that trigger on death (Hunter, AlphaWolf).
 
@@ -142,6 +218,9 @@ class DeathHandlerMixin:
             return []
 
         from llm_werewolf.core.action_selector import ActionSelector
+
+        # Handle sheriff badge transfer first
+        sheriff_messages = self._handle_sheriff_badge_transfer()
 
         messages = []
         all_deaths = self.game_state.night_deaths | self.game_state.day_deaths
@@ -226,6 +305,7 @@ class DeathHandlerMixin:
                                 self.game_state.day_deaths.add(partner.player_id)
                             messages.append(f"{partner.name} died of heartbreak (lover)!")
 
+        messages.extend(sheriff_messages)
         return messages
 
     def resolve_deaths(self) -> list[str]:

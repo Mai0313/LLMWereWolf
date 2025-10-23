@@ -56,6 +56,10 @@ class GameEngineBase:
         if event.phase != self._last_phase and event.event_type == EventType.PHASE_CHANGED:
             if "night" in event.phase.lower():
                 console.print(f"\n{self.locale.get('night_separator')}")
+            elif "sheriff" in event.phase.lower():
+                console.print("\n" + "=" * 60)
+                console.print("        🎖️  SHERIFF ELECTION PHASE  🎖️")
+                console.print("=" * 60 + "\n")
             elif "day" in event.phase.lower():
                 console.print(f"\n{self.locale.get('day_separator')}")
             self._last_phase = event.phase
@@ -225,14 +229,24 @@ class GameEngineBase:
             if self.check_victory():
                 break
 
+            # Sheriff election (only on first day)
+            if self.game_state.round_number == 1 and not self.game_state.sheriff_election_done:
+                self.game_state.next_phase()  # Move to SHERIFF_ELECTION
+                self.execute_sheriff_election()
+
+            if self.check_victory():
+                break
+
+            self.game_state.next_phase()  # Move to DAY_DISCUSSION
             self.run_day_phase()
 
+            self.game_state.next_phase()  # Move to DAY_VOTING
             self.run_voting_phase()
 
             if self.check_victory():
                 break
 
-            self.game_state.next_phase()
+            self.game_state.next_phase()  # Move to next NIGHT
 
         if self.game_state.winner:
             return self.locale.get("game_over", winner=self.game_state.winner)
@@ -260,6 +274,10 @@ class GameEngineBase:
             phase_messages = self.run_night_phase()
             if not self.check_victory():
                 self.game_state.next_phase()
+        elif current_phase == GamePhase.SHERIFF_ELECTION:
+            self.execute_sheriff_election()
+            self.game_state.next_phase()
+            phase_messages = ["Sheriff election completed."]
         elif current_phase == GamePhase.DAY_DISCUSSION:
             phase_messages = self.run_day_phase()
             self.game_state.next_phase()

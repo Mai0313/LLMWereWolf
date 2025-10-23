@@ -13,8 +13,18 @@ class BaseAgent(BaseModel):
     Provides shared functionality like __repr__.
     """
 
-    name: str
-    model: str
+    name: str = Field(
+        ...,
+        title="The Name of the player",
+        description="Display name for the player",
+        examples=["AI-GPT-5"],
+    )
+    model: str = Field(
+        ...,
+        title="Model Name",
+        description="The model name of your player",
+        examples=["gpt-5", "human", "demo"],
+    )
 
     def get_response(self, message: str) -> str:
         """Get a response from the agent.

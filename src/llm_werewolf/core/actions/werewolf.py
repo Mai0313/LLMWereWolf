@@ -90,7 +90,8 @@ class WhiteWolfKillAction(Action):
         if self.actor.role.name != "WhiteWolf":
             return False
 
-        if self.game_state.round_number % 2 == 0:
+        # White Wolf can only act on even rounds (2, 4, 6...)
+        if self.game_state.round_number % 2 == 1:
             return False
 
         return (

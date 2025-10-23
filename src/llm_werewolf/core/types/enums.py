@@ -10,9 +10,13 @@ class Camp(str, Enum):
 
 
 class ActionPriority(int, Enum):
-    """Enum representing the priority order of night actions."""
+    """Enum representing the priority order of night actions.
+
+    Higher number = higher priority (executes first).
+    """
 
     CUPID = 100
+    NIGHTMARE_WOLF = 98  # Must act before other roles to block them
     THIEF = 95
     GUARD = 90
     WEREWOLF = 80

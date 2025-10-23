@@ -95,7 +95,45 @@ class AlphaWolf(Role):
     """
 
     def get_night_actions(self, game_state: GameStateProtocol) -> list[ActionProtocol]:
-        """Alpha Wolf has no special night actions beyond the standard werewolf kill."""
+        """Get the night actions for the Alpha Wolf role.
+
+        Alpha Wolf participates in the standard werewolf vote.
+        """
+        if not self.player.is_alive():
+            return []
+
+        # Get possible targets (non-werewolf players)
+        possible_targets = [
+            p for p in game_state.get_alive_players() if p.get_camp() != Camp.WEREWOLF
+        ]
+        if not possible_targets:
+            return []
+
+        # Get target from AI agent (participate in werewolf vote)
+        if self.player.agent:
+            # Build context for werewolves
+            werewolves = [w for w in game_state.get_players_by_camp(Camp.WEREWOLF) if w.is_alive()]
+            werewolf_names = [w.name for w in werewolves]
+            context = (
+                f"You are working with these werewolves: {', '.join(werewolf_names)}.\n"
+                f"All werewolves will vote on who to eliminate tonight.\n"
+                f"Choose a villager to vote for."
+            )
+
+            target = ActionSelector.get_target_from_agent(
+                agent=self.player.agent,
+                role_name="Alpha Wolf",
+                action_description="Vote for a player to kill tonight",
+                possible_targets=possible_targets,
+                allow_skip=False,
+                additional_context=context,
+                round_number=game_state.round_number,
+                phase="Night",
+            )
+
+            if target:
+                return [WerewolfVoteAction(self.player, target, game_state)]
+
         return []
 
     def get_config(self) -> RoleConfig:
@@ -122,45 +160,72 @@ class WhiteWolf(Role):
     """
 
     def get_night_actions(self, game_state: GameStateProtocol) -> list[ActionProtocol]:
-        """Get the night actions for the White Wolf role."""
-        # Can only kill every other night (odd rounds)
-        if game_state.round_number % 2 == 0:
-            return []
+        """Get the night actions for the White Wolf role.
 
+        White Wolf participates in the standard werewolf vote every night,
+        and can kill another werewolf on even rounds.
+        """
         if not self.player.is_alive():
             return []
 
-        # Get other werewolves as possible targets
+        actions: list[ActionProtocol] = []
+
+        # 1. Participate in standard werewolf vote (every night)
         possible_targets = [
-            p
-            for p in game_state.get_players_by_camp("werewolf")
-            if p.is_alive() and p.player_id != self.player.player_id
+            p for p in game_state.get_alive_players() if p.get_camp() != Camp.WEREWOLF
         ]
+        if possible_targets and self.player.agent:
+            # Build context for werewolves
+            werewolves = [w for w in game_state.get_players_by_camp(Camp.WEREWOLF) if w.is_alive()]
+            werewolf_names = [w.name for w in werewolves]
+            context = (
+                f"You are working with these werewolves: {', '.join(werewolf_names)}.\n"
+                f"All werewolves will vote on who to eliminate tonight.\n"
+                f"Choose a villager to vote for."
+            )
 
-        if not possible_targets:
-            return []
-
-        # Get target from AI agent or skip
-        if self.player.agent:
             target = ActionSelector.get_target_from_agent(
                 agent=self.player.agent,
                 role_name="White Wolf",
-                action_description="Choose a werewolf to kill (or skip)",
+                action_description="Vote for a player to kill tonight",
                 possible_targets=possible_targets,
-                allow_skip=True,
-                additional_context=(
-                    "You can kill another werewolf tonight. "
-                    "This is optional - you may skip if you prefer."
-                ),
-                fallback_random=False,  # White Wolf can skip
+                allow_skip=False,
+                additional_context=context,
                 round_number=game_state.round_number,
                 phase="Night",
             )
 
             if target:
-                return [WhiteWolfKillAction(self.player, target, game_state)]
+                actions.append(WerewolfVoteAction(self.player, target, game_state))
 
-        return []
+        # 2. Special ability: Kill another werewolf on even rounds (2, 4, 6...)
+        if game_state.round_number % 2 == 0:
+            werewolf_targets = [
+                p
+                for p in game_state.get_players_by_camp("werewolf")
+                if p.is_alive() and p.player_id != self.player.player_id
+            ]
+
+            if werewolf_targets and self.player.agent:
+                target = ActionSelector.get_target_from_agent(
+                    agent=self.player.agent,
+                    role_name="White Wolf",
+                    action_description="Choose a werewolf to kill (or skip)",
+                    possible_targets=werewolf_targets,
+                    allow_skip=True,
+                    additional_context=(
+                        "You can kill another werewolf tonight. "
+                        "This is optional - you may skip if you prefer."
+                    ),
+                    fallback_random=False,  # White Wolf can skip
+                    round_number=game_state.round_number,
+                    phase="Night",
+                )
+
+                if target:
+                    actions.append(WhiteWolfKillAction(self.player, target, game_state))
+
+        return actions
 
     def get_config(self) -> RoleConfig:
         """Get configuration for the White Wolf role."""
@@ -191,40 +256,67 @@ class WolfBeauty(Role):
         self.charmed_player: str | None = None
 
     def get_night_actions(self, game_state: GameStateProtocol) -> list[ActionProtocol]:
-        """Get the night actions for the Wolf Beauty role."""
+        """Get the night actions for the Wolf Beauty role.
+
+        Wolf Beauty participates in the standard werewolf vote every night,
+        and can charm one player (once per game).
+        """
         if not self.player.is_alive():
             return []
 
-        # Can only charm if not already charmed someone
-        if self.charmed_player:
-            return []
+        actions: list[ActionProtocol] = []
 
-        # Get possible targets (all alive players)
-        possible_targets = game_state.get_alive_players()
+        # 1. Participate in standard werewolf vote (every night)
+        possible_targets = [
+            p for p in game_state.get_alive_players() if p.get_camp() != Camp.WEREWOLF
+        ]
+        if possible_targets and self.player.agent:
+            # Build context for werewolves
+            werewolves = [w for w in game_state.get_players_by_camp(Camp.WEREWOLF) if w.is_alive()]
+            werewolf_names = [w.name for w in werewolves]
+            context = (
+                f"You are working with these werewolves: {', '.join(werewolf_names)}.\n"
+                f"All werewolves will vote on who to eliminate tonight.\n"
+                f"Choose a villager to vote for."
+            )
 
-        if not possible_targets:
-            return []
-
-        # Get target from AI agent
-        if self.player.agent:
             target = ActionSelector.get_target_from_agent(
                 agent=self.player.agent,
                 role_name="Wolf Beauty",
-                action_description="Choose a player to charm",
+                action_description="Vote for a player to kill tonight",
                 possible_targets=possible_targets,
                 allow_skip=False,
-                additional_context=(
-                    "If you die, the charmed player will die with you immediately. "
-                    "Choose wisely - you can only charm one player for the entire game."
-                ),
+                additional_context=context,
                 round_number=game_state.round_number,
                 phase="Night",
             )
 
             if target:
-                return [WolfBeautyCharmAction(self.player, target, game_state)]
+                actions.append(WerewolfVoteAction(self.player, target, game_state))
 
-        return []
+        # 2. Special ability: Charm a player (once per game)
+        if not self.charmed_player:
+            charm_targets = game_state.get_alive_players()
+
+            if charm_targets and self.player.agent:
+                target = ActionSelector.get_target_from_agent(
+                    agent=self.player.agent,
+                    role_name="Wolf Beauty",
+                    action_description="Choose a player to charm",
+                    possible_targets=charm_targets,
+                    allow_skip=False,
+                    additional_context=(
+                        "If you die, the charmed player will die with you immediately. "
+                        "Choose wisely - you can only charm one player for the entire game."
+                    ),
+                    round_number=game_state.round_number,
+                    phase="Night",
+                )
+
+                if target:
+                    actions.append(WolfBeautyCharmAction(self.player, target, game_state))
+
+        return actions
 
     def get_config(self) -> RoleConfig:
         """Get configuration for the Wolf Beauty role."""
@@ -249,23 +341,53 @@ class GuardianWolf(Role):
     """
 
     def get_night_actions(self, game_state: GameStateProtocol) -> list[ActionProtocol]:
-        """Get the night actions for the Guardian Wolf role."""
+        """Get the night actions for the Guardian Wolf role.
+
+        Guardian Wolf participates in the standard werewolf vote every night,
+        and can protect one werewolf from elimination.
+        """
         if not self.player.is_alive():
             return []
 
-        # Get all alive werewolves
-        possible_targets = [p for p in game_state.get_players_by_camp("werewolf") if p.is_alive()]
+        actions: list[ActionProtocol] = []
 
-        if not possible_targets:
-            return []
+        # 1. Participate in standard werewolf vote (every night)
+        possible_targets = [
+            p for p in game_state.get_alive_players() if p.get_camp() != Camp.WEREWOLF
+        ]
+        if possible_targets and self.player.agent:
+            # Build context for werewolves
+            werewolves = [w for w in game_state.get_players_by_camp(Camp.WEREWOLF) if w.is_alive()]
+            werewolf_names = [w.name for w in werewolves]
+            context = (
+                f"You are working with these werewolves: {', '.join(werewolf_names)}.\n"
+                f"All werewolves will vote on who to eliminate tonight.\n"
+                f"Choose a villager to vote for."
+            )
 
-        # Get target from AI agent
-        if self.player.agent:
+            target = ActionSelector.get_target_from_agent(
+                agent=self.player.agent,
+                role_name="Guardian Wolf",
+                action_description="Vote for a player to kill tonight",
+                possible_targets=possible_targets,
+                allow_skip=False,
+                additional_context=context,
+                round_number=game_state.round_number,
+                phase="Night",
+            )
+
+            if target:
+                actions.append(WerewolfVoteAction(self.player, target, game_state))
+
+        # 2. Special ability: Protect a werewolf
+        werewolf_targets = [p for p in game_state.get_players_by_camp("werewolf") if p.is_alive()]
+
+        if werewolf_targets and self.player.agent:
             target = ActionSelector.get_target_from_agent(
                 agent=self.player.agent,
                 role_name="Guardian Wolf",
                 action_description="Choose a werewolf to protect tonight",
-                possible_targets=possible_targets,
+                possible_targets=werewolf_targets,
                 allow_skip=True,
                 additional_context=(
                     "You can protect one werewolf from elimination tonight. "
@@ -277,9 +399,9 @@ class GuardianWolf(Role):
             )
 
             if target:
-                return [GuardianWolfProtectAction(self.player, target, game_state)]
+                actions.append(GuardianWolfProtectAction(self.player, target, game_state))
 
-        return []
+        return actions
 
     def get_config(self) -> RoleConfig:
         """Get configuration for the Guardian Wolf role."""
@@ -304,7 +426,46 @@ class HiddenWolf(Role):
     """
 
     def get_night_actions(self, game_state: GameStateProtocol) -> list[ActionProtocol]:
-        """Hidden Wolf has no special night actions beyond the standard werewolf kill."""
+        """Get the night actions for the Hidden Wolf role.
+
+        Hidden Wolf participates in the standard werewolf vote.
+        Special ability: Appears as villager when checked by Seer (handled elsewhere).
+        """
+        if not self.player.is_alive():
+            return []
+
+        # Get possible targets (non-werewolf players)
+        possible_targets = [
+            p for p in game_state.get_alive_players() if p.get_camp() != Camp.WEREWOLF
+        ]
+        if not possible_targets:
+            return []
+
+        # Get target from AI agent (participate in werewolf vote)
+        if self.player.agent:
+            # Build context for werewolves
+            werewolves = [w for w in game_state.get_players_by_camp(Camp.WEREWOLF) if w.is_alive()]
+            werewolf_names = [w.name for w in werewolves]
+            context = (
+                f"You are working with these werewolves: {', '.join(werewolf_names)}.\n"
+                f"All werewolves will vote on who to eliminate tonight.\n"
+                f"Choose a villager to vote for."
+            )
+
+            target = ActionSelector.get_target_from_agent(
+                agent=self.player.agent,
+                role_name="Hidden Wolf",
+                action_description="Vote for a player to kill tonight",
+                possible_targets=possible_targets,
+                allow_skip=False,
+                additional_context=context,
+                round_number=game_state.round_number,
+                phase="Night",
+            )
+
+            if target:
+                return [WerewolfVoteAction(self.player, target, game_state)]
+
         return []
 
     def get_config(self) -> RoleConfig:
@@ -391,10 +552,10 @@ class BloodMoonApostle(Role):
                 "into a werewolf and can start killing. You appear as a villager to the Seer "
                 "until transformed."
             ),
-            priority=None,  # No night action until transformed
-            can_act_night=False,
+            priority=ActionPriority.WEREWOLF,  # Acts with werewolves after transformation
+            can_act_night=True,  # Needs to check transformation condition every night
             can_act_day=False,
-            max_uses=1,  # Can only transform once
+            max_uses=None,  # Can act every night after transformation
         )
 
 
@@ -405,23 +566,53 @@ class NightmareWolf(Role):
     """
 
     def get_night_actions(self, game_state: GameStateProtocol) -> list[ActionProtocol]:
-        """Get the night actions for the Nightmare Wolf role."""
+        """Get the night actions for the Nightmare Wolf role.
+
+        Nightmare Wolf participates in the standard werewolf vote every night,
+        and can block one player's ability.
+        """
         if not self.player.is_alive():
             return []
 
-        # Get all alive players except self
-        possible_targets = game_state.get_alive_players(except_ids=[self.player.player_id])
+        actions: list[ActionProtocol] = []
 
-        if not possible_targets:
-            return []
+        # 1. Participate in standard werewolf vote (every night)
+        possible_targets = [
+            p for p in game_state.get_alive_players() if p.get_camp() != Camp.WEREWOLF
+        ]
+        if possible_targets and self.player.agent:
+            # Build context for werewolves
+            werewolves = [w for w in game_state.get_players_by_camp(Camp.WEREWOLF) if w.is_alive()]
+            werewolf_names = [w.name for w in werewolves]
+            context = (
+                f"You are working with these werewolves: {', '.join(werewolf_names)}.\n"
+                f"All werewolves will vote on who to eliminate tonight.\n"
+                f"Choose a villager to vote for."
+            )
 
-        # Get target from AI agent
-        if self.player.agent:
+            target = ActionSelector.get_target_from_agent(
+                agent=self.player.agent,
+                role_name="Nightmare Wolf",
+                action_description="Vote for a player to kill tonight",
+                possible_targets=possible_targets,
+                allow_skip=False,
+                additional_context=context,
+                round_number=game_state.round_number,
+                phase="Night",
+            )
+
+            if target:
+                actions.append(WerewolfVoteAction(self.player, target, game_state))
+
+        # 2. Special ability: Block a player's ability
+        block_targets = game_state.get_alive_players(except_ids=[self.player.player_id])
+
+        if block_targets and self.player.agent:
             target = ActionSelector.get_target_from_agent(
                 agent=self.player.agent,
                 role_name="Nightmare Wolf",
                 action_description="Choose a player to block tonight",
-                possible_targets=possible_targets,
+                possible_targets=block_targets,
                 allow_skip=True,
                 additional_context=(
                     "You can block one player's ability tonight. "
@@ -433,9 +624,9 @@ class NightmareWolf(Role):
             )
 
             if target:
-                return [NightmareWolfBlockAction(self.player, target, game_state)]
+                actions.append(NightmareWolfBlockAction(self.player, target, game_state))
 
-        return []
+        return actions
 
     def get_config(self) -> RoleConfig:
         """Get configuration for the Nightmare Wolf role."""

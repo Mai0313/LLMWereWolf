@@ -19,6 +19,36 @@ class ActionProcessorMixin:
     locale: "Locale"
     _log_event: "Callable"
 
+    @staticmethod
+    def _get_action_priority(action: "Action") -> int:
+        """Get action priority. Higher number = higher priority (executes first).
+
+        Args:
+            action: The action to get priority for.
+
+        Returns:
+            int: Priority value (higher executes first).
+        """
+        from llm_werewolf.core.types import ActionPriority
+
+        # Priority map ordered from highest to lowest priority
+        priority_map = {
+            "CupidLinkAction": ActionPriority.CUPID.value,
+            "NightmareWolfBlockAction": ActionPriority.NIGHTMARE_WOLF.value,
+            "GuardProtectAction": ActionPriority.GUARD.value,
+            "GuardianWolfProtectAction": ActionPriority.GUARD.value,
+            "WerewolfVoteAction": ActionPriority.WEREWOLF.value,
+            "WerewolfKillAction": ActionPriority.WEREWOLF.value,
+            "WolfBeautyCharmAction": ActionPriority.WEREWOLF.value,
+            "WhiteWolfKillAction": ActionPriority.WHITE_WOLF.value,
+            "WitchSaveAction": ActionPriority.WITCH.value,
+            "WitchPoisonAction": ActionPriority.WITCH.value,
+            "SeerCheckAction": ActionPriority.SEER.value,
+            "GraveyardKeeperCheckAction": ActionPriority.GRAVEYARD_KEEPER.value,
+            "RavenMarkAction": ActionPriority.RAVEN.value,
+        }
+        return priority_map.get(action.__class__.__name__, 0)
+
     def process_actions(self, actions: list) -> list[str]:
         """Process a list of actions.
 
@@ -35,24 +65,40 @@ class ActionProcessorMixin:
             WitchPoisonAction,
             GuardProtectAction,
         )
-        from llm_werewolf.core.actions.werewolf import WhiteWolfKillAction, WolfBeautyCharmAction
+        from llm_werewolf.core.actions.werewolf import (
+            WhiteWolfKillAction,
+            WolfBeautyCharmAction,
+            NightmareWolfBlockAction,
+        )
 
         messages = []
 
-        def get_action_priority(action: "Action") -> int:
-            priority_map = {
-                "GuardProtectAction": 0,
-                "WerewolfVoteAction": 1,
-                "WerewolfKillAction": 1,
-                "WitchSaveAction": 2,
-                "WitchPoisonAction": 3,
-                "SeerCheckAction": 4,
-            }
-            return priority_map.get(action.__class__.__name__, 100)
-
-        sorted_actions = sorted(actions, key=get_action_priority)
+        # Sort by priority: higher priority value = executes first
+        sorted_actions = sorted(actions, key=self._get_action_priority, reverse=True)
 
         for action in sorted_actions:
+            # Check if actor is blocked by Nightmare Wolf
+            if (
+                self.game_state
+                and self.game_state.nightmare_blocked
+                and hasattr(action, "actor")
+                and action.actor.player_id == self.game_state.nightmare_blocked
+                and not isinstance(action, NightmareWolfBlockAction)
+            ):
+                self._log_event(
+                    EventType.MESSAGE,
+                    self.locale.get(
+                        "nightmare_blocked",
+                        player=action.actor.name,
+                        role=action.actor.get_role_name(),
+                    ),
+                    data={
+                        "player_id": action.actor.player_id,
+                        "role": action.actor.get_role_name(),
+                    },
+                )
+                continue
+
             if action.validate():
                 result_messages = action.execute()
 
@@ -81,15 +127,11 @@ class ActionProcessorMixin:
                         )
                 elif isinstance(action, WitchPoisonAction):
                     self._log_event(
-                        EventType.WITCH_POISONED,
-                        self.locale.get("witch_poisoned", target=action.target.name),
+                        EventType.MESSAGE,
+                        self.locale.get("witch_uses_poison", target=action.target.name),
                         data={"target_id": action.target.player_id},
                     )
-                    # Mark poisoned target for death
-                    if action.target.is_alive() and self.game_state:
-                        action.target.kill()
-                        self.game_state.night_deaths.add(action.target.player_id)
-                        self.game_state.death_causes[action.target.player_id] = "witch_poison"
+                    # Note: Actual death is handled in resolve_deaths()
                     # Record decision
                     if action.actor.agent and self.game_state:
                         action.actor.agent.add_decision(

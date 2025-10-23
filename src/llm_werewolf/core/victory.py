@@ -36,17 +36,36 @@ class VictoryChecker:
         """Check if werewolves have won.
 
         Werewolves win when they equal or outnumber the villagers.
+        Note: Untransformed Blood Moon Apostle doesn't count as werewolf for victory.
 
         Returns:
             VictoryResult: The victory check result.
         """
         alive_players = self.game_state.get_alive_players()
 
-        werewolf_count = sum(1 for p in alive_players if p.get_camp() == "werewolf")
+        # Count werewolves, excluding untransformed Blood Moon Apostle
+        werewolf_count = 0
+        for p in alive_players:
+            if p.get_camp() == "werewolf":
+                # Check if it's an untransformed Blood Moon Apostle
+                if (
+                    p.role.name == "Blood Moon Apostle"
+                    and hasattr(p.role, "transformed")
+                    and not p.role.transformed
+                ):
+                    continue  # Don't count untransformed apostle
+                werewolf_count += 1
+
         villager_count = sum(1 for p in alive_players if p.get_camp() == "villager")
 
         if werewolf_count >= villager_count and werewolf_count > 0:
-            werewolf_ids = [p.player_id for p in alive_players if p.get_camp() == "werewolf"]
+            # Include all werewolves (including transformed Blood Moon Apostle) in winner list
+            werewolf_ids = []
+            for p in alive_players:
+                if p.get_camp() == "werewolf":
+                    # Untransformed Blood Moon Apostle still wins with werewolves
+                    werewolf_ids.append(p.player_id)
+
             return VictoryResult(
                 has_winner=True,
                 winner_camp="werewolf",
@@ -60,12 +79,14 @@ class VictoryChecker:
         """Check if villagers have won.
 
         Villagers win when all werewolves are eliminated.
+        Note: Blood Moon Apostle (transformed or not) counts as werewolf for elimination.
 
         Returns:
             VictoryResult: The victory check result.
         """
         alive_players = self.game_state.get_alive_players()
 
+        # Count all werewolves (including Blood Moon Apostle, even if untransformed)
         werewolf_count = sum(1 for p in alive_players if p.get_camp() == "werewolf")
 
         if werewolf_count == 0:

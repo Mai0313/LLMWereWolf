@@ -34,8 +34,6 @@
 我覺得 `PlayerConfig` 好像沒必要存在 因為可以透過 `LLMAgent` 繼承 `BaseAgent`
 因為 `api_key_env` 其實也只是從環境變數取得以後送進去 `BaseAgent` 而已
 
-
-
 ## 請依照我代碼實際狀況去更新 `README.md`, `README.zh-TW.md`, 和 `README.zh-CN.md`
 
 目前代碼經過很多迭代 但都沒有更新文檔 所以請你逐行檢查文件是否與代碼一致

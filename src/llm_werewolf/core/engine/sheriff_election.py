@@ -1,5 +1,7 @@
 """Sheriff election phase logic for the game engine."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from llm_werewolf.core.types import EventType, PlayerProtocol
@@ -15,9 +17,9 @@ if TYPE_CHECKING:
 class SheriffElectionMixin:
     """Mixin for handling sheriff election phase logic."""
 
-    game_state: "GameState | None"
-    locale: "Locale"
-    _log_event: "Callable"
+    game_state: GameState | None
+    locale: Locale
+    _log_event: Callable
 
     def execute_sheriff_election(self) -> None:
         """Execute the sheriff election phase.

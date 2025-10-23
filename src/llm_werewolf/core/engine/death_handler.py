@@ -1,5 +1,7 @@
 """Death handling logic for the game engine."""
 
+from __future__ import annotations
+
 import random
 from typing import TYPE_CHECKING
 
@@ -15,9 +17,9 @@ if TYPE_CHECKING:
 class DeathHandlerMixin:
     """Mixin for handling death-related game logic."""
 
-    game_state: "GameState | None"
-    locale: "Locale"
-    _log_event: "Callable"
+    game_state: GameState | None
+    locale: Locale
+    _log_event: Callable
 
     def _handle_lover_death(self, dead_player: PlayerProtocol) -> None:
         """Handle lover partner death when a player dies.

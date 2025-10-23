@@ -1,5 +1,7 @@
 """Day phase logic for the game engine."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from llm_werewolf.core.types import EventType, GamePhase, PlayerProtocol
@@ -14,11 +16,11 @@ if TYPE_CHECKING:
 class DayPhaseMixin:
     """Mixin for handling day phase logic."""
 
-    game_state: "GameState | None"
-    locale: "Locale"
-    _log_event: "Callable"
+    game_state: GameState | None
+    locale: Locale
+    _log_event: Callable
     public_discussion_history: list[str]
-    _get_public_discussion_context: "Callable[[], str]"
+    _get_public_discussion_context: Callable[[], str]
 
     def _build_discussion_context(self, player: PlayerProtocol) -> str:
         """Build context for day discussion.

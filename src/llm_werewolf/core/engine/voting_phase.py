@@ -1,5 +1,7 @@
 """Voting phase logic for the game engine."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from llm_werewolf.core.types import EventType, GamePhase, PlayerProtocol
@@ -10,21 +12,21 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from llm_werewolf.core.locale import Locale
-    from llm_werewolf.core.actions import Action
     from llm_werewolf.core.game_state import GameState
+    from llm_werewolf.core.actions.base import Action
 
 
 class VotingPhaseMixin:
     """Mixin for handling voting phase logic."""
 
-    game_state: "GameState | None"
-    locale: "Locale"
-    _log_event: "Callable"
-    _handle_elder_penalty: "Callable"
-    _handle_lover_death: "Callable"
-    _handle_wolf_beauty_charm_death: "Callable"
-    _handle_death_abilities: "Callable"
-    _get_public_discussion_context: "Callable[[], str]"
+    game_state: GameState | None
+    locale: Locale
+    _log_event: Callable
+    _handle_elder_penalty: Callable
+    _handle_lover_death: Callable
+    _handle_wolf_beauty_charm_death: Callable
+    _handle_death_abilities: Callable
+    _get_public_discussion_context: Callable[[], str]
 
     def _build_voting_context(self, player: PlayerProtocol) -> str:
         """Build context for voting phase.
@@ -76,7 +78,7 @@ class VotingPhaseMixin:
 
         return "\n".join(context_parts)
 
-    def _collect_votes(self) -> list["Action"]:
+    def _collect_votes(self) -> list[Action]:
         """Collect votes from all players.
 
         Returns:
@@ -127,7 +129,7 @@ class VotingPhaseMixin:
 
         return vote_actions
 
-    def _process_votes(self, vote_actions: list["Action"]) -> None:
+    def _process_votes(self, vote_actions: list[Action]) -> None:
         """Process and log vote actions.
 
         Args:

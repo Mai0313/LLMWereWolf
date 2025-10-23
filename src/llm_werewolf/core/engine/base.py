@@ -1,13 +1,13 @@
 """Base game engine class with core functionality."""
 
+from __future__ import annotations
+
 import random
 from typing import TYPE_CHECKING, Any
-from pathlib import Path
 
 from rich.console import Console
 
 from llm_werewolf.core.types import Event, EventType, GamePhase, RoleProtocol, AgentProtocol
-from llm_werewolf.core.config import GameConfig
 from llm_werewolf.core.events import EventLogger
 from llm_werewolf.core.locale import Locale
 from llm_werewolf.core.player import Player
@@ -16,7 +16,10 @@ from llm_werewolf.core.game_state import GameState
 from llm_werewolf.core.event_formatter import EventFormatter
 
 if TYPE_CHECKING:
+    from pathlib import Path
     from collections.abc import Callable
+
+    from llm_werewolf.core.config import GameConfig
 
 console = Console()
 

@@ -4,10 +4,19 @@ This module defines structural type protocols to avoid circular imports.
 Protocols define the interface of objects without requiring actual imports.
 """
 
-from typing import Protocol, runtime_checkable
+from __future__ import annotations
 
-from llm_werewolf.core.types.enums import Camp, GamePhase, ActionType, PlayerStatus, ActionPriority
-from llm_werewolf.core.types.models import PlayerInfo, RoleConfig
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
+
+if TYPE_CHECKING:
+    from llm_werewolf.core.types.enums import (
+        Camp,
+        GamePhase,
+        ActionType,
+        PlayerStatus,
+        ActionPriority,
+    )
+    from llm_werewolf.core.types.models import PlayerInfo, RoleConfig
 
 
 @runtime_checkable
@@ -33,7 +42,7 @@ class AgentProtocol(Protocol):
 class RoleProtocol(Protocol):
     """Protocol for role objects."""
 
-    player: "PlayerProtocol"
+    player: PlayerProtocol
     ability_uses: int
     config: RoleConfig
     disabled: bool
@@ -62,15 +71,15 @@ class RoleProtocol(Protocol):
         """Get the configuration for this role."""
         ...
 
-    def can_act_tonight(self, player: "PlayerProtocol", round_number: int) -> bool:
+    def can_act_tonight(self, player: PlayerProtocol, round_number: int) -> bool:
         """Check if this role can perform an action tonight."""
         ...
 
-    def can_act_today(self, player: "PlayerProtocol") -> bool:
+    def can_act_today(self, player: PlayerProtocol) -> bool:
         """Check if this role can perform an action today."""
         ...
 
-    def night_action(self, game_state: "GameStateProtocol") -> "ActionProtocol | None":
+    def night_action(self, game_state: GameStateProtocol) -> ActionProtocol | None:
         """Perform the role's night action."""
         ...
 
@@ -166,6 +175,9 @@ class GameStateProtocol(Protocol):
     votes: dict[str, str]
     raven_marked: str | None
     winner: str | None
+    sheriff_id: str | None
+    sheriff_election_done: bool
+    sheriff_votes: dict[str, str]
 
     def reset_deaths(self) -> None:
         """Reset the death sets for a new round."""

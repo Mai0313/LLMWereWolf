@@ -1,5 +1,7 @@
 """Night phase logic for the game engine."""
 
+from __future__ import annotations
+
 import random
 from typing import TYPE_CHECKING
 
@@ -9,20 +11,20 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from llm_werewolf.core.locale import Locale
-    from llm_werewolf.core.actions import Action
     from llm_werewolf.core.game_state import GameState
+    from llm_werewolf.core.actions.base import Action
 
 
 class NightPhaseMixin:
     """Mixin for handling night phase logic."""
 
-    game_state: "GameState | None"
-    locale: "Locale"
-    _log_event: "Callable"
-    process_actions: "Callable"
-    resolve_deaths: "Callable"
+    game_state: GameState | None
+    locale: Locale
+    _log_event: Callable
+    process_actions: Callable
+    resolve_deaths: Callable
     werewolf_discussion_history: list[str]
-    _get_werewolf_discussion_context: "Callable[[], str]"
+    _get_werewolf_discussion_context: Callable[[], str]
 
     def _run_werewolf_discussion(self) -> list[str]:
         """Run werewolf discussion phase where werewolves discuss their target.

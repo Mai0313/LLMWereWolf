@@ -1,26 +1,40 @@
 """Action processing logic for the game engine."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
-from llm_werewolf.core.types import EventType
+from llm_werewolf.core.types import EventType, ActionPriority
+from llm_werewolf.core.actions.villager import (
+    CupidLinkAction,
+    SeerCheckAction,
+    WitchSaveAction,
+    WitchPoisonAction,
+    GuardProtectAction,
+)
+from llm_werewolf.core.actions.werewolf import (
+    WhiteWolfKillAction,
+    WolfBeautyCharmAction,
+    NightmareWolfBlockAction,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from llm_werewolf.core.locale import Locale
-    from llm_werewolf.core.actions import Action
     from llm_werewolf.core.game_state import GameState
+    from llm_werewolf.core.actions.base import Action
 
 
 class ActionProcessorMixin:
     """Mixin for processing game actions."""
 
-    game_state: "GameState | None"
-    locale: "Locale"
-    _log_event: "Callable"
+    game_state: GameState | None
+    locale: Locale
+    _log_event: Callable
 
     @staticmethod
-    def _get_action_priority(action: "Action") -> int:
+    def _get_action_priority(action: Action) -> int:
         """Get action priority. Higher number = higher priority (executes first).
 
         Args:
@@ -29,8 +43,6 @@ class ActionProcessorMixin:
         Returns:
             int: Priority value (higher executes first).
         """
-        from llm_werewolf.core.types import ActionPriority
-
         # Priority map ordered from highest to lowest priority
         priority_map = {
             "CupidLinkAction": ActionPriority.CUPID.value,
@@ -58,19 +70,6 @@ class ActionProcessorMixin:
         Returns:
             list[str]: Messages from processing actions.
         """
-        from llm_werewolf.core.actions.villager import (
-            CupidLinkAction,
-            SeerCheckAction,
-            WitchSaveAction,
-            WitchPoisonAction,
-            GuardProtectAction,
-        )
-        from llm_werewolf.core.actions.werewolf import (
-            WhiteWolfKillAction,
-            WolfBeautyCharmAction,
-            NightmareWolfBlockAction,
-        )
-
         messages = []
 
         # Sort by priority: higher priority value = executes first

@@ -3,6 +3,7 @@ from typing import Any
 from rich.text import Text
 from textual.widgets import RichLog
 
+from llm_werewolf.core.types import EventType
 from llm_werewolf.core.events import Event
 from llm_werewolf.core.event_formatter import EventFormatter
 
@@ -16,6 +17,13 @@ class ChatPanel(RichLog):
         self.events: list[Event] = []
         self._streaming_line_count: int = 0
 
+        # Buffers for grouped display
+        self._night_actions: list[tuple[EventType, str]] = []
+        self._discussion_messages: list[str] = []
+        self._werewolf_discussion: list[str] = []
+        self._vote_buffer: dict[str, list[str]] = {}  # target_name -> [voters]
+        self._last_phase = ""
+
     def add_event(self, event: Event) -> None:
         """Add an event to the chat history.
 
@@ -26,14 +34,278 @@ class ChatPanel(RichLog):
         self.display_event(event)
 
     def display_event(self, event: Event) -> None:
-        """Display an event in the chat panel.
+        """Display an event in the chat panel with grouped formatting.
 
         Args:
             event: The event to display.
         """
-        # Use the centralized event formatter
-        text = EventFormatter.format_event(event, include_timestamp=True)
-        self.write(text)
+        # Handle phase transitions
+        if event.event_type == EventType.PHASE_CHANGED:
+            self._handle_phase_change(event)
+            return
+
+        # Group events by type for better presentation
+        if event.event_type == EventType.GAME_STARTED:
+            self._present_game_start(event)
+        elif event.event_type == EventType.GAME_ENDED:
+            self._present_game_end(event)
+        elif event.event_type == EventType.MESSAGE:
+            self._handle_narrator_message(event)
+        elif event.event_type == EventType.ROLE_ACTING:
+            # Buffer night actions instead of showing them immediately
+            pass
+        elif event.event_type in {
+            EventType.GUARD_PROTECTED,
+            EventType.WITCH_SAVED,
+            EventType.WITCH_POISONED,
+            EventType.SEER_CHECKED,
+            EventType.WEREWOLF_KILLED,
+            EventType.LOVERS_LINKED,
+        }:
+            self._buffer_night_action(event)
+        elif event.event_type == EventType.PLAYER_DIED:
+            self._present_death(event)
+        elif event.event_type == EventType.PLAYER_SPEECH:
+            self._buffer_discussion(event)
+        elif event.event_type == EventType.PLAYER_DISCUSSION:
+            self._buffer_werewolf_discussion(event)
+        elif event.event_type == EventType.VOTE_CAST:
+            self._buffer_vote(event)
+        elif event.event_type == EventType.VOTE_RESULT:
+            if "📊" in event.message or "統計" in event.message:
+                # This is the vote summary header
+                self._flush_votes()
+        elif event.event_type == EventType.PLAYER_ELIMINATED:
+            self._present_elimination(event)
+        elif event.event_type == EventType.HUNTER_REVENGE:
+            text = Text(f"🏹 {event.message}", style="bold yellow")
+            self.write(text)
+        elif event.event_type in {
+            EventType.SHERIFF_CAMPAIGN_STARTED,
+            EventType.SHERIFF_CANDIDATE_SPEECH,
+            EventType.SHERIFF_VOTE_CAST,
+            EventType.SHERIFF_ELECTED,
+            EventType.SHERIFF_BADGE_TRANSFERRED,
+        }:
+            text = Text(f"🎖️  {event.message}", style="gold1")
+            self.write(text)
+        elif event.event_type == EventType.ROLE_REVEALED:
+            text = Text(f"🎭 {event.message}", style="bold magenta")
+            self.write(text)
+        else:
+            # Default: use centralized formatter
+            text = EventFormatter.format_event(event, include_timestamp=True)
+            self.write(text)
+
+    def _handle_phase_change(self, event: Event) -> None:
+        """Handle phase transition with visual separators."""
+        if event.data and event.data.get("phase") == "night":
+            # Flush any buffered content before night
+            self._flush_discussion()
+            self._flush_votes()
+
+            round_num = event.data.get("round", 0)
+            self.write("")
+            self.write(Text("═" * 70, style="blue"))
+            self.write(
+                Text(f"                    🌙 第 {round_num} 輪 - 黑夜 🌙", style="bold blue")
+            )
+            self.write(Text("═" * 70, style="blue"))
+            self.write("")
+        elif event.data and event.data.get("phase") == "day":
+            # Flush night actions before day
+            self._flush_night_actions()
+
+            round_num = event.data.get("round", 0)
+            self.write("")
+            self.write(Text("═" * 70, style="yellow"))
+            self.write(
+                Text(f"                    ☀️  第 {round_num} 輪 - 白天 ☀️", style="bold yellow")
+            )
+            self.write(Text("═" * 70, style="yellow"))
+            self.write("")
+
+    def _handle_narrator_message(self, event: Event) -> None:
+        """Handle narrator messages."""
+        if not event.data:
+            text = Text(event.message, style="dim italic")
+            self.write(text)
+            return
+
+        action = event.data.get("action", "")
+
+        if action == "night_falls":
+            self.write(Text("🌙 天黑請閉眼...", style="bold blue"))
+        elif action == "werewolves_wake":
+            self.write("")
+            self.write(Text("🐺 狼人，請睜眼...", style="bold red"))
+            self.write("")
+        elif action == "werewolves_vote":
+            # Flush werewolf discussion before voting
+            self._flush_werewolf_discussion()
+            self.write("")
+            self.write(Text("🐺 狼人正在投票...", style="dim red"))
+        elif action == "werewolves_sleep":
+            # Flush night actions when werewolves sleep
+            self._flush_night_actions()
+            self.write("")
+            self.write(Text("🐺 狼人，請閉眼...", style="bold blue"))
+        elif action == "daybreak":
+            self.write(Text("☀️  天亮了，所有人請睜眼...", style="bold yellow"))
+        else:
+            text = Text(event.message, style="dim italic")
+            self.write(text)
+
+    def _buffer_night_action(self, event: Event) -> None:
+        """Buffer night actions for grouped display."""
+        self._night_actions.append((event.event_type, event.message))
+
+    def _flush_night_actions(self) -> None:
+        """Display all buffered night actions."""
+        if not self._night_actions:
+            return
+
+        self.write("")
+        self.write(Text("─── 夜晚行動結果 ───", style="dim cyan"))
+
+        for event_type, message in self._night_actions:
+            # Remove emoji if already present
+            clean_msg = message
+            for emoji in ["🛡️", "💊", "☠️", "🔮", "🐺", "💕", "🐺💋"]:
+                clean_msg = clean_msg.replace(emoji, "").strip()
+
+            # Add emoji based on event type
+            if event_type == EventType.GUARD_PROTECTED:
+                icon = "🛡️"
+            elif event_type == EventType.WITCH_SAVED:
+                icon = "💊"
+            elif event_type == EventType.WITCH_POISONED:
+                icon = "☠️"
+            elif event_type == EventType.SEER_CHECKED:
+                icon = "🔮"
+            elif event_type == EventType.WEREWOLF_KILLED:
+                icon = "🐺"
+            elif event_type == EventType.LOVERS_LINKED:
+                icon = "💕"
+            else:
+                icon = "  "
+
+            self.write(Text(f"   {icon} {clean_msg}", style="cyan"))
+
+        self.write("")
+        self._night_actions = []
+
+    def _buffer_discussion(self, event: Event) -> None:
+        """Buffer discussion messages for grouped display."""
+        if event.data:
+            player_name = event.data.get("player_name", "Unknown")
+            speech = event.data.get("speech", "")
+            self._discussion_messages.append(f"{player_name}: {speech}")
+
+    def _buffer_werewolf_discussion(self, event: Event) -> None:
+        """Buffer werewolf discussion for grouped display."""
+        if event.data:
+            player_name = event.data.get("player_name", "Unknown")
+            speech = event.data.get("speech", "")
+            self._werewolf_discussion.append(f"{player_name}: {speech}")
+
+    def _flush_werewolf_discussion(self) -> None:
+        """Display werewolf discussion (only called during night phase)."""
+        if self._werewolf_discussion:
+            self.write("")
+            self.write(
+                Text("┌─ 狼人討論 ─────────────────────────────────────────────┐", style="red")
+            )
+            for msg in self._werewolf_discussion:
+                self.write(Text(f"│ 🐺 {msg}", style="red"))
+            self.write(
+                Text("└────────────────────────────────────────────────────────┘", style="red")
+            )
+            self._werewolf_discussion = []
+
+    def _flush_discussion(self) -> None:
+        """Display all buffered player discussion messages."""
+        if self._discussion_messages:
+            self.write("")
+            self.write(Text("💬 玩家發言", style="bold cyan"))
+            self.write(Text("─" * 70, style="dim"))
+            for msg in self._discussion_messages:
+                self.write(Text(f"   {msg}", style="cyan"))
+            self.write("")
+            self._discussion_messages = []
+
+    def _buffer_vote(self, event: Event) -> None:
+        """Buffer vote for grouped display."""
+        if event.data:
+            target_name = event.data.get("target_name", "Unknown")
+            voter_name = event.data.get("voter_name", "Unknown")
+            if target_name not in self._vote_buffer:
+                self._vote_buffer[target_name] = []
+            self._vote_buffer[target_name].append(voter_name)
+
+    def _flush_votes(self) -> None:
+        """Display all buffered votes."""
+        if not self._vote_buffer:
+            return
+
+        # First flush any discussion
+        self._flush_discussion()
+
+        self.write("")
+        self.write(Text("🗳️  投票階段", style="bold yellow"))
+        self.write("")
+
+        # Sort by vote count
+        sorted_votes = sorted(self._vote_buffer.items(), key=lambda x: len(x[1]), reverse=True)
+
+        # Add rank emoji
+        rank_emoji = {0: "🥇", 1: "🥈", 2: "🥉"}
+
+        for idx, (target, voters) in enumerate(sorted_votes):
+            vote_count = len(voters)
+            voters_str = ", ".join(voters)
+            rank = rank_emoji.get(idx, "  ")
+
+            text = Text()
+            text.append(f" {rank} ", style="bold yellow")
+            text.append(f"{target} ", style="cyan")
+            text.append(f"({vote_count}票)", style="yellow")
+            text.append(f" ← {voters_str}", style="dim")
+            self.write(text)
+
+        self.write("")
+        self._vote_buffer = {}
+
+    def _present_game_start(self, event: Event) -> None:
+        """Present game start."""
+        self.write("")
+        self.write(Text("═" * 70, style="bold green"))
+        self.write(Text("                      🎮 遊戲開始 🎮", style="bold green"))
+        self.write(Text("═" * 70, style="bold green"))
+        if event.data:
+            player_count = event.data.get("player_count", 0)
+            self.write(Text(f"📋 玩家人數：{player_count} 人", style="green"))
+        self.write("")
+
+    def _present_game_end(self, event: Event) -> None:
+        """Present game end."""
+        self.write("")
+        self.write(Text("═" * 70, style="bold magenta"))
+        self.write(Text("                      🏆 遊戲結束 🏆", style="bold magenta"))
+        self.write(Text("═" * 70, style="bold magenta"))
+        self.write("")
+        self.write(Text(event.message, style="bold magenta"))
+        self.write("")
+
+    def _present_death(self, event: Event) -> None:
+        """Present player death."""
+        self.write(Text(f"💀 {event.message}", style="bold red"))
+
+    def _present_elimination(self, event: Event) -> None:
+        """Present player elimination."""
+        self.write("")
+        self.write(Text(f"⚰️  {event.message}", style="bold red"))
+        self.write("")
 
     def add_system_message(self, message: str) -> None:
         """Add a system message to the chat.

@@ -9,6 +9,7 @@ from llm_werewolf.core.utils import load_config
 from llm_werewolf.core.config import create_game_config_from_player_count
 from llm_werewolf.core.locale import Locale
 from llm_werewolf.core.role_registry import create_roles
+from llm_werewolf.ui.console_presenter import ConsolePresenter
 
 console = Console()
 
@@ -35,6 +36,11 @@ def main(config: str) -> None:
     # Initialize locale and game engine with language support
     locale = Locale(players_config.language)
     engine = GameEngine(game_config, language=players_config.language)
+
+    # Set up beautified console presenter
+    presenter = ConsolePresenter(locale)
+    engine.on_event = presenter.present_event
+
     engine.setup_game(players=players, roles=roles)
     logfire.info("game_created", config_path=str(config_path), num_players=num_players)
 

@@ -27,3 +27,24 @@ players:
 
   - name: DemoPlayer9
     model: demo
+
+  - name: DemoPlayer10
+    model: demo
+
+  - name: DemoPlayer11
+    model: demo
+
+  - name: DemoPlayer12
+    model: demo
+
+  - name: DemoPlayer13
+    model: demo
+
+  - name: DemoPlayer14
+    model: demo
+
+  - name: DemoPlayer15
+    model: demo
+
+  - name: DemoPlayer16
+    model: demo

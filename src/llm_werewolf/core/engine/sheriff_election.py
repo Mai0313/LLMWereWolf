@@ -216,7 +216,7 @@ class SheriffElectionMixin:
             if not voter.agent:
                 continue
 
-            context = self._build_voting_context(voter, candidates)
+            context = self._build_sheriff_voting_context(voter, candidates)
             vote_target = ActionSelector.select_target(
                 voter.agent, context, candidates, "Vote for sheriff", allow_skip=True
             )
@@ -233,7 +233,7 @@ class SheriffElectionMixin:
 
         return vote_counts
 
-    def _build_voting_context(
+    def _build_sheriff_voting_context(
         self, player: PlayerProtocol, candidates: list[PlayerProtocol]
     ) -> str:
         """Build context for sheriff voting.

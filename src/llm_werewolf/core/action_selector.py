@@ -289,3 +289,103 @@ class ActionSelector:
                 return random.choice(possible_targets)  # noqa: S311
 
         return None
+
+    @staticmethod
+    def ask_yes_no(
+        agent: AgentProtocol,
+        context: str,
+        question: str,
+        role_name: str = "",
+        round_number: int | None = None,
+        phase: str | None = None,
+    ) -> bool:
+        """Ask an agent a yes/no question.
+
+        Args:
+            agent: The AI agent.
+            context: Additional context for the question.
+            question: The yes/no question to ask.
+            role_name: Name of the role (optional, can be extracted from context).
+            round_number: Current round number.
+            phase: Current game phase.
+
+        Returns:
+            bool: True for yes, False for no.
+        """
+        if not role_name:
+            role_name = "Player"
+
+        prompt = ActionSelector.build_yes_no_prompt(
+            role_name, question, context, round_number, phase
+        )
+
+        try:
+            response = agent.get_response(prompt)
+            return ActionSelector.parse_yes_no(response)
+        except Exception:
+            return False
+
+    @staticmethod
+    def select_target(
+        agent: AgentProtocol,
+        context: str,
+        possible_targets: list[PlayerProtocol],
+        action_description: str,
+        role_name: str = "",
+        allow_skip: bool = False,
+        fallback_random: bool = True,
+        round_number: int | None = None,
+        phase: str | None = None,
+    ) -> PlayerProtocol | None:
+        """Select a target from a list of possible targets.
+
+        Args:
+            agent: The AI agent.
+            context: Additional context for the selection.
+            possible_targets: List of possible targets.
+            action_description: Description of the action.
+            role_name: Name of the role (optional).
+            allow_skip: Whether skipping is allowed.
+            fallback_random: If True, randomly select if AI fails.
+            round_number: Current round number.
+            phase: Current game phase.
+
+        Returns:
+            PlayerProtocol | None: Selected target, or None if skipped.
+        """
+        if not role_name:
+            role_name = "Player"
+
+        return ActionSelector.get_target_from_agent(
+            agent,
+            role_name,
+            action_description,
+            possible_targets,
+            allow_skip,
+            context,
+            fallback_random,
+            round_number,
+            phase,
+        )
+
+    @staticmethod
+    def get_free_response(
+        agent: AgentProtocol,
+        context: str,
+        prompt: str,
+    ) -> str:
+        """Get a free-form text response from an agent.
+
+        Args:
+            agent: The AI agent.
+            context: Context information.
+            prompt: The prompt/question to ask.
+
+        Returns:
+            str: The agent's response.
+        """
+        full_prompt = f"{context}\n\n{prompt}"
+        try:
+            return agent.get_response(full_prompt)
+        except Exception:
+            return ""

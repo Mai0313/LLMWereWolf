@@ -114,17 +114,6 @@ class DayPhaseMixin:
 
         for player in alive_players:
             if player.agent:
-                # Log that player is preparing to speak
-                self._log_event(
-                    EventType.MESSAGE,
-                    f"💬 {player.name}（{player.agent.model}）正在思考發言...",
-                    data={
-                        "player_id": player.player_id,
-                        "player_name": player.name,
-                        "action": "preparing_speech",
-                    },
-                )
-
                 game_context = self._build_discussion_context(player)
 
                 try:

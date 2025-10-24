@@ -65,17 +65,6 @@ class NightPhaseMixin:
         # Each werewolf discusses
         for werewolf in werewolves:
             if werewolf.agent:
-                # Log preparing
-                self._log_event(
-                    EventType.MESSAGE,
-                    f"💬 {werewolf.name}（狼人）正在思考...",
-                    data={
-                        "player_id": werewolf.player_id,
-                        "player_name": werewolf.name,
-                        "action": "preparing_speech",
-                    },
-                )
-
                 # Build discussion context with werewolf history
                 context_parts = [
                     f"You are {werewolf.name}, a Werewolf.",

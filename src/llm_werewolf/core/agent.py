@@ -1,10 +1,17 @@
+import os
 import random
 from functools import cached_property
 
+import dotenv
 from openai import OpenAI
 from pydantic import Field, BaseModel, ConfigDict, computed_field
 from rich.console import Console
 from openai.types.shared import ReasoningEffort
+
+from llm_werewolf.core.config import PlayerConfig
+
+dotenv.load_dotenv()
+
 
 console = Console()
 
@@ -187,3 +194,43 @@ class LLMAgent(BaseAgent):
         if not self.decision_history:
             return ""
         return "\n\nYour previous actions:\n" + "\n".join(f"- {d}" for d in self.decision_history)
+
+
+def create_agent(
+    config: PlayerConfig, language: str = "en-US"
+) -> DemoAgent | HumanAgent | LLMAgent:
+    """Create an agent instance from player configuration.
+
+    Args:
+        config: Player configuration.
+        language: Language code for the agent (e.g., "en-US", "zh-TW").
+
+    Returns:
+        DemoAgent | HumanAgent | LLMAgent: Created agent instance.
+
+    Raises:
+        ValueError: If configuration is invalid or API key is missing.
+    """
+    model = config.model.lower()
+
+    if model == "human":
+        return HumanAgent(name=config.name, model="human")
+
+    if model == "demo":
+        return DemoAgent(name=config.name, model="demo")
+
+    api_key = None
+    if config.api_key_env:
+        api_key = os.getenv(config.api_key_env)
+    if not api_key:
+        raise ValueError(
+            f"API key not found in environment variable '{config.api_key_env}' for player '{config.name}'"
+        )
+
+    return LLMAgent(
+        name=config.name,
+        model=config.model,
+        api_key=api_key,
+        base_url=config.base_url,
+        language=language,
+    )

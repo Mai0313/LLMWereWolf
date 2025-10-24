@@ -196,7 +196,7 @@ class SheriffElectionMixin:
         return "\n".join(context_parts)
 
     def _conduct_sheriff_voting(self, candidates: list[PlayerProtocol]) -> dict[str, int]:
-        """Have all players vote for sheriff.
+        """Have non-candidate players vote for sheriff.
 
         Args:
             candidates: List of sheriff candidates.
@@ -207,12 +207,26 @@ class SheriffElectionMixin:
         if not self.game_state:
             return {}
 
-        self._log_event(EventType.MESSAGE, "🎖️ All players will now vote for sheriff.")
+        # Get all alive players who are NOT candidates
+        candidate_ids = {c.player_id for c in candidates}
+        alive_players = self.game_state.get_alive_players()
+        voters = [p for p in alive_players if p.player_id not in candidate_ids]
+
+        if not voters:
+            self._log_event(
+                EventType.MESSAGE,
+                "🎖️ No non-candidate players available to vote. All players are candidates.",
+            )
+            return {c.player_id: 0 for c in candidates}
+
+        self._log_event(
+            EventType.MESSAGE,
+            f"🎖️ {len(voters)} non-candidate player(s) will now vote for sheriff.",
+        )
 
         vote_counts: dict[str, int] = {c.player_id: 0 for c in candidates}
-        alive_players = self.game_state.get_alive_players()
 
-        for voter in alive_players:
+        for voter in voters:
             if not voter.agent:
                 continue
 

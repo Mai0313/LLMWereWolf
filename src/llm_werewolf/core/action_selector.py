@@ -369,11 +369,7 @@ class ActionSelector:
         )
 
     @staticmethod
-    def get_free_response(
-        agent: AgentProtocol,
-        context: str,
-        prompt: str,
-    ) -> str:
+    def get_free_response(agent: AgentProtocol, context: str, prompt: str) -> str:
         """Get a free-form text response from an agent.
 
         Args:

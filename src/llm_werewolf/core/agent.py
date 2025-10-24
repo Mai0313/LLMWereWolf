@@ -88,14 +88,50 @@ class DemoAgent(BaseAgent):
     model: str = Field(default="demo")
 
     def get_response(self, message: str) -> str:
-        """Return a canned response.
+        """Return a canned response based on message type.
 
         Args:
-            message: The prompt message (ignored).
+            message: The prompt message.
 
         Returns:
-            str: A random canned response.
+            str: An appropriate response based on the message type.
         """
+        # Check if it's a yes/no question
+        if "ONLY 'YES' or 'NO'" in message or "respond with ONLY 'YES' or 'NO'" in message:
+            # For sheriff campaign, use 30% chance to say YES (creates 2-3 candidates in 12 players)
+            if "campaign for sheriff" in message.lower():
+                return "YES" if random.random() < 0.3 else "NO"  # noqa: S311
+            # For other yes/no questions, 50/50
+            return random.choice(["YES", "NO"])  # noqa: S311
+
+        # Check if it's a target selection question (contains numbered list)
+        if "responding with ONLY the number" in message or "select a target" in message.lower():
+            # Extract available numbers from the message
+            import re
+
+            # Find all lines that look like "1. PlayerName"
+            lines = message.split("\n")
+            max_number = 0
+            for line in lines:
+                match = re.match(r"^\s*(\d+)\.\s+", line)
+                if match:
+                    max_number = max(max_number, int(match.group(1)))
+
+            if max_number > 0:
+                # Randomly select a number
+                return str(random.randint(1, max_number))  # noqa: S311
+
+        # For campaign speeches and free-form responses
+        if "campaign speech" in message.lower():
+            speeches = [
+                "I believe I can be a good sheriff. Trust me, I'm on the villagers' side!",
+                "Vote for me and I'll use my power wisely to protect the village.",
+                "I promise to lead us to victory. Let me be your sheriff!",
+                "I have good instincts about who the werewolves are. Give me your vote!",
+            ]
+            return random.choice(speeches)  # noqa: S311
+
+        # Default canned responses
         responses = [
             "I agree.",
             "I'm not sure about that.",

@@ -18,21 +18,11 @@
 這樣應該可以避免循環導入的問題
 我不希望透過 `TYPE_CHECKING` 或是 在 `function` 內 `import` 來解決循環問題 我認為應該從根本去解決 也就是將架構重構
 
-## 確認遊戲邏輯中 夜間行動 是如何完成的
-
 ## 更新規則
 
 請查看 `./src/llm_werewolf/core` 這裡是我的狼人殺遊戲邏輯代碼
-請幫我將目前我這個專案的規則 透過繁體中文寫成 `rule.md`
-
-我需要你參考真實的狼人殺規則與角色 與 我現在完成的規則與角色完成這份文件
-如果有缺少的規則或角色 請另外標註出來
-
-## 簡化 `./src/llm_werewolf/ai/agents.py`
-
-請檢查一下 `./src/llm_werewolf/ai/agents.py` 我覺得目前有點複雜
-我覺得 `PlayerConfig` 好像沒必要存在 因為可以透過 `LLMAgent` 繼承 `BaseAgent`
-因為 `api_key_env` 其實也只是從環境變數取得以後送進去 `BaseAgent` 而已
+請幫我檢查是否有邏輯錯誤或規則錯誤的部分沒處理到
+如果有需要可以參考 `rule.md`
 
 ## 請依照我代碼實際狀況去更新 `README.md`, `README.zh-TW.md`, 和 `README.zh-CN.md`
 

@@ -158,7 +158,7 @@ class DeathHandlerMixin:
 
             self._log_event(
                 EventType.MESSAGE,
-                f"🎖️ Sheriff {sheriff.name} has died. They may transfer the badge or tear it.",
+                f"Sheriff {sheriff.name} has died. They may transfer the badge or tear it.",
                 data={"player_id": sheriff.player_id},
             )
 
@@ -169,7 +169,7 @@ class DeathHandlerMixin:
                 self.game_state.remove_sheriff()
                 self._log_event(
                     EventType.SHERIFF_BADGE_TORN,
-                    f"🎖️ Sheriff {sheriff.name} tore the badge. There is no sheriff anymore.",
+                    f"Sheriff {sheriff.name} tore the badge. There is no sheriff anymore.",
                     data={"player_id": sheriff.player_id},
                 )
                 return messages
@@ -196,7 +196,7 @@ class DeathHandlerMixin:
                 self.game_state.set_sheriff(target.player_id)
                 self._log_event(
                     EventType.SHERIFF_BADGE_TRANSFERRED,
-                    f"🎖️ {sheriff.name} transferred the sheriff badge to {target.name}.",
+                    f"{sheriff.name} transferred the sheriff badge to {target.name}.",
                     data={"from_player_id": sheriff.player_id, "to_player_id": target.player_id},
                 )
             else:
@@ -204,7 +204,7 @@ class DeathHandlerMixin:
                 self.game_state.remove_sheriff()
                 self._log_event(
                     EventType.SHERIFF_BADGE_TORN,
-                    f"🎖️ {sheriff.name} tore the sheriff badge. There is no sheriff anymore.",
+                    f"{sheriff.name} tore the sheriff badge. There is no sheriff anymore.",
                     data={"player_id": sheriff.player_id},
                 )
 

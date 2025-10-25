@@ -35,7 +35,7 @@ class SheriffElectionMixin:
 
         self._log_event(
             EventType.SHERIFF_CAMPAIGN_STARTED,
-            "🎖️ Sheriff election begins. Players may volunteer to campaign for sheriff.",
+            "Sheriff election begins. Players may volunteer to campaign for sheriff.",
         )
 
         # Phase 1: Collect candidates
@@ -90,7 +90,7 @@ class SheriffElectionMixin:
             if decision:
                 candidates.append(player)
                 self._log_event(
-                    EventType.MESSAGE, f"🎖️ {player.name} volunteers to campaign for sheriff."
+                    EventType.MESSAGE, f"{player.name} volunteers to campaign for sheriff."
                 )
 
         return candidates
@@ -138,7 +138,7 @@ class SheriffElectionMixin:
 
         self._log_event(
             EventType.MESSAGE,
-            f"🎖️ {len(candidates)} candidates will now give their campaign speeches.",
+            f"{len(candidates)} candidates will now give their campaign speeches.",
         )
 
         for candidate in candidates:
@@ -154,7 +154,7 @@ class SheriffElectionMixin:
 
             self._log_event(
                 EventType.SHERIFF_CANDIDATE_SPEECH,
-                f"🎖️ {candidate.name}'s speech: {speech}",
+                f"{candidate.name}'s speech: {speech}",
                 data={"player_id": candidate.player_id, "speech": speech},
             )
 
@@ -215,13 +215,12 @@ class SheriffElectionMixin:
         if not voters:
             self._log_event(
                 EventType.MESSAGE,
-                "🎖️ No non-candidate players available to vote. All players are candidates.",
+                "No non-candidate players available to vote. All players are candidates.",
             )
             return {c.player_id: 0 for c in candidates}
 
         self._log_event(
-            EventType.MESSAGE,
-            f"🎖️ {len(voters)} non-candidate player(s) will now vote for sheriff.",
+            EventType.MESSAGE, f"{len(voters)} non-candidate player(s) will now vote for sheriff."
         )
 
         vote_counts: dict[str, int] = {c.player_id: 0 for c in candidates}
@@ -239,11 +238,11 @@ class SheriffElectionMixin:
                 vote_counts[vote_target.player_id] += 1
                 self._log_event(
                     EventType.SHERIFF_VOTE_CAST,
-                    f"🎖️ {voter.name} voted for {vote_target.name}.",
+                    f"{voter.name} voted for {vote_target.name}.",
                     data={"voter_id": voter.player_id, "target_id": vote_target.player_id},
                 )
             else:
-                self._log_event(EventType.MESSAGE, f"🎖️ {voter.name} abstained from voting.")
+                self._log_event(EventType.MESSAGE, f"{voter.name} abstained from voting.")
 
         return vote_counts
 
@@ -301,7 +300,7 @@ class SheriffElectionMixin:
         # Announce vote results
         for candidate in candidates:
             votes = vote_counts.get(candidate.player_id, 0)
-            self._log_event(EventType.MESSAGE, f"🎖️ {candidate.name} received {votes} vote(s).")
+            self._log_event(EventType.MESSAGE, f"{candidate.name} received {votes} vote(s).")
 
         if len(winners) > 1:
             # Tie - handle based on rules (for now, no sheriff)
@@ -312,7 +311,7 @@ class SheriffElectionMixin:
             ]
             self._log_event(
                 EventType.SHERIFF_TIE,
-                f"🎖️ Tie between {', '.join(winner_names)}. No sheriff this game.",
+                f"Tie between {', '.join(winner_names)}. No sheriff this game.",
             )
             # Could implement runoff voting here in the future
         else:
@@ -334,6 +333,6 @@ class SheriffElectionMixin:
         self.game_state.set_sheriff(player.player_id)
         self._log_event(
             EventType.SHERIFF_ELECTED,
-            f"🎖️ {player.name} has been elected sheriff!",
+            f"{player.name} has been elected sheriff!",
             data={"player_id": player.player_id},
         )

@@ -115,6 +115,10 @@ class ActionProcessorMixin:
         # HiddenWolf appears as villager to Seer
         if action.target.role.name == "HiddenWolf":
             result = "villager"
+        # BloodMoonApostle (untransformed) appears as villager to Seer
+        if action.target.role.name == "Blood Moon Apostle":
+            if hasattr(action.target.role, "transformed") and not action.target.role.transformed:
+                result = "villager"
         self._log_event(
             EventType.SEER_CHECKED,
             self.locale.get("seer_checked", target=action.target.name, result=result),

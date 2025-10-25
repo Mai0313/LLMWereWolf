@@ -112,6 +112,11 @@ class SeerCheckAction(Action):
         if self.target.role.name == "HiddenWolf":
             result = "villager"
 
+        # BloodMoonApostle (untransformed) appears as villager to Seer
+        if self.target.role.name == "Blood Moon Apostle":
+            if hasattr(self.target.role, "transformed") and not self.target.role.transformed:
+                result = "villager"
+
         self.game_state.seer_checked[self.game_state.round_number] = self.target.player_id
         return [f"Seer checks {self.target.name}: {result}"]
 

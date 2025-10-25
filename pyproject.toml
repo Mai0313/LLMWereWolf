@@ -375,8 +375,6 @@ ignore = [
     "PERF402",
     # constants ("magic") values in comparisons
     "PLR2004",
-    # Too many statements in function
-    "PLR0915",
 ]
 
 [tool.ruff.lint.pycodestyle]

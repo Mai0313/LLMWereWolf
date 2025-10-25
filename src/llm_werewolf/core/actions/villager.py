@@ -259,7 +259,7 @@ class GraveyardKeeperCheckAction(Action):
 
     def get_action_type(self) -> ActionType:
         """Get the action type."""
-        return ActionType.SEER_CHECK
+        return ActionType.GRAVEYARD_KEEPER_CHECK
 
     def validate(self) -> bool:
         """Validate the graveyard keeper check."""

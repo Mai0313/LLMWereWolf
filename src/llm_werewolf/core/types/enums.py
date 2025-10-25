@@ -65,6 +65,7 @@ class ActionType(str, Enum):
     GUARD_PROTECT = "guard_protect"
     CUPID_LINK = "cupid_link"
     RAVEN_MARK = "raven_mark"
+    GRAVEYARD_KEEPER_CHECK = "graveyard_keeper_check"
     WHITE_WOLF_KILL = "white_wolf_kill"
     WOLF_BEAUTY_CHARM = "wolf_beauty_charm"
     NIGHTMARE_BLOCK = "nightmare_block"

@@ -45,6 +45,7 @@ class Locale:
             "narrator_daybreak": "☀️ The sun rises, everyone open your eyes...",
             # Role actions
             "role_acting": "🎬 {role} ({player}) is acting...",
+            "player_speech": "{player}: {speech}",
             "werewolf_discussion": "🐺 {player} (Werewolf): {speech}",
             "werewolf_voting": "🐺 Werewolves are discussing their target...",
             "werewolf_target": "🐺 Werewolves targeted {target}",
@@ -66,6 +67,31 @@ class Locale:
             "saved_by_witch": "{player} was saved by the witch!",
             "poisoned_no_ability": "{player} was poisoned by the Witch and cannot use their death ability.",
             "death_ability_active": "{player} ({role}) can shoot before dying!",
+            # Sheriff Election
+            "sheriff_campaign_started": "Sheriff election begins. Players may volunteer to campaign for sheriff.",
+            "no_candidates": "No one volunteered to campaign for sheriff. There will be no sheriff this game.",
+            "player_volunteers": "{player} volunteers to campaign for sheriff.",
+            "campaign_speeches_start": "{count} candidates will now give their campaign speeches.",
+            "candidate_speech": "{candidate}'s speech: {speech}",
+            "no_voters": "No non-candidate players available to vote. All players are candidates.",
+            "sheriff_voting_start": "{count} non-candidate player(s) will now vote for sheriff.",
+            "sheriff_vote_cast": "{voter} voted for {candidate}.",
+            "sheriff_vote_abstained": "{voter} abstained from voting.",
+            "sheriff_vote_result": "{candidate} received {votes} vote(s).",
+            "sheriff_tie": "Tie between {candidates}. No sheriff this game.",
+            "sheriff_elected": "{player} has been elected sheriff!",
+            # Sheriff Badge Transfer
+            "sheriff_died_transfer": "Sheriff {sheriff} has died. They may transfer the badge or tear it.",
+            "sheriff_badge_torn": "{sheriff} tore the sheriff badge. There is no sheriff anymore.",
+            "sheriff_badge_transferred": "{sheriff} transferred the sheriff badge to {target}.",
+            # Other abilities
+            "elder_penalty": "All villager abilities disabled due to Elder execution",
+            "nightmare_blocked": "{player} ({role}) was blocked by Nightmare Wolf",
+            "witch_uses_poison": "🧪 Witch used poison on {target}",
+            "witch_poisoned_target": "{target} was poisoned by witch",
+            # Error messages
+            "speech_failed": "{player}: [Speech failed - {error}]",
+            "discussion_failed": "{player}: [Discussion failed - {error}]",
             # Config
             "config_loaded": "Loaded configuration: {config_path}",
             "player_count_info": "Number of players: {num_players}",
@@ -108,6 +134,7 @@ class Locale:
             "narrator_daybreak": "☀️ 天亮了，所有人請睜眼...",
             # Role actions
             "role_acting": "🎬 {role}({player})正在行動...",
+            "player_speech": "{player}: {speech}",
             "werewolf_discussion": "🐺 {player}(狼人): {speech}",
             "werewolf_voting": "🐺 狼人正在討論目標...",
             "werewolf_target": "🐺 狼人選擇了 {target}",
@@ -129,6 +156,31 @@ class Locale:
             "saved_by_witch": "{player} 被女巫救了!",
             "poisoned_no_ability": "{player} 被女巫毒殺，無法使用死亡技能。",
             "death_ability_active": "{player}({role})可以在死前射殺一人!",
+            # Sheriff Election
+            "sheriff_campaign_started": "警長選舉開始，玩家可以自願競選警長。",
+            "no_candidates": "沒有人自願競選警長，本局沒有警長。",
+            "player_volunteers": "{player} 自願競選警長。",
+            "campaign_speeches_start": "{count} 位候選人將發表競選演說。",
+            "candidate_speech": "{candidate} 的演說: {speech}",
+            "no_voters": "沒有非候選人可以投票，所有玩家都是候選人。",
+            "sheriff_voting_start": "{count} 位非候選人將投票選舉警長。",
+            "sheriff_vote_cast": "{voter} 投票給 {candidate}。",
+            "sheriff_vote_abstained": "{voter} 棄權。",
+            "sheriff_vote_result": "{candidate} 得到 {votes} 票。",
+            "sheriff_tie": "{candidates} 平手，本局沒有警長。",
+            "sheriff_elected": "{player} 當選警長!",
+            # Sheriff Badge Transfer
+            "sheriff_died_transfer": "警長 {sheriff} 已死亡，可以選擇移交或撕毀警徽。",
+            "sheriff_badge_torn": "{sheriff} 撕毀了警徽，不再有警長。",
+            "sheriff_badge_transferred": "{sheriff} 將警徽移交給 {target}。",
+            # Other abilities
+            "elder_penalty": "長老被處決，所有村民失去特殊能力",
+            "nightmare_blocked": "{player}({role})被夢魘狼封印",
+            "witch_uses_poison": "🧪 女巫對 {target} 使用毒藥",
+            "witch_poisoned_target": "{target} 被女巫毒殺",
+            # Error messages
+            "speech_failed": "{player}: [發言失敗 - {error}]",
+            "discussion_failed": "{player}: [討論失敗 - {error}]",
             # Config
             "config_loaded": "已載入設定檔: {config_path}",
             "player_count_info": "玩家人數: {num_players}",
@@ -171,6 +223,7 @@ class Locale:
             "narrator_daybreak": "☀️ 天亮了，所有人请睁眼...",
             # Role actions
             "role_acting": "🎬 {role}({player})正在行动...",
+            "player_speech": "{player}: {speech}",
             "werewolf_discussion": "🐺 {player}(狼人): {speech}",
             "werewolf_voting": "🐺 狼人正在讨论目标...",
             "werewolf_target": "🐺 狼人选择了 {target}",
@@ -192,6 +245,31 @@ class Locale:
             "saved_by_witch": "{player} 被女巫救了!",
             "poisoned_no_ability": "{player} 被女巫毒杀，无法使用死亡技能。",
             "death_ability_active": "{player}({role})可以在死前射杀一人!",
+            # Sheriff Election
+            "sheriff_campaign_started": "警长选举开始，玩家可以自愿竞选警长。",
+            "no_candidates": "没有人自愿竞选警长，本局没有警长。",
+            "player_volunteers": "{player} 自愿竞选警长。",
+            "campaign_speeches_start": "{count} 位候选人将发表竞选演说。",
+            "candidate_speech": "{candidate} 的演说: {speech}",
+            "no_voters": "没有非候选人可以投票，所有玩家都是候选人。",
+            "sheriff_voting_start": "{count} 位非候选人将投票选举警长。",
+            "sheriff_vote_cast": "{voter} 投票给 {candidate}。",
+            "sheriff_vote_abstained": "{voter} 弃权。",
+            "sheriff_vote_result": "{candidate} 得到 {votes} 票。",
+            "sheriff_tie": "{candidates} 平手，本局没有警长。",
+            "sheriff_elected": "{player} 当选警长!",
+            # Sheriff Badge Transfer
+            "sheriff_died_transfer": "警长 {sheriff} 已死亡，可以选择移交或撕毁警徽。",
+            "sheriff_badge_torn": "{sheriff} 撕毁了警徽，不再有警长。",
+            "sheriff_badge_transferred": "{sheriff} 将警徽移交给 {target}。",
+            # Other abilities
+            "elder_penalty": "长老被处决，所有村民失去特殊能力",
+            "nightmare_blocked": "{player}({role})被梦魇狼封印",
+            "witch_uses_poison": "🧪 女巫对 {target} 使用毒药",
+            "witch_poisoned_target": "{target} 被女巫毒杀",
+            # Error messages
+            "speech_failed": "{player}: [发言失败 - {error}]",
+            "discussion_failed": "{player}: [讨论失败 - {error}]",
             # Config
             "config_loaded": "已加载配置文件: {config_path}",
             "player_count_info": "玩家人数: {num_players}",

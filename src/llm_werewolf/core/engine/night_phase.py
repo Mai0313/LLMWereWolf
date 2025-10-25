@@ -115,7 +115,7 @@ class NightPhaseMixin:
                 except Exception as e:
                     self._log_event(
                         EventType.ERROR,
-                        f"{werewolf.name}: [討論失敗 - {e}]",
+                        self.locale.get("discussion_failed", player=werewolf.name, error=str(e)),
                         data={"player_id": werewolf.player_id, "error": str(e)},
                     )
 

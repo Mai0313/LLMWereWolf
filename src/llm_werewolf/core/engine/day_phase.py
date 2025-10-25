@@ -121,7 +121,7 @@ class DayPhaseMixin:
 
                     self._log_event(
                         EventType.PLAYER_SPEECH,
-                        f"{player.name}: {speech}",
+                        self.locale.get("player_speech", player=player.name, speech=speech),
                         data={
                             "player_id": player.player_id,
                             "player_name": player.name,
@@ -129,7 +129,9 @@ class DayPhaseMixin:
                         },
                     )
 
-                    messages.append(f"{player.name}: {speech}")
+                    messages.append(
+                        self.locale.get("player_speech", player=player.name, speech=speech)
+                    )
 
                     # Add to global public discussion history
                     self.public_discussion_history.append(f"{player.name}: {speech}")
@@ -141,9 +143,11 @@ class DayPhaseMixin:
                 except Exception as e:
                     self._log_event(
                         EventType.ERROR,
-                        f"{player.name}: [發言失敗 - {e}]",
+                        self.locale.get("speech_failed", player=player.name, error=str(e)),
                         data={"player_id": player.player_id, "error": str(e)},
                     )
-                    messages.append(f"{player.name}: [Unable to speak - {e}]")
+                    messages.append(
+                        self.locale.get("speech_failed", player=player.name, error=str(e))
+                    )
 
         return messages

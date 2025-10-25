@@ -136,7 +136,7 @@ class GameEngineBase:
 
             self._log_event(
                 EventType.GAME_ENDED,
-                f"Game ended. {result.winner_camp} wins! {result.reason}",
+                self.locale.get("game_ended", winner=result.winner_camp, reason=result.reason),
                 data={
                     "winner_camp": result.winner_camp,
                     "winner_ids": result.winner_ids,

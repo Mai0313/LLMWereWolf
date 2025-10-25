@@ -73,7 +73,7 @@ class DeathHandlerMixin:
 
         self._log_event(
             EventType.ROLE_REVEALED,
-            "All villager abilities disabled due to Elder execution",
+            self.locale.get("elder_penalty"),
             data={"reason": "elder_penalty"},
         )
 
@@ -158,7 +158,7 @@ class DeathHandlerMixin:
 
             self._log_event(
                 EventType.MESSAGE,
-                f"Sheriff {sheriff.name} has died. They may transfer the badge or tear it.",
+                self.locale.get("sheriff_died_transfer", sheriff=sheriff.name),
                 data={"player_id": sheriff.player_id},
             )
 
@@ -169,7 +169,7 @@ class DeathHandlerMixin:
                 self.game_state.remove_sheriff()
                 self._log_event(
                     EventType.SHERIFF_BADGE_TORN,
-                    f"Sheriff {sheriff.name} tore the badge. There is no sheriff anymore.",
+                    self.locale.get("sheriff_badge_torn", sheriff=sheriff.name),
                     data={"player_id": sheriff.player_id},
                 )
                 return messages
@@ -196,7 +196,9 @@ class DeathHandlerMixin:
                 self.game_state.set_sheriff(target.player_id)
                 self._log_event(
                     EventType.SHERIFF_BADGE_TRANSFERRED,
-                    f"{sheriff.name} transferred the sheriff badge to {target.name}.",
+                    self.locale.get(
+                        "sheriff_badge_transferred", sheriff=sheriff.name, target=target.name
+                    ),
                     data={"from_player_id": sheriff.player_id, "to_player_id": target.player_id},
                 )
             else:
@@ -204,7 +206,7 @@ class DeathHandlerMixin:
                 self.game_state.remove_sheriff()
                 self._log_event(
                     EventType.SHERIFF_BADGE_TORN,
-                    f"{sheriff.name} tore the sheriff badge. There is no sheriff anymore.",
+                    self.locale.get("sheriff_badge_torn", sheriff=sheriff.name),
                     data={"player_id": sheriff.player_id},
                 )
 
@@ -337,7 +339,7 @@ class DeathHandlerMixin:
 
                 self._log_event(
                     EventType.WITCH_POISONED,
-                    f"{target.name} was poisoned by witch",
+                    self.locale.get("witch_poisoned_target", target=target.name),
                     data={"player_id": target.player_id},
                 )
 
@@ -346,10 +348,9 @@ class DeathHandlerMixin:
                     if partner and partner.is_alive():
                         partner.kill()
                         self.game_state.night_deaths.add(partner.player_id)
-                        messages.append(f"{partner.name} died of heartbreak (lover)!")
                         self._log_event(
                             EventType.LOVER_DIED,
-                            f"{partner.name} died of heartbreak",
+                            self.locale.get("died_of_heartbreak", player=partner.name),
                             data={"player_id": partner.player_id},
                         )
 
@@ -363,13 +364,11 @@ class DeathHandlerMixin:
                 if charmed and charmed.is_alive():
                     charmed.kill()
                     self.game_state.night_deaths.add(charmed.player_id)
-                    messages.append(
-                        f"{charmed.name} died from Wolf Beauty's charm "
-                        f"(Wolf Beauty {player.name} died)!"
-                    )
                     self._log_event(
                         EventType.PLAYER_DIED,
-                        f"{charmed.name} died from Wolf Beauty's charm",
+                        self.locale.get(
+                            "died_from_charm", player=charmed.name, wolf_beauty=player.name
+                        ),
                         data={"player_id": charmed.player_id, "reason": "wolf_beauty_charm"},
                     )
 

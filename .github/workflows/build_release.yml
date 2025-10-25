@@ -68,7 +68,7 @@ jobs:
 
       - name: Packaging to Executable file
         run: |
-          uv run pyinstaller -F src/${{ github.event.repository.name }}/cli.py --onefile -n ${{ github.event.repository.name }}
+          uv run pyinstaller -F src/llm_werewolf/cli.py --onefile -n llm_werewolf
 
       - name: Stage Artifact
         shell: bash
@@ -76,7 +76,7 @@ jobs:
           set -euo pipefail
           dest="dist/${{ matrix.target }}"
           mkdir -p "$dest"
-          bin="${{ github.event.repository.name }}"
+          bin="llm_werewolf"
           if [[ "${{ matrix.runner }}" == windows* ]]; then
             bin="${bin}.exe"
           fi
@@ -89,8 +89,8 @@ jobs:
           $ErrorActionPreference = "Stop"
           $dest = "dist/${{ matrix.target }}"
           $version = "${env:GITHUB_REF_NAME}".Substring(1)
-          $bin = "${{ github.event.repository.name }}.exe"
-          $zip = "${{ github.event.repository.name }}-v$version-${{ matrix.friendly_id }}.zip"
+          $bin = "llm_werewolf.exe"
+          $zip = "llm_werewolf-v$version-${{ matrix.friendly_id }}.zip"
           Compress-Archive -Path "$dest\$bin" -DestinationPath "$dest\$zip" -Force
 
       - name: Create .tar.gz (all platforms)
@@ -100,8 +100,8 @@ jobs:
           set -euo pipefail
           dest="dist/${{ matrix.target }}"
           version="${GITHUB_REF_NAME#v}"
-          bin="${{ github.event.repository.name }}"
-          archive="${{ github.event.repository.name }}-v${version}-${{ matrix.friendly_id }}.tar.gz"
+          bin="llm_werewolf"
+          archive="llm_werewolf-v${version}-${{ matrix.friendly_id }}.tar.gz"
           # Try to include .exe if present, otherwise fall back to unix name
           tar -C "$dest" -czf "$dest/${archive}" "${bin}" "${bin}.exe" 2>/dev/null || \
           tar -C "$dest" -czf "$dest/${archive}" "${bin}"

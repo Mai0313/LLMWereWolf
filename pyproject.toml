@@ -375,8 +375,6 @@ ignore = [
     "PERF402",
     # constants ("magic") values in comparisons
     "PLR2004",
-    # Too many arguments for function
-    "PLR0913",
     # Too many statements in function
     "PLR0915",
 ]
@@ -442,7 +440,7 @@ variables = []
 [tool.ruff.lint.pylint]
 allow-dunder-method-names = ["__tablename__", "__table_args__"]
 allow-magic-value-types = ["int"]
-max-args = 5
+max-args = 10
 max-bool-expr = 5
 max-branches = 12
 max-public-methods = 20

@@ -340,7 +340,7 @@ select = [
     # "ERA",  # eradicate
     "PD",  # pandas-vet
     # "PGH",  # pygrep-hooks
-    # "PL",  # Pylint
+    "PL",  # Pylint
     # "TRY",  # tryceratops
     "FLY",  # flynt
     "NPY",  # NumPy-specific rules
@@ -373,6 +373,14 @@ ignore = [
     "PERF401",
     # Use `list` or `list.copy` to create a copy of a list
     "PERF402",
+    # constants ("magic") values in comparisons
+    "PLR2004",
+    # Too many branches in function
+    "PLR0912",
+    # Too many statements in function
+    "PLR0915",
+    # Too many arguments for function
+    "PLR0913",
 ]
 
 [tool.ruff.lint.pycodestyle]

@@ -1,5 +1,7 @@
 ## 重構 `./src/llm_werewolf/core` 代碼, 將整個代碼透過 `pydantic` 的 `BaseModel` 來完善結構化的代碼
 
+由於改用 `BaseModel`, `def __init__` 可能就要改用 `@model_validator(mode=after)` 來完成一些初始化的操作
+
 當任務完成時 請務必記得透過 `uv run pre-commit run -a` 來確保代碼質量
 
 ## 解決循環導入問題

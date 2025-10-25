@@ -441,10 +441,6 @@ single-line-exclusions = []
 split-on-trailing-comma=false
 variables = []
 
-[tool.ruff.lint.mccabe]
-# Maximum McCabe complexity allowed for a function
-max-complexity = 18
-
 [tool.ruff.lint.pylint]
 allow-dunder-method-names = ["__tablename__", "__table_args__"]
 allow-magic-value-types = ["int"]
@@ -485,7 +481,7 @@ console_include_timestamps = true
 console_verbose = true
 console_min_log_level = "debug"
 show_summary = true
-data_dir = "~/.cache/.logfire"
+data_dir = "~/.cache/logfire"
 # base_url = ""
 collect_system_metrics = false
 id_generator = true

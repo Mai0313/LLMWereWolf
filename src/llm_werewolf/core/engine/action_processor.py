@@ -53,6 +53,130 @@ class ActionProcessorMixin:
         }
         return priority_map.get(action.__class__.__name__, 0)
 
+    def _is_actor_blocked(self, action: Action) -> bool:
+        """Check if actor is blocked by Nightmare Wolf.
+
+        Args:
+            action: The action to check.
+
+        Returns:
+            bool: True if actor is blocked, False otherwise.
+        """
+        if not self.game_state or not self.game_state.nightmare_blocked:
+            return False
+
+        if not hasattr(action, "actor"):
+            return False
+
+        if isinstance(action, NightmareWolfBlockAction):
+            return False
+
+        return action.actor.player_id == self.game_state.nightmare_blocked
+
+    def _log_guard_action(self, action: GuardProtectAction) -> None:
+        """Log guard protection action."""
+        self._log_event(
+            EventType.GUARD_PROTECTED,
+            self.locale.get("guard_protected", target=action.target.name),
+            data={"target_id": action.target.player_id},
+        )
+        if action.actor.agent and self.game_state:
+            action.actor.agent.add_decision(
+                f"Round {self.game_state.round_number}: Protected {action.target.name}"
+            )
+
+    def _log_witch_save_action(self, action: WitchSaveAction) -> None:
+        """Log witch save action."""
+        self._log_event(
+            EventType.WITCH_SAVED,
+            self.locale.get("witch_saved", target=action.target.name),
+            data={"target_id": action.target.player_id},
+        )
+        if action.actor.agent and self.game_state:
+            action.actor.agent.add_decision(
+                f"Round {self.game_state.round_number}: Used save potion on {action.target.name}"
+            )
+
+    def _log_witch_poison_action(self, action: WitchPoisonAction) -> None:
+        """Log witch poison action."""
+        self._log_event(
+            EventType.MESSAGE,
+            self.locale.get("witch_uses_poison", target=action.target.name),
+            data={"target_id": action.target.player_id},
+        )
+        if action.actor.agent and self.game_state:
+            action.actor.agent.add_decision(
+                f"Round {self.game_state.round_number}: Used poison on {action.target.name}"
+            )
+
+    def _log_seer_action(self, action: SeerCheckAction) -> None:
+        """Log seer check action."""
+        result = action.target.get_camp()
+        # HiddenWolf appears as villager to Seer
+        if action.target.role.name == "HiddenWolf":
+            result = "villager"
+        self._log_event(
+            EventType.SEER_CHECKED,
+            self.locale.get("seer_checked", target=action.target.name, result=result),
+            data={"target_id": action.target.player_id, "result": result},
+            visible_to=[action.actor.player_id],
+        )
+        if action.actor.agent and self.game_state:
+            action.actor.agent.add_decision(
+                f"Round {self.game_state.round_number}: Checked {action.target.name}, result: {result}"
+            )
+
+    def _log_cupid_action(self, action: CupidLinkAction) -> None:
+        """Log cupid link action."""
+        self._log_event(
+            EventType.LOVERS_LINKED,
+            self.locale.get(
+                "cupid_links", player1=action.target1.name, player2=action.target2.name
+            ),
+            data={"player1_id": action.target1.player_id, "player2_id": action.target2.player_id},
+        )
+        if action.actor.agent and self.game_state:
+            action.actor.agent.add_decision(
+                f"Round {self.game_state.round_number}: Linked {action.target1.name} and {action.target2.name} as lovers"
+            )
+
+    def _log_white_wolf_action(self, action: WhiteWolfKillAction) -> None:
+        """Log white wolf kill action."""
+        self._log_event(
+            EventType.MESSAGE,
+            self.locale.get("white_wolf_kills", target=action.target.name),
+            data={"target_id": action.target.player_id},
+        )
+
+    def _log_wolf_beauty_action(self, action: WolfBeautyCharmAction) -> None:
+        """Log wolf beauty charm action."""
+        self._log_event(
+            EventType.MESSAGE,
+            self.locale.get("wolf_beauty_charms", target=action.target.name),
+            data={"target_id": action.target.player_id},
+        )
+
+    def _log_action_event(self, action: Action) -> None:
+        """Log event for specific action types.
+
+        Args:
+            action: The action to log.
+        """
+        if isinstance(action, GuardProtectAction):
+            self._log_guard_action(action)
+        elif isinstance(action, WitchSaveAction):
+            self._log_witch_save_action(action)
+        elif isinstance(action, WitchPoisonAction):
+            self._log_witch_poison_action(action)
+        elif isinstance(action, SeerCheckAction):
+            self._log_seer_action(action)
+        elif isinstance(action, CupidLinkAction):
+            self._log_cupid_action(action)
+        elif isinstance(action, WhiteWolfKillAction):
+            self._log_white_wolf_action(action)
+        elif isinstance(action, WolfBeautyCharmAction):
+            self._log_wolf_beauty_action(action)
+
     def process_actions(self, actions: list) -> list[str]:
         """Process a list of actions.
 
@@ -69,13 +193,7 @@ class ActionProcessorMixin:
 
         for action in sorted_actions:
             # Check if actor is blocked by Nightmare Wolf
-            if (
-                self.game_state
-                and self.game_state.nightmare_blocked
-                and hasattr(action, "actor")
-                and action.actor.player_id == self.game_state.nightmare_blocked
-                and not isinstance(action, NightmareWolfBlockAction)
-            ):
+            if self._is_actor_blocked(action):
                 self._log_event(
                     EventType.MESSAGE,
                     self.locale.get(
@@ -92,87 +210,7 @@ class ActionProcessorMixin:
 
             if action.validate():
                 result_messages = action.execute()
-
-                # Log detailed events for different action types
-                if isinstance(action, GuardProtectAction):
-                    self._log_event(
-                        EventType.GUARD_PROTECTED,
-                        self.locale.get("guard_protected", target=action.target.name),
-                        data={"target_id": action.target.player_id},
-                    )
-                    # Record decision
-                    if action.actor.agent and self.game_state:
-                        action.actor.agent.add_decision(
-                            f"Round {self.game_state.round_number}: Protected {action.target.name}"
-                        )
-                elif isinstance(action, WitchSaveAction):
-                    self._log_event(
-                        EventType.WITCH_SAVED,
-                        self.locale.get("witch_saved", target=action.target.name),
-                        data={"target_id": action.target.player_id},
-                    )
-                    # Record decision (without revealing who attacked)
-                    if action.actor.agent and self.game_state:
-                        action.actor.agent.add_decision(
-                            f"Round {self.game_state.round_number}: Used save potion on {action.target.name}"
-                        )
-                elif isinstance(action, WitchPoisonAction):
-                    self._log_event(
-                        EventType.MESSAGE,
-                        self.locale.get("witch_uses_poison", target=action.target.name),
-                        data={"target_id": action.target.player_id},
-                    )
-                    # Note: Actual death is handled in resolve_deaths()
-                    # Record decision
-                    if action.actor.agent and self.game_state:
-                        action.actor.agent.add_decision(
-                            f"Round {self.game_state.round_number}: Used poison on {action.target.name}"
-                        )
-                elif isinstance(action, SeerCheckAction):
-                    result = action.target.get_camp()
-                    # HiddenWolf appears as villager to Seer
-                    if action.target.role.name == "HiddenWolf":
-                        result = "villager"
-                    self._log_event(
-                        EventType.SEER_CHECKED,
-                        self.locale.get("seer_checked", target=action.target.name, result=result),
-                        data={"target_id": action.target.player_id, "result": result},
-                        visible_to=[action.actor.player_id],  # Only seer sees this
-                    )
-                    # Record decision (safe summary without werewolf team info)
-                    if action.actor.agent and self.game_state:
-                        action.actor.agent.add_decision(
-                            f"Round {self.game_state.round_number}: Checked {action.target.name}, result: {result}"
-                        )
-                elif isinstance(action, CupidLinkAction):
-                    self._log_event(
-                        EventType.LOVERS_LINKED,
-                        self.locale.get(
-                            "cupid_links", player1=action.target1.name, player2=action.target2.name
-                        ),
-                        data={
-                            "player1_id": action.target1.player_id,
-                            "player2_id": action.target2.player_id,
-                        },
-                    )
-                    # Record decision
-                    if action.actor.agent and self.game_state:
-                        action.actor.agent.add_decision(
-                            f"Round {self.game_state.round_number}: Linked {action.target1.name} and {action.target2.name} as lovers"
-                        )
-                elif isinstance(action, WhiteWolfKillAction):
-                    self._log_event(
-                        EventType.MESSAGE,
-                        self.locale.get("white_wolf_kills", target=action.target.name),
-                        data={"target_id": action.target.player_id},
-                    )
-                elif isinstance(action, WolfBeautyCharmAction):
-                    self._log_event(
-                        EventType.MESSAGE,
-                        self.locale.get("wolf_beauty_charms", target=action.target.name),
-                        data={"target_id": action.target.player_id},
-                    )
-
+                self._log_action_event(action)
                 messages.extend(result_messages)
 
         return messages

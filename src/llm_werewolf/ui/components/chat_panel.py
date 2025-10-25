@@ -34,6 +34,125 @@ class ChatPanel(RichLog):
         self.events.append(event)
         self.display_event(event)
 
+    def _is_night_action_event(self, event_type: EventType) -> bool:
+        """Check if event type is a night action that should be buffered.
+
+        Args:
+            event_type: The event type to check.
+
+        Returns:
+            bool: True if event should be buffered.
+        """
+        return event_type in {
+            EventType.GUARD_PROTECTED,
+            EventType.WITCH_SAVED,
+            EventType.WITCH_POISONED,
+            EventType.SEER_CHECKED,
+            EventType.WEREWOLF_KILLED,
+            EventType.LOVERS_LINKED,
+        }
+
+    def _is_sheriff_event(self, event_type: EventType) -> bool:
+        """Check if event type is sheriff-related.
+
+        Args:
+            event_type: The event type to check.
+
+        Returns:
+            bool: True if sheriff-related event.
+        """
+        return event_type in {
+            EventType.SHERIFF_CAMPAIGN_STARTED,
+            EventType.SHERIFF_CANDIDATE_SPEECH,
+            EventType.SHERIFF_VOTE_CAST,
+            EventType.SHERIFF_ELECTED,
+            EventType.SHERIFF_BADGE_TRANSFERRED,
+        }
+
+    def _handle_special_events(self, event: Event) -> bool:
+        """Handle special event types and return whether event was handled.
+
+        Args:
+            event: The event to handle.
+
+        Returns:
+            bool: True if event was handled, False otherwise.
+        """
+        if event.event_type == EventType.HUNTER_REVENGE:
+            text = Text(f"🏹 {event.message}", style="bold yellow")
+            self.write(text)
+            return True
+
+        if self._is_sheriff_event(event.event_type):
+            text = Text(f"🎖️  {event.message}", style="gold1")
+            self.write(text)
+            return True
+
+        if event.event_type == EventType.ROLE_REVEALED:
+            text = Text(f"🎭 {event.message}", style="bold magenta")
+            self.write(text)
+            return True
+
+        return False
+
+    def _handle_game_lifecycle_events(self, event: Event) -> bool:
+        """Handle game lifecycle events (start, end).
+
+        Args:
+            event: The event to handle.
+
+        Returns:
+            bool: True if event was handled, False otherwise.
+        """
+        if event.event_type == EventType.GAME_STARTED:
+            self._present_game_start(event)
+            return True
+        if event.event_type == EventType.GAME_ENDED:
+            self._present_game_end(event)
+            return True
+        return False
+
+    def _handle_player_events(self, event: Event) -> bool:
+        """Handle player-related events (speech, death, elimination).
+
+        Args:
+            event: The event to handle.
+
+        Returns:
+            bool: True if event was handled, False otherwise.
+        """
+        if event.event_type == EventType.PLAYER_DIED:
+            self._present_death(event)
+            return True
+        if event.event_type == EventType.PLAYER_SPEECH:
+            self._buffer_discussion(event)
+            return True
+        if event.event_type == EventType.PLAYER_DISCUSSION:
+            self._buffer_werewolf_discussion(event)
+            return True
+        if event.event_type == EventType.PLAYER_ELIMINATED:
+            self._present_elimination(event)
+            return True
+        return False
+
+    def _handle_voting_events(self, event: Event) -> bool:
+        """Handle voting-related events.
+
+        Args:
+            event: The event to handle.
+
+        Returns:
+            bool: True if event was handled, False otherwise.
+        """
+        if event.event_type == EventType.VOTE_CAST:
+            self._buffer_vote(event)
+            return True
+        if event.event_type == EventType.VOTE_RESULT:
+            if "📊" in event.message or "統計" in event.message:
+                self._flush_votes()
+            return True
+        return False
+
     def display_event(self, event: Event) -> None:
         """Display an event in the chat panel with grouped formatting.
 
@@ -43,56 +162,21 @@ class ChatPanel(RichLog):
         # Handle phase transitions
         if event.event_type == EventType.PHASE_CHANGED:
             self._handle_phase_change(event)
-            return
-
-        # Group events by type for better presentation
-        if event.event_type == EventType.GAME_STARTED:
-            self._present_game_start(event)
-        elif event.event_type == EventType.GAME_ENDED:
-            self._present_game_end(event)
+        # Handle different event categories
+        elif self._handle_game_lifecycle_events(event):
+            pass  # Already handled
         elif event.event_type == EventType.MESSAGE:
             self._handle_narrator_message(event)
         elif event.event_type == EventType.ROLE_ACTING:
-            # Buffer night actions instead of showing them immediately
-            pass
-        elif event.event_type in {
-            EventType.GUARD_PROTECTED,
-            EventType.WITCH_SAVED,
-            EventType.WITCH_POISONED,
-            EventType.SEER_CHECKED,
-            EventType.WEREWOLF_KILLED,
-            EventType.LOVERS_LINKED,
-        }:
+            pass  # Buffer night actions
+        elif self._is_night_action_event(event.event_type):
             self._buffer_night_action(event)
-        elif event.event_type == EventType.PLAYER_DIED:
-            self._present_death(event)
-        elif event.event_type == EventType.PLAYER_SPEECH:
-            self._buffer_discussion(event)
-        elif event.event_type == EventType.PLAYER_DISCUSSION:
-            self._buffer_werewolf_discussion(event)
-        elif event.event_type == EventType.VOTE_CAST:
-            self._buffer_vote(event)
-        elif event.event_type == EventType.VOTE_RESULT:
-            if "📊" in event.message or "統計" in event.message:
-                # This is the vote summary header
-                self._flush_votes()
-        elif event.event_type == EventType.PLAYER_ELIMINATED:
-            self._present_elimination(event)
-        elif event.event_type == EventType.HUNTER_REVENGE:
-            text = Text(f"🏹 {event.message}", style="bold yellow")
-            self.write(text)
-        elif event.event_type in {
-            EventType.SHERIFF_CAMPAIGN_STARTED,
-            EventType.SHERIFF_CANDIDATE_SPEECH,
-            EventType.SHERIFF_VOTE_CAST,
-            EventType.SHERIFF_ELECTED,
-            EventType.SHERIFF_BADGE_TRANSFERRED,
-        }:
-            text = Text(f"🎖️  {event.message}", style="gold1")
-            self.write(text)
-        elif event.event_type == EventType.ROLE_REVEALED:
-            text = Text(f"🎭 {event.message}", style="bold magenta")
-            self.write(text)
+        elif (
+            self._handle_player_events(event)
+            or self._handle_voting_events(event)
+            or self._handle_special_events(event)
+        ):
+            pass  # Already handled
         else:
             # Default: use centralized formatter
             text = EventFormatter.format_event(event, include_timestamp=True)

@@ -10,7 +10,7 @@ from llm_werewolf.core.game_state import GameState
 from llm_werewolf.core.role_registry import get_role_map
 from llm_werewolf.core.roles.neutral import Thief
 from llm_werewolf.core.roles.villager import Cupid, Elder, Guard, Idiot, Witch, Knight, Magician
-from llm_werewolf.core.roles.werewolf import WhiteWolf, WolfBeauty, BloodMoonApostle
+from llm_werewolf.core.roles.werewolf import WolfBeauty, BloodMoonApostle
 
 
 class PlayerSnapshot(BaseModel):
@@ -59,6 +59,48 @@ class GameStateSnapshot(BaseModel):
     winner: str | None = None
 
 
+def _extract_witch_data(role: Witch) -> dict[str, Any]:
+    """Extract Witch role data."""
+    return {"has_save_potion": role.has_save_potion, "has_poison_potion": role.has_poison_potion}
+
+
+def _extract_role_data(player: PlayerProtocol) -> dict[str, Any]:
+    """Extract role-specific data for serialization.
+
+    Args:
+        player: The player whose role data to extract.
+
+    Returns:
+        dict[str, Any]: Role-specific data.
+    """
+    role = player.role
+    role_data: dict[str, Any] = {}
+
+    # Use dictionary mapping for simpler roles
+    simple_extractors = {
+        Guard: lambda r: {"last_protected": r.last_protected},
+        Elder: lambda r: {"lives": r.lives},
+        Idiot: lambda r: {"revealed": r.revealed},
+        WolfBeauty: lambda r: {"charmed_player": r.charmed_player},
+        Knight: lambda r: {"has_dueled": r.has_dueled},
+        Cupid: lambda r: {"has_linked": r.has_linked},
+        BloodMoonApostle: lambda r: {"transformed": r.transformed},
+        Magician: lambda r: {"has_swapped": r.has_swapped},
+        Thief: lambda r: {"has_chosen": r.has_chosen},
+    }
+
+    # Special handling for Witch
+    if isinstance(role, Witch):
+        return _extract_witch_data(role)
+
+    # Check simple extractors
+    for role_class, extractor in simple_extractors.items():
+        if isinstance(role, role_class):
+            return extractor(role)
+
+    return role_data
+
+
 def serialize_player(player: PlayerProtocol) -> PlayerSnapshot:
     """Serialize a player to a snapshot.
 
@@ -68,39 +110,11 @@ def serialize_player(player: PlayerProtocol) -> PlayerSnapshot:
     Returns:
         PlayerSnapshot: Serialized player data.
     """
-    # Serialize role-specific data
-    role_data: dict[str, Any] = {}
-
-    if isinstance(player.role, Witch):
-        role_data["has_save_potion"] = player.role.has_save_potion
-        role_data["has_poison_potion"] = player.role.has_poison_potion
-    elif isinstance(player.role, Guard):
-        role_data["last_protected"] = player.role.last_protected
-    elif isinstance(player.role, Elder):
-        role_data["lives"] = player.role.lives
-    elif isinstance(player.role, Idiot):
-        role_data["revealed"] = player.role.revealed
-    elif isinstance(player.role, WolfBeauty):
-        role_data["charmed_player"] = player.role.charmed_player
-    elif isinstance(player.role, Knight):
-        role_data["has_dueled"] = player.role.has_dueled
-    elif isinstance(player.role, Cupid):
-        role_data["has_linked"] = player.role.has_linked
-    elif isinstance(player.role, BloodMoonApostle):
-        role_data["transformed"] = player.role.transformed
-    elif isinstance(player.role, Magician):
-        role_data["has_swapped"] = player.role.has_swapped
-    elif isinstance(player.role, Thief):
-        role_data["has_chosen"] = player.role.has_chosen
-    elif isinstance(player.role, WhiteWolf):
-        # WhiteWolf doesn't have additional state to save
-        pass
-
     return PlayerSnapshot(
         player_id=player.player_id,
         name=player.name,
         role_name=player.get_role_name(),
-        role_data=role_data,
+        role_data=_extract_role_data(player),
         is_alive=player.is_alive(),
         statuses=[s.value for s in player.statuses],
         lover_partner_id=player.lover_partner_id,
@@ -178,28 +192,62 @@ def load_game_state_snapshot(file_path: str | Path) -> GameStateSnapshot:
     return GameStateSnapshot.model_validate(data)
 
 
-def restore_game_state(
-    snapshot: GameStateSnapshot, agent_factory: dict[str, Any] | None = None
-) -> GameState:
-    """Restore a GameState from a snapshot.
+def _restore_witch_data(role: Witch, role_data: dict[str, Any]) -> None:
+    """Restore Witch role data."""
+    role.has_save_potion = role_data.get("has_save_potion", True)
+    role.has_poison_potion = role_data.get("has_poison_potion", True)
+
+
+def _restore_role_data(player: Player, role_data: dict[str, Any]) -> None:
+    """Restore role-specific data to a player's role.
+
+    Args:
+        player: The player whose role to restore.
+        role_data: The role-specific data to restore.
+    """
+    role = player.role
+
+    # Use dictionary mapping for simpler roles
+    simple_restorers = {
+        Guard: lambda r, d: setattr(r, "last_protected", d.get("last_protected")),
+        Elder: lambda r, d: setattr(r, "lives", d.get("lives", 2)),
+        Idiot: lambda r, d: setattr(r, "revealed", d.get("revealed", False)),
+        WolfBeauty: lambda r, d: setattr(r, "charmed_player", d.get("charmed_player")),
+        Knight: lambda r, d: setattr(r, "has_dueled", d.get("has_dueled", False)),
+        Cupid: lambda r, d: setattr(r, "has_linked", d.get("has_linked", False)),
+        BloodMoonApostle: lambda r, d: setattr(r, "transformed", d.get("transformed", False)),
+        Magician: lambda r, d: setattr(r, "has_swapped", d.get("has_swapped", False)),
+        Thief: lambda r, d: setattr(r, "has_chosen", d.get("has_chosen", False)),
+    }
+
+    # Special handling for Witch
+    if isinstance(role, Witch):
+        _restore_witch_data(role, role_data)
+        return
+
+    # Check simple restorers
+    for role_class, restorer in simple_restorers.items():
+        if isinstance(role, role_class):
+            restorer(role, role_data)
+            return
+
+
+def _restore_players(snapshot: GameStateSnapshot, agent_factory: dict[str, Any]) -> list[Player]:
+    """Restore players from snapshot.
 
     Args:
         snapshot: The game state snapshot.
-        agent_factory: Optional dictionary mapping player_id to agent instances.
-                      If not provided, players will have no agents.
+        agent_factory: Dictionary mapping player_id to agent instances.
 
     Returns:
-        GameState: The restored game state.
+        list[Player]: List of restored players.
 
-    Note:
-        Agents cannot be serialized, so they must be recreated manually.
-        Pass a dictionary mapping player_id to agent instances to restore agents.
+    Raises:
+        ValueError: If an unknown role is encountered.
     """
-    agent_factory = agent_factory or {}
-
-    # Restore players
     players: list[Player] = []
     role_map = get_role_map()
+
     for p_snap in snapshot.players:
         # Get role class from registry
         role_class = role_map.get(p_snap.role_name)
@@ -228,34 +276,20 @@ def restore_game_state(
         player.can_vote_flag = p_snap.can_vote_flag
 
         # Restore role-specific data
-        if isinstance(player.role, Witch):
-            player.role.has_save_potion = p_snap.role_data.get("has_save_potion", True)
-            player.role.has_poison_potion = p_snap.role_data.get("has_poison_potion", True)
-        elif isinstance(player.role, Guard):
-            player.role.last_protected = p_snap.role_data.get("last_protected")
-        elif isinstance(player.role, Elder):
-            player.role.lives = p_snap.role_data.get("lives", 2)
-        elif isinstance(player.role, Idiot):
-            player.role.revealed = p_snap.role_data.get("revealed", False)
-        elif isinstance(player.role, WolfBeauty):
-            player.role.charmed_player = p_snap.role_data.get("charmed_player")
-        elif isinstance(player.role, Knight):
-            player.role.has_dueled = p_snap.role_data.get("has_dueled", False)
-        elif isinstance(player.role, Cupid):
-            player.role.has_linked = p_snap.role_data.get("has_linked", False)
-        elif isinstance(player.role, BloodMoonApostle):
-            player.role.transformed = p_snap.role_data.get("transformed", False)
-        elif isinstance(player.role, Magician):
-            player.role.has_swapped = p_snap.role_data.get("has_swapped", False)
-        elif isinstance(player.role, Thief):
-            player.role.has_chosen = p_snap.role_data.get("has_chosen", False)
+        _restore_role_data(player, p_snap.role_data)
 
         players.append(player)
 
-    # Create game state
-    game_state = GameState(players)
+    return players
 
-    # Restore game state fields
+
+def _restore_game_state_fields(game_state: GameState, snapshot: GameStateSnapshot) -> None:
+    """Restore game state fields from snapshot.
+
+    Args:
+        game_state: The game state to restore fields to.
+        snapshot: The snapshot containing the fields to restore.
+    """
     game_state.phase = GamePhase(snapshot.phase)
     game_state.round_number = snapshot.round_number
 
@@ -279,6 +313,34 @@ def restore_game_state(
     game_state.raven_marked = snapshot.raven_marked
 
     game_state.winner = snapshot.winner
+
+
+def restore_game_state(
+    snapshot: GameStateSnapshot, agent_factory: dict[str, Any] | None = None
+) -> GameState:
+    """Restore a GameState from a snapshot.
+
+    Args:
+        snapshot: The game state snapshot.
+        agent_factory: Optional dictionary mapping player_id to agent instances. If not provided, players will have no agents.
+
+    Returns:
+        GameState: The restored game state.
+
+    Note:
+        Agents cannot be serialized, so they must be recreated manually.
+        Pass a dictionary mapping player_id to agent instances to restore agents.
+    """
+    agent_factory = agent_factory or {}
+
+    # Restore players
+    players = _restore_players(snapshot, agent_factory)
+
+    # Create game state
+    game_state = GameState(players)
+
+    # Restore game state fields
+    _restore_game_state_fields(game_state, snapshot)
 
     return game_state
 

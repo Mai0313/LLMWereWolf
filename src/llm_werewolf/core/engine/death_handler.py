@@ -204,6 +204,96 @@ class DeathHandlerMixin:
 
         return messages
 
+    def _process_hunter_or_alpha_death(self, player: PlayerProtocol) -> list[str]:
+        """Process Hunter or AlphaWolf death ability.
+
+        Args:
+            player: The player with death ability.
+
+        Returns:
+            list[str]: Messages from ability execution.
+        """
+        if not self.game_state:
+            return []
+
+        messages: list[str] = []
+        possible_targets = self.game_state.get_alive_players()
+        if not possible_targets:
+            return messages
+
+        role_name = player.get_role_name()
+        self._log_event(
+            EventType.MESSAGE,
+            self.locale.get("death_ability_active", player=player.name, role=role_name),
+            data={"player_id": player.player_id, "role": role_name},
+        )
+
+        # Get target from agent or random
+        if player.agent:
+            target = ActionSelector.get_target_from_agent(
+                agent=player.agent,
+                role_name=role_name,
+                action_description="Choose a player to shoot before you die",
+                possible_targets=possible_targets,
+                allow_skip=False,
+                additional_context=f"You ({player.name}) have been killed. You can take one player down with you.",
+            )
+        else:
+            target = random.choice(possible_targets)  # noqa: S311
+
+        if target and target.is_alive():
+            self._execute_death_shot(player, target, role_name, messages)
+
+        return messages
+
+    def _execute_death_shot(
+        self, shooter: PlayerProtocol, target: PlayerProtocol, role_name: str, messages: list[str]
+    ) -> None:
+        """Execute the death shot and handle consequences.
+
+        Args:
+            shooter: The player shooting.
+            target: The target player.
+            role_name: Name of the shooter's role.
+            messages: List to append messages to.
+        """
+        if not self.game_state:
+            return
+
+        target.kill()
+        if self.game_state.phase.value == "night":
+            self.game_state.night_deaths.add(target.player_id)
+        else:
+            self.game_state.day_deaths.add(target.player_id)
+
+        # Log appropriate event based on role
+        event_msg = (
+            self.locale.get("hunter_shoots", hunter=shooter.name, target=target.name)
+            if shooter.role.name == "Hunter"
+            else self.locale.get("alpha_wolf_shoots", alpha=shooter.name, target=target.name)
+        )
+
+        self._log_event(
+            EventType.HUNTER_REVENGE,
+            event_msg,
+            data={
+                "shooter_id": shooter.player_id,
+                "target_id": target.player_id,
+                "role": role_name,
+            },
+        )
+
+        # Handle lover death
+        if target.is_lover() and target.lover_partner_id:
+            partner = self.game_state.get_player(target.lover_partner_id)
+            if partner and partner.is_alive():
+                partner.kill()
+                if self.game_state.phase.value == "night":
+                    self.game_state.night_deaths.add(partner.player_id)
+                else:
+                    self.game_state.day_deaths.add(partner.player_id)
+                messages.append(f"{partner.name} died of heartbreak (lover)!")
+
     def _handle_death_abilities(self) -> list[str]:
         """Handle abilities that trigger on death (Hunter, AlphaWolf).
 
@@ -227,6 +317,7 @@ class DeathHandlerMixin:
                 continue
 
             if player.role.name in ("Hunter", "AlphaWolf"):
+                # Check if poisoned
                 death_cause = self.game_state.death_causes.get(player_id)
                 if death_cause == "witch_poison":
                     self._log_event(
@@ -238,111 +329,47 @@ class DeathHandlerMixin:
                     continue
 
                 self.game_state.death_abilities_used.add(player_id)
-
-                possible_targets = self.game_state.get_alive_players()
-                if not possible_targets:
-                    continue
-
-                role_name = player.get_role_name()
-                self._log_event(
-                    EventType.MESSAGE,
-                    self.locale.get("death_ability_active", player=player.name, role=role_name),
-                    data={"player_id": player_id, "role": role_name},
-                )
-
-                if player.agent:
-                    target = ActionSelector.get_target_from_agent(
-                        agent=player.agent,
-                        role_name=role_name,
-                        action_description="Choose a player to shoot before you die",
-                        possible_targets=possible_targets,
-                        allow_skip=False,
-                        additional_context=f"You ({player.name}) have been killed. You can take one player down with you.",
-                    )
-                else:
-                    target = random.choice(possible_targets)  # noqa: S311
-
-                if target and target.is_alive():
-                    target.kill()
-                    if self.game_state.phase.value == "night":
-                        self.game_state.night_deaths.add(target.player_id)
-                    else:
-                        self.game_state.day_deaths.add(target.player_id)
-
-                    # Use appropriate event based on role
-                    if player.role.name == "Hunter":
-                        event_msg = self.locale.get(
-                            "hunter_shoots", hunter=player.name, target=target.name
-                        )
-                    else:  # AlphaWolf
-                        event_msg = self.locale.get(
-                            "alpha_wolf_shoots", alpha=player.name, target=target.name
-                        )
-
-                    self._log_event(
-                        EventType.HUNTER_REVENGE,
-                        event_msg,
-                        data={
-                            "shooter_id": player.player_id,
-                            "target_id": target.player_id,
-                            "role": role_name,
-                        },
-                    )
-
-                    if target.is_lover() and target.lover_partner_id:
-                        partner = self.game_state.get_player(target.lover_partner_id)
-                        if partner and partner.is_alive():
-                            partner.kill()
-                            if self.game_state.phase.value == "night":
-                                self.game_state.night_deaths.add(partner.player_id)
-                            else:
-                                self.game_state.day_deaths.add(partner.player_id)
-                            messages.append(f"{partner.name} died of heartbreak (lover)!")
+                ability_messages = self._process_hunter_or_alpha_death(player)
+                messages.extend(ability_messages)
 
         messages.extend(sheriff_messages)
         return messages
 
-    def resolve_deaths(self) -> list[str]:
-        """Resolve all deaths based on night actions.
+    def _resolve_witch_poison_death(self) -> None:
+        """Resolve witch poison death and lover consequence."""
+        if not self.game_state or not self.game_state.witch_poison_target:
+            return
 
-        Returns:
-            list[str]: Messages describing deaths.
-        """
-        if not self.game_state:
-            return []
+        target = self.game_state.get_player(self.game_state.witch_poison_target)
+        if not target or not target.is_alive():
+            return
 
-        messages = []
+        target.kill()
+        self.game_state.night_deaths.add(target.player_id)
+        self.game_state.death_causes[target.player_id] = "witch_poison"
 
-        if self.game_state.werewolf_target:
-            target = self.game_state.get_player(self.game_state.werewolf_target)
-            if target:
-                messages.extend(self._handle_werewolf_kill(target))
-                if not target.is_alive() and target.player_id not in self.game_state.death_causes:
-                    self.game_state.death_causes[target.player_id] = "werewolf"
+        self._log_event(
+            EventType.WITCH_POISONED,
+            self.locale.get("witch_poisoned_target", target=target.name),
+            data={"player_id": target.player_id},
+        )
 
-        if self.game_state.witch_poison_target:
-            target = self.game_state.get_player(self.game_state.witch_poison_target)
-            if target and target.is_alive():
-                target.kill()
-                self.game_state.night_deaths.add(target.player_id)
-                self.game_state.death_causes[target.player_id] = "witch_poison"
-
+        # Handle lover death
+        if target.is_lover() and target.lover_partner_id:
+            partner = self.game_state.get_player(target.lover_partner_id)
+            if partner and partner.is_alive():
+                partner.kill()
+                self.game_state.night_deaths.add(partner.player_id)
                 self._log_event(
-                    EventType.WITCH_POISONED,
-                    self.locale.get("witch_poisoned_target", target=target.name),
-                    data={"player_id": target.player_id},
+                    EventType.LOVER_DIED,
+                    self.locale.get("died_of_heartbreak", player=partner.name),
+                    data={"player_id": partner.player_id},
                 )
 
-                if target.is_lover() and target.lover_partner_id:
-                    partner = self.game_state.get_player(target.lover_partner_id)
-                    if partner and partner.is_alive():
-                        partner.kill()
-                        self.game_state.night_deaths.add(partner.player_id)
-                        self._log_event(
-                            EventType.LOVER_DIED,
-                            self.locale.get("died_of_heartbreak", player=partner.name),
-                            data={"player_id": partner.player_id},
-                        )
+    def _resolve_wolf_beauty_charm_deaths(self) -> None:
+        """Resolve charmed player deaths when Wolf Beauty dies."""
+        if not self.game_state:
+            return
 
         for player in self.game_state.players:
             if (
@@ -362,6 +389,32 @@ class DeathHandlerMixin:
                         data={"player_id": charmed.player_id, "reason": "wolf_beauty_charm"},
                     )
 
+    def resolve_deaths(self) -> list[str]:
+        """Resolve all deaths based on night actions.
+
+        Returns:
+            list[str]: Messages describing deaths.
+        """
+        if not self.game_state:
+            return []
+
+        messages = []
+
+        # Handle werewolf kill
+        if self.game_state.werewolf_target:
+            target = self.game_state.get_player(self.game_state.werewolf_target)
+            if target:
+                messages.extend(self._handle_werewolf_kill(target))
+                if not target.is_alive() and target.player_id not in self.game_state.death_causes:
+                    self.game_state.death_causes[target.player_id] = "werewolf"
+
+        # Handle witch poison
+        self._resolve_witch_poison_death()
+
+        # Handle wolf beauty charm deaths
+        self._resolve_wolf_beauty_charm_deaths()
+
+        # Handle death abilities
         death_ability_messages = self._handle_death_abilities()
         messages.extend(death_ability_messages)
 

@@ -1,12 +1,4 @@
-## 檢查專案代碼邏輯
-
-修改確認範圍:
-
-- 狼人殺遊戲邏輯是否正確
-- 狼人殺規則完整性, 部分特殊角色能力未實現, 詳情可以參考 `rule.md`
-- 保存/加載遊戲 - 使用 Pydantic 序列化 GameState
-- 重構複雜函數 - 將 run_voting_phase 拆分為更小的函數
-- 狼人協商機制 - 實現多隻狼人投票決定殺人目標
+## 重構 `./src/llm_werewolf/core` 代碼, 將整個代碼透過 `pydantic` 的 `BaseModel` 來完善結構化的代碼
 
 當任務完成時 請務必記得透過 `uv run pre-commit run -a` 來確保代碼質量
 

@@ -1,4 +1,5 @@
 import os
+import re
 import random
 from functools import cached_property
 
@@ -107,8 +108,6 @@ class DemoAgent(BaseAgent):
         # Check if it's a target selection question (contains numbered list)
         if "responding with ONLY the number" in message or "select a target" in message.lower():
             # Extract available numbers from the message
-            import re
-
             # Find all lines that look like "1. PlayerName"
             lines = message.split("\n")
             max_number = 0

@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import fire
 import logfire
 
 from llm_werewolf.ui import run_tui
@@ -49,8 +50,6 @@ def main(config: str) -> None:
 
 def entry() -> None:
     """Entry point for the werewolf TUI command."""
-    import fire
-
     fire.Fire(main)
 
 

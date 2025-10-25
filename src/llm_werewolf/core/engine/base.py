@@ -1,25 +1,21 @@
-"""Base game engine class with core functionality."""
-
-from __future__ import annotations
-
 import random
 from typing import TYPE_CHECKING, Any
+from pathlib import Path
 
 from rich.console import Console
 
 from llm_werewolf.core.types import Event, EventType, GamePhase, RoleProtocol, AgentProtocol
+from llm_werewolf.core.config import GameConfig
 from llm_werewolf.core.events import EventLogger
 from llm_werewolf.core.locale import Locale
 from llm_werewolf.core.player import Player
 from llm_werewolf.core.victory import VictoryChecker
 from llm_werewolf.core.game_state import GameState
+from llm_werewolf.core.serialization import load_game_state, save_game_state
 from llm_werewolf.core.event_formatter import EventFormatter
 
 if TYPE_CHECKING:
-    from pathlib import Path
     from collections.abc import Callable
-
-    from llm_werewolf.core.config import GameConfig
 
 console = Console()
 
@@ -304,8 +300,6 @@ class GameEngineBase:
             msg = "Game not initialized"
             raise RuntimeError(msg)
 
-        from llm_werewolf.core.serialization import save_game_state
-
         save_game_state(self.game_state, file_path)
 
     def load_game(
@@ -322,7 +316,5 @@ class GameEngineBase:
             Agents cannot be serialized, so they must be recreated manually.
             Pass a dictionary mapping player_id to agent instances to restore agents.
         """
-        from llm_werewolf.core.serialization import load_game_state
-
         self.game_state = load_game_state(file_path, agent_factory)
         self.victory_checker = VictoryChecker(self.game_state)

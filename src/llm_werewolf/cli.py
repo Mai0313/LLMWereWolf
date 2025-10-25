@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import fire
 import logfire
 from rich.console import Console
 
@@ -97,8 +98,6 @@ def main(config: str) -> None:
 
 def entry() -> None:
     """Entry point for the werewolf console command."""
-    import fire
-
     fire.Fire(main)
 
 

@@ -1,4 +1,5 @@
 from typing import Any
+import datetime
 
 from rich.text import Text
 from textual.widgets import RichLog
@@ -342,8 +343,6 @@ class ChatPanel(RichLog):
             player_name: Name of the player speaking.
             prefix: Optional prefix to display before the streaming content.
         """
-        import datetime
-
         text = Text()
         time_str = datetime.datetime.now().strftime("%H:%M:%S")
         text.append(f"[{time_str}] ", style="dim")

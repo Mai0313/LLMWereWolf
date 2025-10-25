@@ -1,17 +1,11 @@
 """Sheriff election phase logic for the game engine."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from collections.abc import Callable
 
 from llm_werewolf.core.types import EventType, PlayerProtocol
+from llm_werewolf.core.locale import Locale
+from llm_werewolf.core.game_state import GameState
 from llm_werewolf.core.action_selector import ActionSelector
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from llm_werewolf.core.locale import Locale
-    from llm_werewolf.core.game_state import GameState
 
 
 class SheriffElectionMixin:

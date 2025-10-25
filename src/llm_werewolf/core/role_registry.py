@@ -1,3 +1,27 @@
+from llm_werewolf.core.roles import (
+    Seer,
+    Cupid,
+    Elder,
+    Guard,
+    Idiot,
+    Lover,
+    Raven,
+    Thief,
+    Witch,
+    Hunter,
+    Knight,
+    Magician,
+    Villager,
+    Werewolf,
+    AlphaWolf,
+    WhiteWolf,
+    HiddenWolf,
+    WolfBeauty,
+    GuardianWolf,
+    NightmareWolf,
+    GraveyardKeeper,
+    BloodMoonApostle,
+)
 from llm_werewolf.core.roles.base import Role
 
 
@@ -7,31 +31,6 @@ def get_role_map() -> dict[str, type[Role]]:
     Returns:
         dict[str, type[Role]]: Mapping of role name strings to Role classes.
     """
-    from llm_werewolf.core.roles import (
-        Seer,
-        Cupid,
-        Elder,
-        Guard,
-        Idiot,
-        Lover,
-        Raven,
-        Thief,
-        Witch,
-        Hunter,
-        Knight,
-        Magician,
-        Villager,
-        Werewolf,
-        AlphaWolf,
-        WhiteWolf,
-        HiddenWolf,
-        WolfBeauty,
-        GuardianWolf,
-        NightmareWolf,
-        GraveyardKeeper,
-        BloodMoonApostle,
-    )
-
     return {
         "Werewolf": Werewolf,
         "AlphaWolf": AlphaWolf,

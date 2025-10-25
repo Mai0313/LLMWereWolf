@@ -1,14 +1,16 @@
-from __future__ import annotations
-
 import json
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from pathlib import Path
 
 from pydantic import Field, BaseModel
 
-if TYPE_CHECKING:
-    from llm_werewolf.core.types import PlayerProtocol, GameStateProtocol
-    from llm_werewolf.core.game_state import GameState
+from llm_werewolf.core.types import GamePhase, PlayerStatus, PlayerProtocol, GameStateProtocol
+from llm_werewolf.core.player import Player
+from llm_werewolf.core.game_state import GameState
+from llm_werewolf.core.role_registry import get_role_map
+from llm_werewolf.core.roles.neutral import Thief
+from llm_werewolf.core.roles.villager import Cupid, Elder, Guard, Idiot, Witch, Knight, Magician
+from llm_werewolf.core.roles.werewolf import WhiteWolf, WolfBeauty, BloodMoonApostle
 
 
 class PlayerSnapshot(BaseModel):
@@ -66,18 +68,6 @@ def serialize_player(player: PlayerProtocol) -> PlayerSnapshot:
     Returns:
         PlayerSnapshot: Serialized player data.
     """
-    from llm_werewolf.core.roles.neutral import Thief
-    from llm_werewolf.core.roles.villager import (
-        Cupid,
-        Elder,
-        Guard,
-        Idiot,
-        Witch,
-        Knight,
-        Magician,
-    )
-    from llm_werewolf.core.roles.werewolf import WhiteWolf, WolfBeauty, BloodMoonApostle
-
     # Serialize role-specific data
     role_data: dict[str, Any] = {}
 
@@ -205,18 +195,14 @@ def restore_game_state(
         Agents cannot be serialized, so they must be recreated manually.
         Pass a dictionary mapping player_id to agent instances to restore agents.
     """
-    from llm_werewolf.core.types import GamePhase, PlayerStatus
-    from llm_werewolf.core.player import Player
-    from llm_werewolf.core.game_state import GameState
-    from llm_werewolf.core.role_registry import RoleRegistry
-
     agent_factory = agent_factory or {}
 
     # Restore players
     players: list[Player] = []
+    role_map = get_role_map()
     for p_snap in snapshot.players:
         # Get role class from registry
-        role_class = RoleRegistry.get_role(p_snap.role_name)
+        role_class = role_map.get(p_snap.role_name)
         if not role_class:
             msg = f"Unknown role: {p_snap.role_name}"
             raise ValueError(msg)
@@ -242,18 +228,6 @@ def restore_game_state(
         player.can_vote_flag = p_snap.can_vote_flag
 
         # Restore role-specific data
-        from llm_werewolf.core.roles.neutral import Thief
-        from llm_werewolf.core.roles.villager import (
-            Cupid,
-            Elder,
-            Guard,
-            Idiot,
-            Witch,
-            Knight,
-            Magician,
-        )
-        from llm_werewolf.core.roles.werewolf import WolfBeauty, BloodMoonApostle
-
         if isinstance(player.role, Witch):
             player.role.has_save_potion = p_snap.role_data.get("has_save_potion", True)
             player.role.has_poison_potion = p_snap.role_data.get("has_poison_potion", True)

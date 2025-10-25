@@ -5,7 +5,7 @@ import logfire
 
 logfire.configure(send_to_logfire=False)
 
-from llm_werewolf.core import GameEngine
+from llm_werewolf.core import GameEngine  # noqa: E402
 
 package_name = Path(__file__).parent.name
 __package__ = package_name

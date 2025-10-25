@@ -1,17 +1,14 @@
 """Night phase logic for the game engine."""
 
-from __future__ import annotations
-
 import random
 from typing import TYPE_CHECKING
+from collections.abc import Callable
 
 from llm_werewolf.core.types import Camp, EventType, GamePhase
+from llm_werewolf.core.locale import Locale
+from llm_werewolf.core.game_state import GameState
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from llm_werewolf.core.locale import Locale
-    from llm_werewolf.core.game_state import GameState
     from llm_werewolf.core.actions.base import Action
 
 

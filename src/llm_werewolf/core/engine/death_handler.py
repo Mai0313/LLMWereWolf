@@ -1,17 +1,12 @@
 """Death handling logic for the game engine."""
 
-from __future__ import annotations
-
 import random
-from typing import TYPE_CHECKING
+from collections.abc import Callable
 
 from llm_werewolf.core.types import Camp, EventType, PlayerProtocol
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from llm_werewolf.core.locale import Locale
-    from llm_werewolf.core.game_state import GameState
+from llm_werewolf.core.locale import Locale
+from llm_werewolf.core.game_state import GameState
+from llm_werewolf.core.action_selector import ActionSelector
 
 
 class DeathHandlerMixin:
@@ -103,34 +98,33 @@ class DeathHandlerMixin:
                 self.locale.get("protected_by_guard", player=target.name),
                 data={"player_id": target.player_id},
             )
+        elif hasattr(target.role, "lives") and target.role.lives > 1:
+            target.role.lives -= 1
+            self._log_event(
+                EventType.PLAYER_DIED,
+                self.locale.get("elder_attacked", player=target.name),
+                data={"player_id": target.player_id},
+            )
         else:
-            if hasattr(target.role, "lives") and target.role.lives > 1:
-                target.role.lives -= 1
-                self._log_event(
-                    EventType.PLAYER_DIED,
-                    self.locale.get("elder_attacked", player=target.name),
-                    data={"player_id": target.player_id},
-                )
-            else:
-                target.kill()
-                self.game_state.night_deaths.add(target.player_id)
+            target.kill()
+            self.game_state.night_deaths.add(target.player_id)
 
-                self._log_event(
-                    EventType.PLAYER_DIED,
-                    self.locale.get("killed_by_werewolves", player=target.name),
-                    data={"player_id": target.player_id},
-                )
+            self._log_event(
+                EventType.PLAYER_DIED,
+                self.locale.get("killed_by_werewolves", player=target.name),
+                data={"player_id": target.player_id},
+            )
 
-                if target.is_lover() and target.lover_partner_id:
-                    partner = self.game_state.get_player(target.lover_partner_id)
-                    if partner and partner.is_alive():
-                        partner.kill()
-                        self.game_state.night_deaths.add(partner.player_id)
-                        self._log_event(
-                            EventType.LOVER_DIED,
-                            self.locale.get("died_of_heartbreak", player=partner.name),
-                            data={"player_id": partner.player_id},
-                        )
+            if target.is_lover() and target.lover_partner_id:
+                partner = self.game_state.get_player(target.lover_partner_id)
+                if partner and partner.is_alive():
+                    partner.kill()
+                    self.game_state.night_deaths.add(partner.player_id)
+                    self._log_event(
+                        EventType.LOVER_DIED,
+                        self.locale.get("died_of_heartbreak", player=partner.name),
+                        data={"player_id": partner.player_id},
+                    )
 
         return messages
 
@@ -142,8 +136,6 @@ class DeathHandlerMixin:
         """
         if not self.game_state:
             return []
-
-        from llm_werewolf.core.action_selector import ActionSelector
 
         messages: list[str] = []
         all_deaths = self.game_state.night_deaths | self.game_state.day_deaths
@@ -220,8 +212,6 @@ class DeathHandlerMixin:
         """
         if not self.game_state:
             return []
-
-        from llm_werewolf.core.action_selector import ActionSelector
 
         # Handle sheriff badge transfer first
         sheriff_messages = self._handle_sheriff_badge_transfer()

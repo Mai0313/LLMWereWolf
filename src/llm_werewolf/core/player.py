@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from llm_werewolf.core.types import PlayerInfo, PlayerStatus, RoleProtocol, AgentProtocol
 
 

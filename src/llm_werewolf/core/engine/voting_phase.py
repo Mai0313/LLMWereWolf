@@ -1,19 +1,13 @@
 """Voting phase logic for the game engine."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from collections.abc import Callable
 
 from llm_werewolf.core.types import EventType, GamePhase, PlayerProtocol
+from llm_werewolf.core.locale import Locale
 from llm_werewolf.core.actions import VoteAction
+from llm_werewolf.core.game_state import GameState
+from llm_werewolf.core.actions.base import Action
 from llm_werewolf.core.action_selector import ActionSelector
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from llm_werewolf.core.locale import Locale
-    from llm_werewolf.core.game_state import GameState
-    from llm_werewolf.core.actions.base import Action
 
 
 class VotingPhaseMixin:

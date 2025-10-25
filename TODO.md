@@ -16,7 +16,8 @@
 我發現這個主要邏輯中有非常多循環導入的問題 導致很多 `import` 沒有按照規定放在文件最上方 或是 要透過 `TYPE_CHECKING` 來避免循環導入
 但我覺得正確的做法應該是將代碼重構, 關於類型的東西應該放在 `./src/llm_werewolf/core/types` 資料夾中
 這樣應該可以避免循環導入的問題
-我不希望透過 `TYPE_CHECKING` 或是 在 `function` 內 `import` 來解決循環問題 我認為應該從根本去解決 也就是將架構重構
+我不希望透過 `TYPE_CHECKING`, `function` 內 `import`, 透過雙引號, 或透過 `from __future__ import annotations` 來解決循環問題
+我認為應該從根本去解決 也就是將架構重構
 
 ## 更新規則
 

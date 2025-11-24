@@ -34,7 +34,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Trufflehog Scanning
-        uses: trufflesecurity/trufflehog@v3.90.11
+        uses: trufflesecurity/trufflehog@v3.91.1
         with:
           extra_args: --results=verified,unknown
 

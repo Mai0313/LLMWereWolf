@@ -1,0 +1,197 @@
+# 🏆 LLM Werewolf AI Arena - 完整竞技场配置
+# 支持 Phase 1-3 所有功能的完整配置示例
+
+language: zh-TW
+enable_personality_system: true
+
+# 🎭 玩家配置 - 完整人格化配置
+players:
+  - name: 激进狼王
+    model: gpt-4
+    base_url: https://api.openai.com/v1
+    api_key_env: OPENAI_API_KEY
+    personality_profile: aggressive_wolf
+    enable_personality_system: true
+    description: "高控制欲的狼人，喜欢主导讨论和严厉指控"
+
+  - name: 谨慎预言家
+    model: claude-3-sonnet
+    base_url: https://api.anthropic.com/v1
+    api_key_env: ANTHROPIC_API_KEY
+    personality_profile: cautious_seer
+    enable_personality_system: true
+    description: "逻辑分析能力强，做事谨慎小心"
+
+  - name: 情感女巫
+    model: claude-3-opus
+    base_url: https://api.anthropic.com/v1
+    api_key_env: ANTHROPIC_API_KEY
+    personality_profile: emotional_witch
+    enable_personality_system: true
+    description: "情绪化表达，容易受他人影响"
+
+  - name: 平衡猎人
+    model: gpt-4
+    base_url: https://api.openai.com/v1
+    api_key_env: OPENAI_API_KEY
+    personality_profile: balanced_hunter
+    enable_personality_system: true
+    description: "理性平衡，有责任心"
+
+  - name: 保守村民
+    model: gpt-3.5-turbo
+    base_url: https://api.openai.com/v1
+    api_key_env: OPENAI_API_KEY
+    personality_profile: passive_villager
+    enable_personality_system: true
+    description: "容易随大流，避免冲突"
+
+  - name: 混乱玩家
+    model: deepseek-chat
+    base_url: https://api.deepseek.com/v1
+    api_key_env: DEEPSEEK_API_KEY
+    personality_profile: chaotic_player
+    enable_personality_system: true
+    description: "行为难以预测，喜欢冒险"
+
+  - name: 实验AI
+    model: gpt-4
+    base_url: https://api.openai.com/v1
+    api_key_env: OPENAI_API_KEY
+    personality_profile: balanced_hunter
+    enable_personality_system: true
+    description: "Testing AI with learning capabilities"
+
+  - name: 传统AI
+    model: demo
+    # 不启用人格，保持原有行为
+    enable_personality_system: false
+    description: "Traditional AI without personality system"
+
+  - name: 传统AI2
+    model: demo
+    # 不启用人格，保持原有行为
+    enable_personality_system: false
+    description: "Traditional AI without personality system"
+
+# ⚙️ 竞技场设置
+arena_settings:
+  # Phase 1: 基础设置
+  collect_detailed_stats: true
+  save_replays: true
+  enable_ranking: true
+
+  # Phase 2: 多局竞技设置
+  max_concurrent_games: 1
+  auto_save_progress: true
+  progress_save_interval: 5  # 每5局保存一次进度
+
+  # Phase 3: 高级特性设置
+  enable_learning_system: true
+  learning_iteration_interval: 100  # 每100局更新学习模型
+  enable_social_modeling: true
+  enable_adaptive_mechanics: true
+
+  # 数据存储
+  results_directory: "arena_results"
+  learning_data_directory: "learning_data"
+  replay_data_directory: "replay_data"
+
+# 📊 统计和分析设置
+statistics:
+  # 基础统计
+  enable_performance_tracking: true
+  enable_personality_comparison: true
+  enable_win_rate_analysis: true
+  enable_survival_analysis: true
+
+  # 高级统计
+  enable_correlation_analysis: true
+  enable_predictive_modeling: true
+  enable_behavior_clustering: true
+
+  # 报告生成
+  auto_generate_reports: true
+  report_format: ["json", "html", "markdown"]
+  include_replay_data: true
+
+# 🎮 学习系统设置 (Phase 3)
+learning_system:
+  enable_learning: true
+  learning_rate: 0.1
+  adaptation_rate: 0.05
+  retention_rate: 0.9
+
+  # 记忆系统
+  short_term_memory_size: 50
+  long_term_memory_enabled: true
+  auto_save_learning_state: true
+
+  # 人格演变
+  enable_personality_evolution: true
+  evolution_tracking_interval: 10
+  min_decisions_for_evolution: 5
+
+# 🤝 社交模拟设置 (Phase 3)
+social_modeling:
+  enable_social_network: true
+  enable_faction_detection: true
+  enable_influence_propagation: true
+  enable_voting_prediction: true
+
+  # 社交参数
+  trust_decay_rate: 0.95
+  influence_decay_rate: 0.9
+  alliance_formation_probability: 0.1
+
+# 🎯 自适应机制 (Phase 3)
+adaptive_mechanics:
+  enable_difficulty_adjustment: true
+  enable_dynamic_balance: true
+  enable_emergent_gameplay: false  # 实验性功能
+
+  # 平衡参数
+  winrate_target_range: [0.45, 0.55]
+  adjustment_threshold: 0.1
+  max_adjustment_rate: 0.2
+
+# 🔧 性能和调试设置
+performance:
+  # 基础性能
+  timeout_per_decision: 30.0
+  max_rounds_per_game: 20
+  cleanup_interval: 100  # 每100局清理一次缓存
+
+  # 调试模式
+  debug_mode: false
+  verbose_logging: false
+  save_intermediate_states: false
+
+  # 监控
+  enable_metrics_collection: true
+  enable_resource_monitoring: false  # 可选的资源监控
+  metrics_save_interval: 60
+
+# 📝 存储和备份设置
+storage:
+  # 结果存储
+  auto_save_results: true
+  results_backup_interval: 50  # 每50局备份一次
+
+  # 学习数据存储
+  auto_save_learning: true
+  learning_backup_interval: 20  # 每20局备份一次学习数据
+
+  # 复盘数据存储
+  auto_save_replays: true
+  replay_cleanup_interval: 100  # 每100局清理一次临时文件
+
+# 🔌 语言和本地化
+localization:
+  language: zh-TW
+  auto_translate: false
+
+  # 提示信息
+  show_progress_bars: true
+  show_detailed_events: true
+  colorized_output: true

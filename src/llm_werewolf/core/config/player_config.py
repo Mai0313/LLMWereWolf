@@ -2,6 +2,7 @@ import dotenv
 from pydantic import Field, BaseModel, field_validator
 from openai.types.shared import ReasoningEffort
 from pydantic_core.core_schema import ValidationInfo
+from typing import Optional
 
 dotenv.load_dotenv()
 
@@ -36,6 +37,24 @@ class PlayerConfig(BaseModel):
     )
     reasoning_effort: ReasoningEffort | None = Field(
         default=None, title="Reasoning Effort", description="Reasoning effort level for LLM"
+    )
+
+    # 🆕 Personality System Integration
+    personality_profile: Optional[str] = Field(
+        default=None,
+        title="Personality Profile",
+        description="Name of personality profile (e.g., 'aggressive_wolf', 'cautious_seer')",
+        examples=["aggressive_wolf", "cautious_seer", "emotional_witch"]
+    )
+    enable_personality_system: bool = Field(
+        default=False,
+        title="Enable Personality System",
+        description="Enable AI personality-driven behavior"
+    )
+    force_personality_mode: bool = Field(
+        default=False,
+        title="Force Personality Mode",
+        description="Force personality mode even when personality_system is disabled"
     )
 
     @field_validator("base_url")

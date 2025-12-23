@@ -8,6 +8,10 @@ from llm_werewolf.core.engine.death_handler import DeathHandlerMixin
 from llm_werewolf.core.engine.action_processor import ActionProcessorMixin
 from llm_werewolf.core.engine.sheriff_election import SheriffElectionMixin
 
+# 🆕 Personality System Integration (Temporarily disabled due to circular imports)
+# from llm_werewolf.core.engine.personality_integration import PersonalityEngineIntegration
+from llm_werewolf.core.types import GamePhase
+
 
 class GameEngine(
     DeathHandlerMixin,

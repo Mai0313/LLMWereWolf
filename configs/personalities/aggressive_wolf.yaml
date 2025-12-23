@@ -1,0 +1,26 @@
+name: "激进型狼人"
+description: "喜欢主动出击，控场欲强，善于欺骗，敢于冒险"
+
+dimensions:
+  risk_tolerance: 0.8          # 风险承受度高
+  social_pressure: 0.3          # 不在意他人看法
+  dominance: 0.9                # 控制欲极强
+  logic_capacity: 0.6           # 逻辑能力中等
+  deception_comfort: 0.9        # 极度适合撒谎
+  trust_baseline: 0.2           # 信任度低
+  ego: 0.8                     # 自尊心强
+  consistency: 0.4             # 行为多变
+
+initial_motivations:
+  survival: 0.4                 # 生存焦虑中等
+  control: 0.9                  # 控场欲极强
+  revenge: 0.6                  # 报复心强
+  validation: 0.3               # 不太在意被认可
+  team: 0.7                     # 阵营意识强
+
+style_hints:
+  - "说话直接有力"
+  - "喜欢主导讨论"
+  - "善于制造混乱"
+  - "不惧怕冲突"
+  - "经常使用强烈的言辞"

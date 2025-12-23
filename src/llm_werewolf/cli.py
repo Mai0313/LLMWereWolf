@@ -12,6 +12,9 @@ from llm_werewolf.core.locale import Locale
 from llm_werewolf.core.role_registry import create_roles
 from llm_werewolf.ui.console_presenter import ConsolePresenter
 
+# 🆕 Personality System Integration
+from llm_werewolf.core.personality_integration_manager import PersonalityManager
+
 console = Console()
 
 
@@ -24,19 +27,46 @@ def main(config: str) -> None:
     config_path = Path(config)
     players_config = load_config(config_path=config_path)
 
+    # Check if personality system is enabled
+    enable_personality_system = getattr(players_config, 'enable_personality_system', False)
+
     # Automatically generate game config based on player count
     num_players = len(players_config.players)
     game_config = create_game_config_from_player_count(num_players)
 
-    players = [
-        create_agent(player_cfg, language=players_config.language)
-        for player_cfg in players_config.players
-    ]
+    # 🆕 Create players with personality system support
+    players = []
+    for i, player_cfg in enumerate(players_config.players):
+        # Create base agent
+        base_agent = create_agent(player_cfg, language=players_config.language)
+
+        # Check if personality system is enabled for this player
+        if (enable_personality_system and
+            getattr(player_cfg, 'enable_personality_system', False)):
+
+            # Get personality adapter and create enhanced agent
+            personality_adapter = PersonalityManager.get_personality_adapter()
+            if personality_adapter:
+                enhanced_agent = personality_adapter.create_enhanced_agent(
+                    player_id=i + 1,
+                    base_agent=base_agent,
+                    personality_profile_name=getattr(player_cfg, 'personality_profile', None)
+                )
+                players.append(enhanced_agent)
+            else:
+                players.append(base_agent)
+        else:
+            players.append(base_agent)
+
     roles = create_roles(role_names=game_config.role_names)
 
-    # Initialize locale and game engine with language support
+    # Initialize locale and game engine with language support and personality system
     locale = Locale(players_config.language)
-    engine = GameEngine(game_config, language=players_config.language)
+    engine = GameEngine(
+        game_config,
+        language=players_config.language,
+        enable_personality_system=enable_personality_system
+    )
 
     # Set up beautified console presenter
     presenter = ConsolePresenter(locale)
@@ -44,6 +74,10 @@ def main(config: str) -> None:
 
     engine.setup_game(players=players, roles=roles)
     logfire.info("game_created", config_path=str(config_path), num_players=num_players)
+
+    # 🆕 Log personality system status
+    if enable_personality_system:
+        console.print(f"[green]Personality system enabled with {len([p for p in players_config.players if getattr(p, 'enable_personality_system', False)])} players[/green]")
 
     console.print(
         f"[green]{locale.get('config_loaded', config_path=config_path.resolve())}[/green]"

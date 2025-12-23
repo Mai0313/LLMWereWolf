@@ -1,0 +1,68 @@
+# Personality Demo Configuration - 人格系统演示配置
+language: zh-TW
+
+# 玩家配置 - 包含人格系统参数
+players:
+  - name: 激进攻击者
+    model: gpt-4
+    personality_profile: aggressive_wolf
+    enable_personality_system: true
+
+  - name: 谨慎分析师
+    model: gpt-4
+    personality_profile: cautious_seer
+    enable_personality_system: true
+
+  - name: 情感玩家
+    model: claude-3-opus
+    personality_profile: emotional_witch
+    enable_personality_system: true
+
+  - name: 平衡观察者
+    model: claude-3-sonnet
+    personality_profile: balanced_hunter
+    enable_personality_system: true
+
+  - name: 被动跟随者
+    model: demo
+    personality_profile: passive_villager
+    enable_personality_system: true
+
+  - name: 混乱制造者
+    model: deepseek-chat
+    personality_profile: chaotic_player
+    enable_personality_system: true
+
+  - name: 传统玩家
+    model: gpt-4
+    # 不启用人格系统，使用传统方式
+    enable_personality_system: false
+
+  - name: 演示AI
+    model: demo
+    personality_profile: aggressive_wolf
+    enable_personality_system: true
+
+# 游戏设置
+settings:
+  enable_personality_system: true
+  personality_timeout: 30.0
+  validate_personality_compliance: true
+
+# 人格系统配置
+personality_system:
+  # 信息裁剪设置
+  world_cropping:
+    ensure_spec_compliance: true
+    max_speech_history: 5
+    mask_sensitive_info: true
+
+  # 决策引擎设置
+  decision_engine:
+    fallback_on_failure: true
+    minimum_confidence: 0.1
+
+  # LLM渲染设置
+  llm_rendering:
+    use_rule_based_fallback: true
+    max_prompt_length: 1000

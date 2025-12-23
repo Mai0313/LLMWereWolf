@@ -23,12 +23,18 @@ console = Console()
 class GameEngineBase:
     """Base game engine class with core functionality."""
 
-    def __init__(self, config: GameConfig | None = None, language: str = "en-US") -> None:
+    def __init__(
+        self,
+        config: GameConfig | None = None,
+        language: str = "en-US",
+        enable_personality_system: bool = False
+    ) -> None:
         """Initialize the game engine.
 
         Args:
             config: Game configuration.
             language: Language code for localization (en-US, zh-TW, zh-CN).
+            enable_personality_system: Enable personality-driven AI behavior.
         """
         self.config = config
         self.game_state: GameState | None = None
@@ -42,6 +48,26 @@ class GameEngineBase:
         self.werewolf_discussion_history: list[str] = []  # Only werewolves can see
 
         self.on_event: Callable[[Event], None] = self._default_print_event
+
+        # 🆕 Personality System Integration
+        from ..personality_integration_manager import PersonalityManager
+
+        self.enable_personality_system = enable_personality_system
+        self.personality_integration = PersonalityManager.get_personality_integration(enable_personality_system)
+
+    def get_player_response(self, player, phase: Any, prompt: str) -> str:
+        """Get player response with personality system support."""
+        if self.personality_integration:
+            return self.personality_integration.get_player_response(
+                player_id=int(player.player_id),
+                original_agent=player.get_agent_for_decision(),
+                original_prompt=prompt,
+                game_state=self.game_state,
+                phase=phase
+            )
+        else:
+            # Original behavior
+            return player.get_agent_for_decision().get_response(prompt)
 
     def _default_print_event(self, event: Event) -> None:
         """Default event handler that prints to console.

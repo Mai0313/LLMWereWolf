@@ -1,0 +1,48 @@
+{
+  "language": "zh-TW",
+  "players": [
+    {
+      "name": "激进狼王",
+      "model": "demo",
+      "personality_profile": "aggressive_wolf",
+      "enable_personality_system": true,
+      "description": "高控制欲的狼人，喜欢主导讨论"
+    },
+    {
+      "name": "谨慎预言家",
+      "model": "demo",
+      "personality_profile": "cautious_seer",
+      "enable_personality_system": true,
+      "description": "逻辑分析能力强，做事谨慎"
+    },
+    {
+      "name": "情感女巫",
+      "model": "demo",
+      "personality_profile": "emotional_witch",
+      "enable_personality_system": true,
+      "description": "情绪化表达，容易受他人影响"
+    },
+    {
+      "name": "平衡猎人",
+      "model": "demo",
+      "personality_profile": "balanced_hunter",
+      "enable_personality_system": true,
+      "description": "理性平衡，有责任心"
+    },
+    {
+      "name": "传统玩家1",
+      "model": "demo",
+      "enable_personality_system": false,
+      "description": "传统AI，无人格"
+    },
+    {
+      "name": "传统玩家2",
+      "model": "demo",
+      "enable_personality_system": false,
+      "description": "传统AI，无人格"
+    }
+  ],
+  "enable_personality_system": true,
+  "max_rounds_per_game": 20,
+  "timeout_per_decision": 30.0
+}

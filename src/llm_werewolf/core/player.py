@@ -1,4 +1,9 @@
 from llm_werewolf.core.types import PlayerInfo, PlayerStatus, RoleProtocol, AgentProtocol
+from typing import Optional
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from llm_werewolf.core.agents.enhanced_agent import EnhancedAgent
 
 
 class Player:
@@ -11,6 +16,10 @@ class Player:
         role: type[RoleProtocol],
         agent: AgentProtocol | None = None,
         ai_model: str = "unknown",
+        # 🆕 Personality System Integration
+        personality_profile: Optional[str] = None,
+        enable_personality_system: bool = False,
+        enhanced_agent: Optional["EnhancedAgent"] = None,
     ) -> None:
         """Initialize a player.
 
@@ -20,6 +29,9 @@ class Player:
             role: The role assigned to this player.
             agent: AI agent controlling this player (optional).
             ai_model: Name of the AI model being used.
+            personality_profile: Personality profile name (optional).
+            enable_personality_system: Enable personality-driven behavior.
+            enhanced_agent: Enhanced agent instance (for personality system).
         """
         self.player_id = player_id
         self.name = name
@@ -27,11 +39,28 @@ class Player:
         self.agent = agent
         self.ai_model = ai_model
 
+        # 🆕 Personality System Integration
+        self.personality_profile = personality_profile
+        self.enable_personality_system = enable_personality_system
+        self.enhanced_agent = enhanced_agent
+        if enhanced_agent:
+            self.agent = enhanced_agent  # Override with enhanced agent
+
         self._alive = True
         self.statuses: set[PlayerStatus] = {PlayerStatus.ALIVE}
         self.lover_partner_id: str | None = None
 
         self.can_vote_flag = True
+
+    def has_personality_system(self) -> bool:
+        """Check if this player uses personality system."""
+        return self.enable_personality_system and self.enhanced_agent is not None
+
+    def get_agent_for_decision(self):
+        """Get the appropriate agent for decision making."""
+        if self.has_personality_system():
+            return self.enhanced_agent
+        return self.agent
 
     def is_alive(self) -> bool:
         """Check if the player is alive.

@@ -26,8 +26,8 @@ import {
   ThunderboltOutlined,
   ApiOutlined
 } from '@ant-design/icons'
-import { apiService } from '@utils/api'
-import { llmService, getServerDisplayName, getModelDisplayName } from '@services/llmService'
+import { apiService } from '@/utils/api'
+import { llmService, getServerDisplayName, getModelDisplayName } from '@/services/llmService'
 
 const { Panel } = Collapse
 
@@ -70,7 +70,7 @@ const AIConfigurationPanel: React.FC = () => {
   useEffect(() => {
     loadModelsAndStatus()
     // 设置默认模型
-    const defaultModel = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_DEFAULT_MODEL) ||
+    const defaultModel = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_DEFAULT_MODEL) ||
                          (typeof process !== 'undefined' && process.env?.REACT_APP_DEFAULT_MODEL) ||
                          'meta-llama/Llama-3.3-70B-Instruct'
     setSelectedModel(defaultModel)
@@ -240,10 +240,10 @@ const AIConfigurationPanel: React.FC = () => {
                         <div className="flex items-center space-x-2">
                           <RobotOutlined />
                           <span>{model.name}</span>
-                          <Tag size="small" color="blue">{model.size}</Tag>
+                          <Tag style={{ fontSize: '12px' }} color="blue">{model.size}</Tag>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Tag size="small">{model.serverAlias}</Tag>
+                          <Tag style={{ fontSize: '12px' }}>{model.serverAlias}</Tag>
                           {testResults[model.id] !== undefined && (
                             testResults[model.id] ?
                               <CheckCircleOutlined style={{ color: '#52c41a' }} /> :
@@ -363,7 +363,7 @@ const AIConfigurationPanel: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <span className="text-sm font-medium">{getModelDisplayName(model.id)}</span>
-                        <Tag size="small" color="blue">{model.size}</Tag>
+                        <Tag style={{ fontSize: '12px' }} color="blue">{model.size}</Tag>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Button

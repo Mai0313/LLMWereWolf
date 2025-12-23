@@ -1,5 +1,5 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios'
-import { GameState, GameConfiguration, ApiResponse, WebSocketMessage } from '../types/game'
+import axios, { AxiosInstance } from 'axios'
+import { GameState, GameConfiguration, ApiResponse, WebSocketMessage } from '@/types/game'
 
 // API 基础配置
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api'
@@ -30,7 +30,7 @@ class ApiService {
 
     // 响应拦截器
     this.client.interceptors.response.use(
-      (response: AxiosResponse) => {
+      (response: any) => {
         console.log(`✅ API Response: ${response.status} ${response.config.url}`)
         return response
       },
@@ -162,7 +162,7 @@ class ApiService {
   // AI 相关API (集成公司LLM服务)
   async testAIConnection(model: string): Promise<boolean> {
     try {
-      const { llmService } = await import('@services/llmService')
+      const { llmService } = await import('@/services/llmService')
       return await llmService.testModelConnection(model)
     } catch (error) {
       console.error('测试模型连接失败:', error)
@@ -180,7 +180,7 @@ class ApiService {
     type?: 'chat' | 'embeddings'
   }>> {
     try {
-      const { llmService } = await import('@services/llmService')
+      const { llmService } = await import('@/services/llmService')
       return await llmService.getAvailableModels()
     } catch (error) {
       console.error('获取模型列表失败:', error)
@@ -191,7 +191,7 @@ class ApiService {
 
   async getServerStatus(): Promise<Record<string, { available: boolean; latency: number; models_count: number }>> {
     try {
-      const { llmService } = await import('@services/llmService')
+      const { llmService } = await import('@/services/llmService')
       return await llmService.getServerStatus()
     } catch (error) {
       console.error('获取服务器状态失败:', error)
@@ -201,7 +201,7 @@ class ApiService {
 
   async getModelRecommendedConfig(modelId: string): Promise<any> {
     try {
-      const { llmService } = await import('@services/llmService')
+      const { llmService } = await import('@/services/llmService')
       return llmService.getModelRecommendedConfig(modelId)
     } catch (error) {
       console.error('获取模型配置失败:', error)

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { useGameState, usePlayers, useVotingData, setVotingData } from '@store/gameStore'
+import { useGameState, usePlayers } from '@store/gameStore'
 import { Vote } from '@/types/game'
 
 const VotingPanel: React.FC = () => {
@@ -18,7 +18,7 @@ const VotingPanel: React.FC = () => {
     }
   }, [timeLeft])
 
-  const voteCounts = votingData.reduce((acc, vote) => {
+  const voteCounts = votingData.reduce((acc: Record<string, number>, vote: Vote) => {
     acc[vote.targetId] = (acc[vote.targetId] || 0) + 1
     return acc
   }, {} as Record<string, number>)

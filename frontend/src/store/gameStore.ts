@@ -18,6 +18,7 @@ interface GameStore extends UIState {
   configuration: GameConfiguration | null
   availableConfigurations: GameConfiguration[]
   circleLayout: Record<string, Position>
+  playerAnimations: Record<string, any>
 
   setGameState: (state: GameState) => void
   addEvent: (event: GameEvent) => void
@@ -40,6 +41,7 @@ interface GameStore extends UIState {
   setConfiguration: (config: GameConfiguration) => void
   loadConfigurations: () => Promise<void>
   reset: () => void
+  hoverPlayer: (player: Player | null) => void
 }
 
 export const useGameStore = create<GameStore>()(
@@ -131,4 +133,6 @@ export const useUIState = () => useGameStore((state) => ({
 }))
 export const useCircleLayout = () => useGameStore((state) => state.circleLayout)
 export const useAutoScroll = () => useGameStore((state) => state.autoScroll)
+export const useVotingData = () => useGameStore((state) => state.votingData)
+export const setVotingData = (votes: Vote[]) => useGameStore.getState().setVotingData(votes)
 export const setView = (view: UIState['currentView']) => useGameStore.getState().setView(view)

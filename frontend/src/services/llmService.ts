@@ -1,17 +1,20 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios'
+import axios, { AxiosInstance } from 'axios'
+
+// 类型定义
+type AvailableModels = Record<string, string[]>
 
 // 公司 API 服务器配置
 const LLM_SERVERS = {
-  server1: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_LLM_SERVER_1) ||
+  server1: (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_LLM_SERVER_1) ||
              (typeof process !== 'undefined' && process.env?.REACT_APP_LLM_SERVER_1) ||
              'http://100.80.20.5:4000/v1',
-  server2: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_LLM_SERVER_2) ||
+  server2: (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_LLM_SERVER_2) ||
              (typeof process !== 'undefined' && process.env?.REACT_APP_LLM_SERVER_2) ||
              'http://100.82.5.110:30001'
 }
 
 // 可用模型列表
-export const AVAILABLE_MODELS = {
+export const AVAILABLE_MODELS: AvailableModels = {
   'http://100.80.20.5:4000/v1': [
     'nvidia/Llama-3_3-Nemotron-Super-49B-v1_5',
     'mistralai/Devstral-Small-2507',
@@ -25,7 +28,7 @@ export const AVAILABLE_MODELS = {
 }
 
 // 默认模型
-export const DEFAULT_MODEL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_DEFAULT_MODEL) ||
+export const DEFAULT_MODEL = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_DEFAULT_MODEL) ||
                            (typeof process !== 'undefined' && process.env?.REACT_APP_DEFAULT_MODEL) ||
                            'meta-llama/Llama-3.3-70B-Instruct'
 

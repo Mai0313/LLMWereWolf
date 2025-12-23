@@ -1,0 +1,8 @@
+streamlit>=1.28.0
+pydantic>=2.12.3
+textual>=6.3.0
+openai>=2.5.0
+fire>=0.7.1
+logfire>=4.13.2
+pyyaml>=6.0
+aiofiles>=23.0.0

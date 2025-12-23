@@ -1,139 +1,92 @@
-import React, { useEffect, useRef } from 'react'
-import { Layout, Row, Col, Card, Empty, Spin } from 'antd'
-import { motion, AnimatePresence } from 'framer-motion'
+import React, { useEffect } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import PlayerCircle from './PlayerCircle'
 import EventFeed from './EventFeed'
-import GameDashboard from './GameDashboard'
 import VotingPanel from './VotingPanel'
 import PlayerDetailsPanel from './PlayerDetailsPanel'
-import { useGameState, usePlayers, useCurrentEvent, useUIState, useGameStore } from '@store/gameStore'
+import GameDashboard from './GameDashboard'
+import { useGameState, usePlayers, useUIState, useGameStore } from '@store/gameStore'
 import { generateMockGame } from '@utils/mockData'
-
-const { Content, Sider } = Layout
 
 const GameLayout: React.FC = () => {
   const players = usePlayers()
   const gameState = useGameState()
-  const currentEvent = useCurrentEvent()
   const uiState = useUIState()
-  const { setGameState, addEvent } = useGameStore()
+  const { setGameState, calculateCircleLayout } = useGameStore()
 
-  // 如果没有游戏状态，生成模拟数据
   useEffect(() => {
+    // 初始化游戏数据
     if (!gameState) {
-      const mockGame = generateMockGame()
-      setGameState(mockGame)
-
-      // 模拟事件流
-      const eventInterval = setInterval(() => {
-        if (mockGame.events.length > 0) {
-          const randomEvent = mockGame.events[
-            Math.floor(Math.random() * Math.min(mockGame.events.length, 10))
-          ]
-          addEvent({ ...randomEvent, id: Date.now().toString(), timestamp: new Date() })
-        }
-      }, 3000)
-
-      return () => clearInterval(eventInterval)
+      setGameState(generateMockGame())
     }
-  }, [gameState, setGameState, addEvent])
+  }, []) // 只在挂载时运行一次
 
-  if (!gameState) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Spin size="large" />
-      </div>
-    )
-  }
+  // 监听玩家数量变化，重新计算布局
+  useEffect(() => {
+    if (players.length > 0) {
+      calculateCircleLayout(players.length)
+    }
+  }, [players.length, calculateCircleLayout])
+
+  if (!gameState) return <div className="w-full h-full bg-black" />
 
   return (
-    <Layout className="h-full">
-      {/* 左侧边栏 - 事件流 */}
-      <Sider
-        width={350}
-        className="p-4 overflow-hidden"
-        style={{
-          background: 'transparent',
-          borderRight: uiState.theme === 'light' ?
-            '1px solid rgba(0, 0, 0, 0.1)' :
-            '1px solid rgba(148, 163, 184, 0.1)'
-        }}
-      >
+    <div className="relative w-full h-full flex overflow-hidden bg-bg-dark">
+
+      {/* 左侧：日志栏 */}
+      <aside className="w-80 flex-shrink-0 z-10 flex flex-col border-r border-white/10 bg-black/40 backdrop-blur-md">
         <EventFeed />
-      </Sider>
+      </aside>
 
-      {/* 主内容区 - 游戏桌面 */}
-      <Content className="relative overflow-hidden">
-        {/* 游戏仪表板 */}
-        <div className="absolute top-4 left-4 z-10">
-          <GameDashboard />
-        </div>
+      {/* 中间：主舞台 */}
+      <main className="flex-1 relative flex flex-col bg-radial-mystic">
 
-        {/* 圆形玩家布局 */}
-        <div className="relative w-full h-full flex items-center justify-center">
-          <AnimatePresence>
-            {currentEvent && (
-              <motion.div
-                key={currentEvent.id}
-                initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -50, scale: 0.9 }}
-                className="absolute top-20 left-1/2 transform -translate-x-1/2 z-20"
-              >
-                <Card
-                  className="shadow-2xl"
-                  style={{
-                    background: uiState.theme === 'light' ?
-                      'rgba(255, 255, 255, 0.95)' :
-                      'rgba(30, 41, 59, 0.95)',
-                    backdropFilter: 'blur(10px)',
-                    minWidth: '300px'
-                  }}
-                  size="small"
-                >
-                  <div className="text-center">
-                    <div className="text-sm opacity-75 mb-1">
-                      {currentEvent.round} 轮 • {currentEvent.phase}
-                    </div>
-                    <div className="font-medium">
-                      {currentEvent.message}
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <PlayerCircle
-            players={players}
-            gameState={gameState}
-          />
-        </div>
-
-        {/* 投票面板 */}
-        {gameState.phase === 'day_voting' && (
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
-            <VotingPanel />
+        {/* 顶部仪表盘 */}
+        <div className="absolute top-6 left-0 right-0 z-20 flex justify-center pointer-events-none">
+          <div className="pointer-events-auto">
+            <GameDashboard />
           </div>
-        )}
-      </Content>
+        </div>
 
-      {/* 右侧边栏 - 玩家详情 */}
-      {uiState.showPlayerDetails && uiState.selectedPlayer && (
-        <Sider
-          width={320}
-          className="p-4"
-          style={{
-            background: 'transparent',
-            borderLeft: uiState.theme === 'light' ?
-              '1px solid rgba(0, 0, 0, 0.1)' :
-              '1px solid rgba(148, 163, 184, 0.1)'
-          }}
-        >
-          <PlayerDetailsPanel player={uiState.selectedPlayer} />
-        </Sider>
-      )}
-    </Layout>
+        {/* 仪式圆环区域 - 强制居中 */}
+        <div className="flex-1 flex items-center justify-center overflow-hidden">
+          {/* 这里强制设定容器大小，与 Store 中的计算逻辑(800x800)对应 */}
+          <div className="w-[800px] h-[800px] relative flex items-center justify-center">
+            <PlayerCircle players={players} gameState={gameState} />
+          </div>
+        </div>
+
+        {/* 底部投票栏 */}
+        <AnimatePresence>
+          {gameState.phase === 'day_voting' && (
+            <motion.div
+              initial={{ y: 200, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 200, opacity: 0 }}
+              className="absolute bottom-8 left-0 right-0 z-30 flex justify-center pointer-events-none"
+            >
+              <div className="pointer-events-auto w-full max-w-3xl px-4">
+                <VotingPanel />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
+
+      {/* 右侧：详情面板 */}
+      <AnimatePresence>
+        {uiState.showPlayerDetails && uiState.selectedPlayer && (
+          <motion.aside
+            initial={{ x: 350, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 350, opacity: 0 }}
+            className="absolute right-0 top-0 bottom-0 w-80 z-40 border-l border-white/10 bg-black/80 backdrop-blur-xl shadow-2xl"
+          >
+            <PlayerDetailsPanel player={uiState.selectedPlayer} />
+          </motion.aside>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
 

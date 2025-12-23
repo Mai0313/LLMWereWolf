@@ -1,421 +1,190 @@
 import React, { useState } from 'react'
-import {
-  Card,
-  Form,
-  Input,
-  Select,
-  Slider,
-  Switch,
-  Button,
-  Space,
-  Row,
-  Col,
-  Divider,
-  Tag,
-  Table,
-  message,
-  Modal,
-  InputNumber,
-  Tabs
-} from 'antd'
+import { Form, Input, Select, Slider, Switch, Button, Row, Col, Badge } from 'antd'
 import {
   PlayCircleOutlined,
-  SaveOutlined,
-  PlusOutlined,
-  DeleteOutlined,
   SettingOutlined,
-  UserOutlined,
-  RobotOutlined
+  RobotOutlined,
+  UsergroupAddOutlined,
+  ClockCircleOutlined
 } from '@ant-design/icons'
+import { useGameStore, setView } from '@store/gameStore'
 import WorkingAIConfigurationPanel from './WorkingAIConfigurationPanel'
-import { GameConfiguration, AgentConfig } from '../../types/game'
-import { useConfiguration, useAvailableConfigurations, setView, useGameStore } from '@store/gameStore'
+import { motion } from 'framer-motion'
 
 const { Option } = Select
 
-interface RoleSlot {
-  id: string
-  role: string
-  count: number
-  description: string
-}
-
 const ConfigurationPanel: React.FC = () => {
-  const configuration = useConfiguration()
-  const availableConfigurations = useAvailableConfigurations()
-  const { setConfiguration } = useGameStore()
-
   const [form] = Form.useForm()
-  const [selectedConfig, setSelectedConfig] = useState<GameConfiguration | null>(null)
-  const [isModalVisible, setIsModalVisible] = useState(false)
+  const [activeTab, setActiveTab] = useState<'rules' | 'ai'>('rules')
 
-  // 解决 LLM_SERVERS 未定义的问题
-  const LLM_SERVERS = {
-    server1: process.env.REACT_APP_LLM_SERVER_1 || 'http://100.80.20.5:4000/v1',
-    server2: process.env.REACT_APP_LLM_SERVER_2 || 'http://100.82.5.110:30001'
+  const handleStart = () => {
+    setView('game')
   }
 
-  // 预设角色数据
-  const availableRoles: RoleSlot[] = [
-    { id: 'werewolf', role: '狼人', count: 4, description: '每晚可以击杀一名玩家' },
-    { id: 'villager', role: '村民', count: 6, description: '普通村民，无特殊技能' },
-    { id: 'seer', role: '预言家', count: 1, description: '每晚可以查验一名玩家身份' },
-    { id: 'witch', role: '女巫', count: 1, description: '拥有一瓶解药和毒药' },
-    { id: 'guard', role: '守卫', count: 1, description: '每晚可以守护一名玩家' },
-    { id: 'hunter', role: '猎人', count: 1, description: '死亡时可以开枪带走一人' },
-    { id: 'cupid', role: '丘比特', count: 1, description: '游戏开始时连接情侣' },
-    { id: 'idiot', role: '白痴', count: 1, description: '被投票出局时可以继续发言' }
-  ]
-
-  // AI模型配置
-  const availableModels: AgentConfig[] = [
-    { model: 'demo', description: 'Demo 智能体（测试用）' },
-    { model: 'gpt-4', description: 'GPT-4（需要API密钥）' },
-    { model: 'gpt-3.5-turbo', description: 'GPT-3.5 Turbo（需要API密钥）' },
-    { model: 'claude-3', description: 'Claude-3（需要API密钥）' },
-    { model: 'deepseek-chat', description: 'DeepSeek Chat（需要API密钥）' }
-  ]
-
-  const handleLoadConfiguration = (config: GameConfiguration) => {
-    setSelectedConfig(config)
-    form.setFieldsValue({
-      name: config.name,
-      playerCount: config.playerCount,
-      enablePersonalitySystem: config.enablePersonalitySystem,
-      language: config.language,
-      timeout: config.timeout
-    })
-  }
-
-  const handleSaveConfiguration = () => {
-    form.validateFields().then((values) => {
-      const newConfig: GameConfiguration = {
-        id: Date.now().toString(),
-        name: values.name,
-        playerCount: values.playerCount,
-        roles: [], // 根据玩家数量和角色配置生成
-        timeout: values.timeout,
-        language: values.language,
-        enablePersonalitySystem: values.enablePersonalitySystem,
-        agents: generateAgentConfigs(values.playerCount)
-      }
-
-      setConfiguration(newConfig)
-      setSelectedConfig(newConfig)
-      message.success('配置保存成功！')
-    })
-  }
-
-  const generateAgentConfigs = (playerCount: number): AgentConfig[] => {
-    return Array.from({ length: playerCount }, (_, i) => ({
-      model: availableModels[0].model, // 默认使用第一个模型
-      personalityProfile: values.enablePersonalitySystem ? `personality_${i}` : undefined,
-      description: `玩家 ${i + 1} 智能体`
-    }))
-  }
-
-  const handleStartGame = () => {
-    if (selectedConfig) {
-      //这里将来会调用真实的游戏启动API
-      message.success(`正在启动游戏: ${selectedConfig.name}`)
-      setView('game')
-    } else {
-      message.warning('请先选择或创建一个配置')
-    }
-  }
-
-  const handleAddRole = () => {
-    setIsModalVisible(true)
-  }
-
-  const handleRemoveRole = (roleId: string) => {
-    // 实现角色移除逻辑
-    message.info('角色移除功能待实现')
-  }
-
-  const handleTestAPIConnection = () => {
-    // 实现API连接测试
-    message.info('API连接测试功能待实现')
-  }
+  // 侧边栏菜单项组件
+  const MenuItem = ({ id, icon, label, active }: any) => (
+    <div
+      onClick={() => setActiveTab(id)}
+      className={`
+        group flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-300
+        ${active
+          ? 'bg-gradient-to-r from-mystic-accent/20 to-transparent border-l-2 border-mystic-accent text-white'
+          : 'text-gray-400 hover:bg-white/5 hover:text-gray-200 border-l-2 border-transparent'}
+      `}
+    >
+      <span className={`text-lg transition-transform group-hover:scale-110 ${active ? 'text-mystic-accent' : 'text-gray-500'}`}>
+        {icon}
+      </span>
+      <span className="font-serif tracking-wide text-sm">{label}</span>
+    </div>
+  )
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <Card
-        title={
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <SettingOutlined />
-              <span>游戏配置</span>
+    <div className="w-full h-full flex items-center justify-center p-4 md:p-8">
+      {/* 玻璃拟态主容器 */}
+      <div className="w-full max-w-6xl h-[85vh] bg-[#0a0a0f]/80 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col md:flex-row">
+
+        {/* 左侧导航栏 */}
+        <div className="w-full md:w-64 bg-black/20 border-r border-white/5 p-6 flex flex-col">
+          <div className="mb-8 pl-2">
+            <div className="text-[10px] text-mystic-dim uppercase tracking-[0.2em] mb-1">System Configuration</div>
+            <h2 className="text-2xl font-serif text-white font-bold">RITUAL SETUP</h2>
+          </div>
+
+          <div className="flex-1 space-y-2">
+            <MenuItem
+              id="rules"
+              icon={<SettingOutlined />}
+              label="Game Parameters"
+              active={activeTab === 'rules'}
+            />
+            <MenuItem
+              id="ai"
+              icon={<RobotOutlined />}
+              label="Artificial Intelligence"
+              active={activeTab === 'ai'}
+            />
+          </div>
+
+          {/* 底部预设 */}
+          <div className="mt-auto pt-6 border-t border-white/5">
+            <div className="text-xs text-gray-500 mb-3 uppercase tracking-wider">Quick Presets</div>
+            <div className="space-y-2">
+              {['Standard 12 (4 Wolves)', 'Chaos 9 (3 Wolves)', 'Speed 6 (2 Wolves)'].map((preset, i) => (
+                <div key={i} className="px-3 py-2 text-xs text-gray-400 bg-white/5 hover:bg-mystic-accent/20 hover:text-white rounded cursor-pointer transition-colors border border-transparent hover:border-mystic-accent/30">
+                  {preset}
+                </div>
+              ))}
             </div>
+          </div>
+        </div>
+
+        {/* 右侧内容区 */}
+        <div className="flex-1 flex flex-col relative overflow-hidden bg-gradient-to-br from-transparent to-mystic-accent/5">
+          {/* 顶部标题栏 */}
+          <div className="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-black/10">
+            <div>
+              <h3 className="text-xl text-white font-serif tracking-wide">
+                {activeTab === 'rules' ? 'RULES OF ENGAGEMENT' : 'NEURAL NETWORK CONFIG'}
+              </h3>
+              <p className="text-xs text-gray-500 mt-1">
+                {activeTab === 'rules' ? 'Configure time dilation and participant souls' : 'Manage LLM connections and parameters'}
+              </p>
+            </div>
+
             <Button
               type="primary"
+              size="large"
               icon={<PlayCircleOutlined />}
-              onClick={handleStartGame}
-              disabled={!selectedConfig}
+              onClick={handleStart}
+              className="bg-mystic-accent border-none hover:bg-mystic-accent/80 shadow-glow-sm h-10 px-8 font-serif tracking-widest rounded-full"
             >
-              启动游戏
+              INITIATE
             </Button>
           </div>
-        }
-      >
-        <Tabs
-          defaultActiveKey="game"
-          items={[
-            {
-              key: 'game',
-              label: (
-                <span>
-                  <SettingOutlined />
-                  游戏配置
-                </span>
-              ),
-              children: (
-                <Row gutter={[24, 24]}>
-                  {/* 左侧：配置表单 */}
-                  <Col span={16}>
-                    <Form
-                      form={form}
-                      layout="vertical"
-                      initialValues={{
-                        name: '自定义游戏',
-                        playerCount: 16,
-                        enablePersonalitySystem: false,
-                        language: 'zh-CN',
-                        timeout: {
-                          night: 30,
-                          dayDiscussion: 60,
-                          dayVoting: 30
-                        }
-                      }}
-                    >
-                      {/* 基本信息 */}
-                      <Card size="small" title="基本信息" className="mb-4">
-                        <Row gutter={[16, 16]}>
-                          <Col span={12}>
-                            <Form.Item
-                              label="游戏名称"
-                              name="name"
-                              rules={[{ required: true, message: '请输入游戏名称' }]}
-                            >
-                              <Input placeholder="输入游戏名称" />
-                            </Form.Item>
-                          </Col>
-                          <Col span={12}>
-                            <Form.Item
-                              label="玩家人数"
-                              name="playerCount"
-                              rules={[{ required: true, message: '请选择玩家人数' }]}
-                            >
-                              <Select placeholder="选择玩家人数">
-                                {[6, 8, 10, 12, 14, 16, 18, 20].map(count => (
-                                  <Option key={count} value={count}>
-                                    {count} 人
-                                  </Option>
-                                ))}
-                              </Select>
-                            </Form.Item>
-                          </Col>
-                          <Col span={12}>
-                            <Form.Item
-                              label="游戏语言"
-                              name="language"
-                            >
-                              <Select>
-                                <Option value="zh-CN">简体中文</Option>
-                                <Option value="zh-TW">繁体中文</Option>
-                                <Option value="en-US">English</Option>
-                              </Select>
-                            </Form.Item>
-                          </Col>
-                          <Col span={12}>
-                            <Form.Item
-                              label="启用人格系统"
-                              name="enablePersonalitySystem"
-                              valuePropName="checked"
-                            >
-                              <Switch />
-                            </Form.Item>
-                          </Col>
-                        </Row>
-                      </Card>
 
-                      {/* 时间配置 */}
-                      <Card size="small" title="时间配置" className="mb-4">
-                        <Form.Item
-                          label="黑夜时间（秒）"
-                          name={['timeout', 'night']}
-                        >
-                          <Slider
-                            min={10}
-                            max={120}
-                            marks={{
-                              10: '10s',
-                              30: '30s',
-                              60: '1m',
-                              120: '2m'
-                            }}
-                          />
-                        </Form.Item>
-                        <Form.Item
-                          label="白天讨论时间（秒）"
-                          name={['timeout', 'dayDiscussion']}
-                        >
-                          <Slider
-                            min={30}
-                            max={180}
-                            marks={{
-                              30: '30s',
-                              60: '1m',
-                              120: '2m',
-                              180: '3m'
-                            }}
-                          />
-                        </Form.Item>
-                        <Form.Item
-                          label="投票时间（秒）"
-                          name={['timeout', 'dayVoting']}
-                        >
-                          <Slider
-                            min={15}
-                            max={90}
-                            marks={{
-                              15: '15s',
-                              30: '30s',
-                              60: '1m',
-                              90: '1.5m'
-                            }}
-                          />
-                        </Form.Item>
-                      </Card>
+          {/* 滚动内容区 */}
+          <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+            {activeTab === 'rules' ? (
+              <Form form={form} layout="vertical" className="max-w-3xl">
 
-                      {/* 操作按钮 */}
-                      <div className="flex space-x-4">
-                        <Button
-                          type="primary"
-                          icon={<SaveOutlined />}
-                          onClick={handleSaveConfiguration}
-                        >
-                          保存配置
-                        </Button>
-                        <Button
-                          icon={<PlusOutlined />}
-                          onClick={handleAddRole}
-                        >
-                          添加角色
-                        </Button>
-                      </div>
-                    </Form>
-                  </Col>
+                {/* 第一部分：核心设置 */}
+                <div className="mb-8">
+                  <div className="flex items-center gap-2 mb-4 text-mystic-accent">
+                    <UsergroupAddOutlined />
+                    <span className="text-sm font-bold uppercase tracking-widest">Core Parameters</span>
+                  </div>
 
-                  {/* 右侧：预设配置 */}
-                  <Col span={8}>
-                    <Card size="small" title="预设配置">
-                      <div className="space-y-2 max-h-96 overflow-y-auto">
-                        {availableConfigurations.map(config => (
-                          <div
-                            key={config.id}
-                            className={`p-3 border rounded cursor-pointer transition-all ${
-                              selectedConfig?.id === config.id
-                                ? 'border-blue-400 bg-blue-50'
-                                : 'border-gray-200 hover:border-gray-300'
-                            }`}
-                            onClick={() => handleLoadConfiguration(config)}
-                          >
-                            <div className="font-medium">{config.name}</div>
-                            <div className="text-sm text-gray-600">
-                              {config.playerCount} 人
-                              {config.enablePersonalitySystem && (
-                                <Tag size="small" className="ml-2">人格系统</Tag>
-                              )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Form.Item label={<span className="text-gray-400">SESSION NAME</span>} name="name" initialValue="Midnight Protocol">
+                      <Input className="h-10 text-lg font-serif" placeholder="Enter session name" />
+                    </Form.Item>
+
+                    <Form.Item label={<span className="text-gray-400">PARTICIPANTS</span>} name="playerCount" initialValue={12}>
+                      <Select className="h-10" dropdownClassName="bg-mystic-900 border border-white/10">
+                        {[6, 9, 12, 16, 20].map(n => (
+                          <Option key={n} value={n}>
+                            <div className="flex justify-between items-center">
+                              <span>{n} Souls</span>
+                              <Badge status="processing" color={n > 12 ? '#f59e0b' : '#8b5cf6'} />
                             </div>
-                          </div>
+                          </Option>
                         ))}
+                      </Select>
+                    </Form.Item>
+                  </div>
+
+                  <Form.Item name="personality" valuePropName="checked" className="bg-white/5 p-4 rounded-lg border border-white/5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-white font-medium mb-1">Complex Personality Matrix</div>
+                        <div className="text-xs text-gray-500">Enable deep psychological profiling and memory retention for agents</div>
                       </div>
-                    </Card>
+                      <Switch />
+                    </div>
+                  </Form.Item>
+                </div>
 
-                    {/* 角色分配 */}
-                    {selectedConfig && (
-                      <Card size="small" title="角色分配" className="mt-4">
-                        <div className="space-y-2 max-h-64 overflow-y-auto">
-                          {availableRoles.map(role => (
-                            <div
-                              key={role.id}
-                              className="flex items-center justify-between p-2 border rounded"
-                            >
-                              <div className="flex items-center space-x-2">
-                                <UserOutlined />
-                                <div>
-                                  <div className="font-medium">{role.role}</div>
-                                  <div className="text-xs text-gray-500">
-                                    {role.description}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <InputNumber
-                                  size="small"
-                                  min={0}
-                                  max={selectedConfig.playerCount}
-                                  defaultValue={role.count}
-                                  style={{ width: 60 }}
-                                />
-                                <Button
-                                  size="small"
-                                  type="text"
-                                  danger
-                                  icon={<DeleteOutlined />}
-                                  onClick={() => handleRemoveRole(role.id)}
-                                />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </Card>
-                    )}
-                  </Col>
-                </Row>
-              )
-            },
-            {
-              key: 'ai',
-              label: (
-                <span>
-                  <RobotOutlined />
-                  AI 配置
-                </span>
-              ),
-              children: <WorkingAIConfigurationPanel />
-            }
-          ]}
-        />
-      </Card>
+                {/* 第二部分：时间设置 */}
+                <div className="mb-8">
+                  <div className="flex items-center gap-2 mb-4 text-mystic-gold">
+                    <ClockCircleOutlined />
+                    <span className="text-sm font-bold uppercase tracking-widest">Time Dilation</span>
+                  </div>
 
-      {/* 添加角色 Modal */}
-      <Modal
-        title="添加自定义角色"
-        open={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
-        onOk={() => {
-          setIsModalVisible(false)
-          message.info('自定义角色功能待实现')
-        }}
-      >
-        <Form layout="vertical">
-          <Form.Item label="角色名称">
-            <Input placeholder="输入角色名称" />
-          </Form.Item>
-          <Form.Item label="角色描述">
-            <Input.TextArea placeholder="输入角色描述" rows={3} />
-          </Form.Item>
-          <Form.Item label="所属阵营">
-            <Select placeholder="选择阵营">
-              <Option value="werewolf">狼人阵营</Option>
-              <Option value="villager">村民阵营</Option>
-              <Option value="neutral">中立阵营</Option>
-            </Select>
-          </Form.Item>
-        </Form>
-      </Modal>
+                  <div className="bg-black/20 p-6 rounded-xl border border-white/5 space-y-6">
+                    <Form.Item label={<span className="text-gray-400 flex justify-between"><span>NIGHT DURATION</span> <span className="text-mystic-accent">30s</span></span>} name="nightTime">
+                      <Slider
+                        trackStyle={{ backgroundColor: '#8b5cf6' }}
+                        handleStyle={{ borderColor: '#8b5cf6', backgroundColor: '#000', boxShadow: '0 0 10px #8b5cf6' }}
+                        railStyle={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+                      />
+                    </Form.Item>
+                    <Form.Item label={<span className="text-gray-400 flex justify-between"><span>DAY DISCUSSION</span> <span className="text-mystic-gold">60s</span></span>} name="dayTime">
+                      <Slider
+                        trackStyle={{ backgroundColor: '#fbbf24' }}
+                        handleStyle={{ borderColor: '#fbbf24', backgroundColor: '#000', boxShadow: '0 0 10px #fbbf24' }}
+                        railStyle={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+                      />
+                    </Form.Item>
+                    <Form.Item label={<span className="text-gray-400 flex justify-between"><span>VOTING WINDOW</span> <span className="text-mystic-blood">30s</span></span>} name="voteTime">
+                      <Slider
+                        trackStyle={{ backgroundColor: '#ef4444' }}
+                        handleStyle={{ borderColor: '#ef4444', backgroundColor: '#000', boxShadow: '0 0 10px #ef4444' }}
+                        railStyle={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+                      />
+                    </Form.Item>
+                  </div>
+                </div>
+              </Form>
+            ) : (
+              <div className="max-w-4xl animate-fade-in">
+                <WorkingAIConfigurationPanel />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

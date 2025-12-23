@@ -1,268 +1,80 @@
 import React from 'react'
-import { Card, Tag, Avatar, Statistic, Row, Col, Timeline, Divider } from 'antd'
-import {
-  UserOutlined,
-  CrownOutlined,
-  HeartOutlined,
-  EyeOutlined,
-  MessageOutlined,
-  ClockCircleOutlined
-} from '@ant-design/icons'
-import { Player } from '../../types/game'
-import { useGameEvents } from '@store/gameStore'
+import { Player } from '@/types/game'
+import { useGameEvents, useGameStore } from '@store/gameStore'
+import { CloseOutlined, UserOutlined } from '@ant-design/icons'
+import { Button, Tag } from 'antd'
 
-interface PlayerDetailsPanelProps {
-  player: Player
-}
-
-const PlayerDetailsPanel: React.FC<PlayerDetailsPanelProps> = ({ player }) => {
+const PlayerDetailsPanel: React.FC<{ player: Player }> = ({ player }) => {
   const events = useGameEvents()
-
-  // 获取与玩家相关的事件
-  const playerEvents = events.filter(event =>
-    event.message.includes(player.name) ||
-    event.actorId === player.id ||
-    event.targetId === player.id
-  ).slice(-10) // 最近10个事件
-
-  // 统计数据
-  const discussionEvents = playerEvents.filter(e => e.type === 'DISCUSSION').length
-  const voteEvents = playerEvents.filter(e => e.type === 'VOTING').length
-  const actionEvents = playerEvents.filter(e => e.type === 'ROLE_ACTION').length
-
-  const getStatusColor = (player: Player) => {
-    if (!player.isAlive) return 'default'
-    if (player.status === 'protected') return 'blue'
-    if (player.status === 'poisoned') return 'purple'
-    if (player.status === 'charmed') return 'magenta'
-    return 'green'
-  }
-
-  const getStatusText = (player: Player) => {
-    if (!player.isAlive) return '已淘汰'
-    if (player.status === 'protected') return '被保护'
-    if (player.status === 'poisoned') return '中毒'
-    if (player.status === 'charmed') return '被魅惑'
-    return '存活'
-  }
-
-  const getFactionColor = (faction: string) => {
-    switch (faction) {
-      case 'werewolf': return 'red'
-      case 'villager': return 'blue'
-      case 'neutral': return 'default'
-      default: return 'default'
-    }
-  }
-
-  const getFactionText = (faction: string) => {
-    switch (faction) {
-      case 'werewolf': return '狼人阵营'
-      case 'villager': return '村民阵营'
-      case 'neutral': return '中立阵营'
-      default: return '未知阵营'
-    }
-  }
+  const { togglePlayerDetails } = useGameStore()
+  const playerEvents = events.filter(e => e.message.includes(player.name)).slice(-10)
 
   return (
-    <div className="space-y-4">
-      {/* 玩家基本信息 */}
-      <Card size="small" title="玩家信息">
-        <div className="flex items-center space-x-4 mb-4">
-          <Avatar
-            size={64}
-            icon={<UserOutlined />}
-            className={
-              `border-4 ${
-                getStatusColor(player) === 'default' ? 'border-gray-400' :
-                getStatusColor(player) === 'blue' ? 'border-blue-400' :
-                getStatusColor(player) === 'purple' ? 'border-purple-400' :
-                getStatusColor(player) === 'magenta' ? 'border-pink-400' :
-                'border-green-400'
-              }`
-            }
-            style={{
-              backgroundColor: player.isAlive ?
-                (player.role.camp === 'werewolf' ? '#dc2626' : '#1e40af') :
-                '#6b7280'
-            }}
-          />
+    <div className="h-full flex flex-col relative">
+      {/* Close Button */}
+      <Button
+        type="text"
+        icon={<CloseOutlined />}
+        className="absolute top-4 right-4 text-gray-400 hover:text-white z-10"
+        onClick={togglePlayerDetails}
+      />
 
-          <div className="flex-1">
-            <div className="flex items-center space-x-2 mb-2">
-              <h3 className="text-lg font-bold">{player.name}</h3>
-              {player.sheriff && <CrownOutlined className="text-yellow-400" />}
+      {/* Header Profile */}
+      <div className="p-8 pb-6 border-b border-white/5 bg-gradient-to-b from-mystic-accent/10 to-transparent">
+        <div className="w-20 h-20 rounded-full border-2 border-mystic-accent/30 flex items-center justify-center bg-black/40 mb-4 mx-auto shadow-glow-sm relative">
+          {player.isAlive ? (
+            <span className="text-3xl">👤</span>
+          ) : (
+            <span className="text-3xl grayscale opacity-50">💀</span>
+          )}
+          <div className="absolute -bottom-2 px-2 py-0.5 bg-black border border-white/20 rounded text-[10px] text-gray-300">
+            NO.{player.position + 1}
+          </div>
+        </div>
+
+        <h2 className="text-2xl font-serif text-white font-bold text-center mb-1">{player.name}</h2>
+        <div className="flex justify-center gap-2 mb-4">
+          <Tag color={player.isAlive ? '#3b82f6' : '#262626'} className="border-none m-0">
+            {player.isAlive ? 'ALIVE' : 'ELIMINATED'}
+          </Tag>
+          <Tag color="purple" className="border-none m-0 bg-mystic-accent/20 text-mystic-accent">
+            {player.role.name}
+          </Tag>
+        </div>
+      </div>
+
+      {/* Stats / AI Info */}
+      <div className="p-6 grid grid-cols-2 gap-4 border-b border-white/5">
+        <div className="bg-white/5 p-3 rounded-lg">
+          <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Model</div>
+          <div className="text-xs text-blue-300 font-mono truncate" title={player.agent}>{player.agent}</div>
+        </div>
+        <div className="bg-white/5 p-3 rounded-lg">
+          <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Role Camp</div>
+          <div className="text-xs text-gray-200 capitalize">{player.role.camp}</div>
+        </div>
+      </div>
+
+      {/* Activity Log */}
+      <div className="flex-1 overflow-hidden flex flex-col p-6">
+        <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <span className="w-1 h-1 bg-mystic-accent rounded-full"></span>
+          Behavior Analysis
+        </div>
+        <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1">
+          {playerEvents.length > 0 ? playerEvents.map((e, i) => (
+            <div key={i} className="relative pl-4 border-l border-white/10 pb-4 last:pb-0">
+              <div className="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-black border border-white/20"></div>
+              <div className="text-[10px] text-gray-500 mb-1">{new Date(e.timestamp).toLocaleTimeString()}</div>
+              <div className="text-sm text-gray-300 font-light leading-snug">
+                {e.message.replace(player.name, 'Target')}
+              </div>
             </div>
-
-            <div className="space-y-1">
-              <Tag color={getFactionColor(player.role.camp)}>
-                {getFactionText(player.role.camp)}
-              </Tag>
-              <Tag color={getStatusColor(player)}>
-                {getStatusText(player)}
-              </Tag>
-            </div>
-
-            {!player.isAlive && (
-              <div className="text-sm opacity-60">
-                身份: {player.role.name}
-              </div>
-            )}
-          </div>
+          )) : (
+            <div className="text-center text-gray-600 text-xs py-10 italic">No activity recorded yet</div>
+          )}
         </div>
-
-        {/* 详细状态 */}
-        <Row gutter={[8, 8]}>
-          <Col span={12}>
-            <Statistic
-              title="状态"
-              value={getStatusText(player)}
-              valueStyle={{
-                color: getStatusColor(player) === 'default' ? '#9ca3af' :
-                       getStatusColor(player) === 'blue' ? '#3b82f6' :
-                       getStatusColor(player) === 'purple' ? '#8b5cf6' :
-                       getStatusColor(player) === 'magenta' ? '#ec4899' :
-                       '#10b981'
-              }}
-            />
-          </Col>
-          <Col span={12}>
-            <Statistic
-              title="位置"
-              value={`位置 ${player.position + 1}`}
-              prefix={<ClockCircleOutlined />}
-            />
-          </Col>
-        </Row>
-      </Card>
-
-      {/* 角色信息 */}
-      <Card size="small" title="角色信息">
-        <div className="space-y-3">
-          <div>
-            <div className="text-sm opacity-60">角色名称</div>
-            <div className="font-medium">{player.role.name}</div>
-          </div>
-          <div>
-            <div className="text-sm opacity-60">角色描述</div>
-            <div className="text-sm">{player.role.description}</div>
-          </div>
-          <div>
-            <div className="text-sm opacity-60">行动优先级</div>
-            <div className="font-medium">{player.role.priority}</div>
-          </div>
-          <div>
-            <div className="text-sm opacity-60">AI 模型</div>
-            <div className="text-sm">{player.agent}</div>
-          </div>
-        </div>
-      </Card>
-
-      {/* 活动统计 */}
-      <Card size="small" title="活动统计">
-        <Row gutter={[16, 16]}>
-          <Col span={8}>
-            <Statistic
-              title="发言次数"
-              value={discussionEvents}
-              prefix={<MessageOutlined />}
-              valueStyle={{ color: '#f59e0b' }}
-            />
-          </Col>
-          <Col span={8}>
-            <Statistic
-              title="投票次数"
-              value={voteEvents}
-              prefix={<VoteOutlined />}
-              valueStyle={{ color: '#ef4444' }}
-            />
-          </Col>
-          <Col span={8}>
-            <Statistic
-              title="技能使用"
-              value={actionEvents}
-              prefix={<EyeOutlined />}
-              valueStyle={{ color: '#3b82f6' }}
-            />
-          </Col>
-        </Row>
-      </Card>
-
-      {/* 特殊状态 */}
-      {(player.status !== 'alive' || player.lovers?.length || player.sheriff) && (
-        <Card size="small" title="特殊状态">
-          <div className="space-y-2">
-            {!player.isAlive && (
-              <div className="flex items-center space-x-2">
-                <HeartOutlined className="text-red-400" />
-                <span>已被淘汰</span>
-              </div>
-            )}
-
-            {player.status === 'protected' && (
-              <div className="flex items-center space-x-2">
-                <ShieldCheckOutlined className="text-blue-400" />
-                <span>被守卫保护</span>
-              </div>
-            )}
-
-            {player.status === 'poisoned' && (
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 rounded-full bg-purple-400" />
-                <span>中了女巫毒药</span>
-              </div>
-            )}
-
-            {player.status === 'charmed' && (
-              <div className="flex items-center space-x-2">
-                <HeartOutlined className="text-pink-400" />
-                <span>被狼美人魅惑</span>
-              </div>
-            )}
-
-            {player.sheriff && (
-              <div className="flex items-center space-x-2">
-                <CrownOutlined className="text-yellow-400" />
-                <span>当前警长</span>
-              </div>
-            )}
-
-            {player.lovers && player.lovers.length > 0 && (
-              <div className="flex items-center space-x-2">
-                <HeartOutlined className="text-pink-400" />
-                <span>有情侣关系</span>
-              </div>
-            )}
-          </div>
-        </Card>
-      )}
-
-      {/* 最近事件 */}
-      <Card size="small" title={`最近事件 (${playerEvents.length})`}>
-        <div className="max-h-64 overflow-y-auto">
-          <Timeline mode="left" size="small">
-            {playerEvents.map((event, index) => (
-              <Timeline.Item
-                key={`${event.id}-${index}`}
-                color={
-                  event.type === 'PLAYER_DIED' ? 'red' :
-                  event.type === 'ROLE_ACTION' ? 'blue' :
-                  event.type === 'DISCUSSION' ? 'gold' :
-                  event.type === 'VOTING' ? 'orange' :
-                  'gray'
-                }
-              >
-                <div className="text-sm">
-                  <div className="opacity-60 text-xs mb-1">
-                    第{event.round}轮 • {event.phase}
-                  </div>
-                  <div>{event.message}</div>
-                </div>
-              </Timeline.Item>
-            ))}
-          </Timeline>
-        </div>
-      </Card>
+      </div>
     </div>
   )
 }

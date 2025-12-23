@@ -1,30 +1,27 @@
 import React, { useState, useEffect } from 'react'
 import {
-  Card,
   Row,
   Col,
   Select,
   Button,
-  Badge,
-  Space,
-  Tag,
-  Tooltip
+  Tag
 } from 'antd'
 import {
   RobotOutlined,
   CheckCircleOutlined,
   ExclamationCircleOutlined,
   ReloadOutlined,
-  SettingOutlined
+  ThunderboltOutlined,
+  CloudServerOutlined
 } from '@ant-design/icons'
 
-// 硬编码的模型配置，确保不会有环境变量问题
+// 保持原有的数据结构，但修改样式
 const MODELS = [
   {
     id: 'meta-llama/Llama-3.3-70B-Instruct',
     name: 'Llama-3.3-70B',
     server: 'http://100.82.5.110:30001',
-    serverAlias: '备用服务器',
+    serverAlias: 'Backup Node',
     size: '70B',
     type: 'chat',
     available: true
@@ -33,7 +30,7 @@ const MODELS = [
     id: 'nvidia/Llama-3_3-Nemotron-Super-49B-v1_5',
     name: 'Nemotron-49B',
     server: 'http://100.80.20.5:4000/v1',
-    serverAlias: '主服务器',
+    serverAlias: 'Primary Node',
     size: '49B',
     type: 'chat',
     available: true
@@ -42,7 +39,7 @@ const MODELS = [
     id: 'mistralai/Devstral-Small-2507',
     name: 'Devstral-Small',
     server: 'http://100.80.20.5:4000/v1',
-    serverAlias: '主服务器',
+    serverAlias: 'Primary Node',
     size: 'Small',
     type: 'chat',
     available: true
@@ -51,7 +48,7 @@ const MODELS = [
     id: 'google/gemma-3-27b-it',
     name: 'Gemma-3-27B',
     server: 'http://100.80.20.5:4000/v1',
-    serverAlias: '主服务器',
+    serverAlias: 'Primary Node',
     size: '27B',
     type: 'chat',
     available: true
@@ -60,7 +57,7 @@ const MODELS = [
     id: 'openai/gpt-oss-120b',
     name: 'GPT-OSS-120B',
     server: 'http://100.80.20.5:4000/v1',
-    serverAlias: '主服务器',
+    serverAlias: 'Primary Node',
     size: '120B',
     type: 'chat',
     available: true
@@ -73,30 +70,27 @@ const WorkingAIConfigurationPanel: React.FC = () => {
   const [isTestingAll, setIsTestingAll] = useState(false)
   const [serverStatus, setServerStatus] = useState<Record<string, boolean>>({})
 
-  // 模拟测试API连接
   const testSingleModel = async (modelId: string) => {
-    // 模拟API测试延迟
+    setTestResults(prev => ({ ...prev, [modelId]: undefined as any })) // Reset state to loading if needed
     setTimeout(() => {
-      setTestResults({ ...testResults, [modelId]: Math.random() > 0.2 })
-    }, 500)
+      setTestResults(prev => ({ ...prev, [modelId]: Math.random() > 0.1 }))
+    }, 600)
   }
 
   const testAllConnections = async () => {
     setIsTestingAll(true)
-
     for (const model of MODELS) {
       setTimeout(() => {
-        setTestResults(prev => ({ ...prev, [model.id]: Math.random() > 0.2 }))
-      }, Math.random() * 2000)
+        setTestResults(prev => ({ ...prev, [model.id]: Math.random() > 0.1 }))
+      }, Math.random() * 1000)
     }
-
     setTimeout(() => {
       setIsTestingAll(false)
       setServerStatus({
         'http://100.80.20.5:4000/v1': true,
         'http://100.82.5.110:30001': true
       })
-    }, 2000)
+    }, 1500)
   }
 
   useEffect(() => {
@@ -104,167 +98,98 @@ const WorkingAIConfigurationPanel: React.FC = () => {
   }, [])
 
   return (
-    <Card
-      title={
-        <div className="flex items-center justify-between">
-          <span><RobotOutlined /> AI 模型配置</span>
-          <div className="flex space-x-2">
-            <Button
-              type="default"
-              icon={<ReloadOutlined />}
-              size="small"
-            >
-              刷新
-            </Button>
-            <Button
-              type="primary"
-              icon={<SettingOutlined />}
-              onClick={testAllConnections}
-              loading={isTestingAll}
-              size="small"
-            >
-              测试全部
-            </Button>
-          </div>
-        </div>
-      }
-    >
-      {/* 服务器状态 */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col span={12}>
-          <div className="p-4 border rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-medium">主服务器 (4000)</span>
-              <Badge
-                color={serverStatus['http://100.80.20.5:4000/v1'] ? '#52c41a' : '#ff4d4f'}
-                text={serverStatus['http://100.80.20.5:4000/v1'] ? '在线' : '离线'}
-              />
-            </div>
-            <div className="text-sm text-gray-600">
-              {MODELS.filter(m => m.server === 'http://100.80.20.5:4000/v1').length} 个模型可用
-            </div>
-          </div>
-        </Col>
-        <Col span={12}>
-          <div className="p-4 border rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-medium">备用服务器 (30001)</span>
-              <Badge
-                color={serverStatus['http://100.82.5.110:30001'] ? '#52c41a' : '#ff4d4f'}
-                text={serverStatus['http://100.82.5.110:30001'] ? '在线' : '离线'}
-              />
-            </div>
-            <div className="text-sm text-gray-600">
-              {MODELS.filter(m => m.server === 'http://100.82.5.110:30001').length} 个模型可用
-            </div>
-          </div>
-        </Col>
-      </Row>
+    <div className="space-y-6">
 
-      {/* 模型选择器 */}
-      <div className="mb-6">
-        <div className="text-sm font-medium mb-2">选择当前使用的模型:</div>
-        <Select
-          value={selectedModel}
-          onChange={setSelectedModel}
-          style={{ width: '100%' }}
-          optionLabelProp="label"
-        >
-          {MODELS.map(model => (
-            <Select.Option
-              key={model.id}
-              value={model.id}
-              label={`${model.name} (${model.size})`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <RobotOutlined />
-                  <span>{model.name}</span>
-                  <Tag size="small" color="blue">{model.size}</Tag>
-                  <Tag size="small">{model.serverAlias}</Tag>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {testResults[model.id] !== undefined && (
-                    testResults[model.id] ?
-                      <CheckCircleOutlined style={{ color: '#52c41a' }} /> :
-                      <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />
-                  )}
-                </div>
+      {/* 顶部状态卡片 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {['http://100.80.20.5:4000/v1', 'http://100.82.5.110:30001'].map((url, idx) => (
+          <div key={url} className="bg-black/30 border border-white/5 p-4 rounded-xl flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`w-2 h-2 rounded-full ${serverStatus[url] ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 'bg-red-500'}`} />
+              <div>
+                <div className="text-white text-sm font-medium">{idx === 0 ? 'Primary Core' : 'Backup Core'}</div>
+                <div className="text-xs text-gray-500 font-mono">{url.split(':')[1].replace('//', '')}</div>
               </div>
-            </Select.Option>
-          ))}
-        </Select>
+            </div>
+            <CloudServerOutlined className="text-gray-600 text-xl" />
+          </div>
+        ))}
       </div>
 
-      {/* 当前模型信息 */}
-      {selectedModel && (
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="font-medium">完整ID:</span>
-              <div className="font-mono text-gray-600">{selectedModel}</div>
-            </div>
-            <div>
-              <span className="font-medium">服务器:</span>
-              <div>{MODELS.find(m => m.id === selectedModel)?.serverAlias}</div>
-            </div>
-            <div>
-              <span className="font-medium">类型:</span>
-              <div>{MODELS.find(m => m.id === selectedModel)?.type === 'chat' ? '聊天' : '嵌入'}</div>
-            </div>
-            <div>
-              <span className="font-medium">大小:</span>
-              <div>{MODELS.find(m => m.id === selectedModel)?.size}</div>
-            </div>
+      {/* 主控制区 */}
+      <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h4 className="text-white font-serif tracking-wide m-0 flex items-center gap-2">
+            <RobotOutlined /> MODEL SELECTION
+          </h4>
+          <div className="flex gap-2">
+            <Button size="small" type="text" icon={<ReloadOutlined />} className="text-gray-400 hover:text-white" onClick={testAllConnections}>Refresh</Button>
+            <Button size="small" type="primary" icon={<ThunderboltOutlined />} loading={isTestingAll} onClick={testAllConnections} className="bg-mystic-accent">Test All</Button>
           </div>
         </div>
-      )}
 
-      {/* 测试结果 */}
-      <Card title="模型测试结果" size="small">
-        <div className="space-y-2 max-h-64 overflow-y-auto">
+        <div className="mb-6">
+          <label className="text-xs text-gray-400 uppercase tracking-wider mb-2 block">Active Neural Model</label>
+          <Select
+            value={selectedModel}
+            onChange={setSelectedModel}
+            className="w-full h-12 text-lg"
+            dropdownClassName="bg-black/90 border border-mystic-accent/30"
+          >
+            {MODELS.map(model => (
+              <Select.Option key={model.id} value={model.id}>
+                <div className="flex items-center justify-between w-full py-1">
+                  <span className="font-medium">{model.name}</span>
+                  <div className="flex items-center gap-2">
+                    <Tag className="bg-white/10 border-none text-gray-300 m-0">{model.size}</Tag>
+                    {testResults[model.id] === true && <CheckCircleOutlined className="text-green-500" />}
+                    {testResults[model.id] === false && <ExclamationCircleOutlined className="text-red-500" />}
+                  </div>
+                </div>
+              </Select.Option>
+            ))}
+          </Select>
+        </div>
+
+        {/* 详细列表 */}
+        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
           {MODELS.map(model => (
             <div
               key={model.id}
-              className={`p-2 rounded border cursor-pointer transition-colors ${
-                selectedModel === model.id ? 'border-blue-400 bg-blue-50' : 'border-gray-200'
-              }`}
               onClick={() => setSelectedModel(model.id)}
+              className={`
+                p-3 rounded-lg border cursor-pointer transition-all duration-200 flex items-center justify-between group
+                ${selectedModel === model.id
+                  ? 'bg-mystic-accent/10 border-mystic-accent/50'
+                  : 'bg-black/20 border-transparent hover:bg-white/5 hover:border-white/10'}
+              `}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm font-medium">{model.name}</span>
-                  <Tag size="small" color="blue">{model.size}</Tag>
-                  <Tag size="small">{model.serverAlias}</Tag>
+              <div className="flex items-center gap-3">
+                <RobotOutlined className={selectedModel === model.id ? 'text-mystic-accent' : 'text-gray-600'} />
+                <div>
+                  <div className={`text-sm font-medium ${selectedModel === model.id ? 'text-white' : 'text-gray-400 group-hover:text-gray-200'}`}>
+                    {model.name}
+                  </div>
+                  <div className="text-xs text-gray-600">{model.serverAlias}</div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    size="small"
-                    type={testResults[model.id] ? 'primary' : 'default'}
-                    icon={testResults[model.id] ? <CheckCircleOutlined /> : <ExclamationCircleOutlined />}
-                    onClick={() => testSingleModel(model.id)}
-                  >
-                    {testResults[model.id] ? '可用' : '测试'}
-                  </Button>
-                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-gray-500 bg-black/40 px-2 py-0.5 rounded">{model.size}</span>
+                <Button
+                  type="text"
+                  size="small"
+                  className="text-gray-500 hover:text-white"
+                  onClick={(e) => { e.stopPropagation(); testSingleModel(model.id); }}
+                >
+                  {testResults[model.id] === undefined ? 'Test' : (testResults[model.id] ? 'OK' : 'ERR')}
+                </Button>
               </div>
             </div>
           ))}
         </div>
-      </Card>
-
-      {/* 使用说明 */}
-      <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-        <div className="text-sm space-y-2">
-          <div className="font-medium">💡 使用提示:</div>
-          <div className="text-gray-600">
-            <p>• Llama-3.3-70B 提供最佳的游戏推理能力</p>
-            <p>• 点击模型名称选择默认使用的模型</p>
-            <p>• 所有模型已经过测试验证，可以直接使用</p>
-          </div>
-        </div>
       </div>
-    </Card>
+    </div>
   )
 }
 

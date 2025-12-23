@@ -1,306 +1,150 @@
 import React from 'react'
-import { Card, Row, Col, Statistic, Table, Tag } from 'antd'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
-  LineChart,
-  Line,
-  Area,
-  AreaChart
-} from 'recharts'
-import {
-  UserOutlined,
-  MessageOutlined,
-  VoteOutlined,
-  ThunderboltOutlined,
-  TrophyOutlined,
-  ClockCircleOutlined
-} from '@ant-design/icons'
-import { usePlayers, useGameState, useGameEvents } from '@store/gameStore'
+import { usePlayers, useGameEvents, useGameState } from '@store/gameStore'
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis } from 'recharts'
+import { CloseOutlined } from '@ant-design/icons'
+import { Button } from 'antd'
+import { useGameStore } from '@store/gameStore'
 
 const COLORS = {
-  werewolf: '#dc2626',
-  villager: '#1e40af',
-  neutral: '#6b7280'
+  werewolf: '#ef4444',
+  villager: '#3b82f6',
+  neutral: '#9ca3af'
 }
+
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-black/90 border border-white/20 p-2 text-xs text-white uppercase tracking-widest shadow-xl rounded">
+        {`${payload[0].name} : ${payload[0].value}`}
+      </div>
+    );
+  }
+  return null;
+};
+
+const StatCard: React.FC<{ title: string; value: string | number; sub?: string }> = ({ title, value, sub }) => (
+  <div className="bg-white/5 border border-white/5 p-4 rounded-xl flex flex-col items-center justify-center relative overflow-hidden group hover:bg-white/10 transition-colors">
+    <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-1 z-10">{title}</div>
+    <div className="text-3xl font-serif font-bold text-white z-10">{value}</div>
+    {sub && <div className="text-[10px] text-mystic-accent z-10 mt-1">{sub}</div>}
+  </div>
+)
 
 const StatisticsPanel: React.FC = () => {
   const players = usePlayers()
-  const gameState = useGameState()
   const events = useGameEvents()
+  const gameState = useGameState()
+  const { toggleStatistics } = useGameStore()
 
-  // 基础统计数据
-  const alivePlayers = players.filter(p => p.isAlive)
-  const deadPlayers = players.filter(p => !p.isAlive)
+  // 数据计算
+  const alive = players.filter(p => p.isAlive).length
+  const werewolfCount = players.filter(p => p.isAlive && p.role.camp === 'werewolf').length
+  const villagerCount = players.filter(p => p.isAlive && p.role.camp === 'villager').length
 
-  const factionData = [
-    {
-      name: '狼人',
-      value: alivePlayers.filter(p => p.role.camp === 'werewolf').length,
-      color: COLORS.werewolf,
-      totalDead: deadPlayers.filter(p => p.role.camp === 'werewolf').length
-    },
-    {
-      name: '村民',
-      value: alivePlayers.filter(p => p.role.camp === 'villager').length,
-      color: COLORS.villager,
-      totalDead: deadPlayers.filter(p => p.role.camp === 'villager').length
-    },
-    {
-      name: '中立',
-      value: alivePlayers.filter(p => p.role.camp === 'neutral').length,
-      color: COLORS.neutral,
-      totalDead: deadPlayers.filter(p => p.role.camp === 'neutral').length
-    }
+  const chartData = [
+    { name: 'Werewolf', value: werewolfCount },
+    { name: 'Villager', value: villagerCount },
+    { name: 'Neutral', value: players.filter(p => p.isAlive && p.role.camp === 'neutral').length }
   ]
 
-  // 玩家活跃度统计
-  const playerActivityData = players.map(player => {
-    const playerEvents = events.filter(e =>
-      e.message.includes(player.name) || e.actorId === player.id
-    )
-
-    const discussionEvents = playerEvents.filter(e => e.type === 'DISCUSSION').length
-    const voteEvents = playerEvents.filter(e => e.type === 'VOTING').length
-    const actionEvents = playerEvents.filter(e => e.type === 'ROLE_ACTION').length
-
-    return {
-      name: player.name,
-      alive: player.isAlive,
-      discussion: discussionEvents,
-      voting: voteEvents,
-      actions: actionEvents,
-      total: discussionEvents + voteEvents + actionEvents
-    }
-  }).sort((a, b) => b.total - a.total)
-
-  // 时间线数据（模拟）
-  const timelineData = Array.from({ length: gameState.round + 1 }, (_, i) => ({
-    round: i,
-    werewolf: Math.max(0, players.filter(p => p.role.camp === 'werewolf').length - i),
-    villager: Math.max(0, players.filter(p => p.role.camp === 'villager').length - Math.floor(i * 0.8))
-  }))
-
-  // 事件类型分布
-  const eventTypeData = [
-    { type: '讨论', count: events.filter(e => e.type === 'DISCUSSION').length, color: '#f59e0b' },
-    { type: '投票', count: events.filter(e => e.type === 'VOTING').length, color: '#ef4444' },
-    { type: '技能', count: events.filter(e => e.type === 'ROLE_ACTION').length, color: '#3b82f6' },
-    { type: '死亡', count: events.filter(e => e.type === 'PLAYER_DIED').length, color: '#dc2626' }
-  ]
-
-  // 表格列定义
-  const columns = [
-    {
-      title: '玩家',
-      dataIndex: 'name',
-      key: 'name',
-      render: (name: string, record: any) => (
-        <div className="flex items-center space-x-2">
-          <span>{name}</span>
-          {!record.alive && <Tag color="default">已淘汰</Tag>}
-        </div>
-      )
-    },
-    {
-      title: '发言次数',
-      dataIndex: 'discussion',
-      key: 'discussion',
-      render: (count: number) => <span className="text-yellow-400">{count}</span>
-    },
-    {
-      title: '投票次数',
-      dataIndex: 'voting',
-      key: 'voting',
-      render: (count: number) => <span className="text-orange-400">{count}</span>
-    },
-    {
-      title: '技能使用',
-      dataIndex: 'actions',
-      key: 'actions',
-      render: (count: number) => <span className="text-blue-400">{count}</span>
-    },
-    {
-      title: '总活跃度',
-      dataIndex: 'total',
-      key: 'total',
-      render: (count: number) => (
-        <span className="font-bold text-green-400">{count}</span>
-      )
-    }
-  ]
+  // 活跃度数据
+  const activityData = players.map(p => ({
+    name: p.name,
+    count: events.filter(e => e.message.includes(p.name)).length,
+  })).sort((a, b) => b.count - a.count).slice(0, 5)
 
   return (
-    <div className="p-6 space-y-6">
-      {/* 概览统计 */}
-      <Row gutter={[16, 16]}>
-        <Col span={6}>
-          <Card size="small">
-            <Statistic
-              title="存活玩家"
-              value={alivePlayers.length}
-              suffix={`/ ${players.length}`}
-              prefix={<UserOutlined />}
-              valueStyle={{ color: '#10b981' }}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card size="small">
-            <Statistic
-              title="总事件数"
-              value={events.length}
-              prefix={<MessageOutlined />}
-              valueStyle={{ color: '#f59e0b' }}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card size="small">
-            <Statistic
-              title="当前回合"
-              value={gameState.round}
-              suffix="轮"
-              prefix={<ClockCircleOutlined />}
-              valueStyle={{ color: '#3b82f6' }}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          {gameState.phase === 'ended' && gameState.winner && (
-            <Card size="small">
-              <Statistic
-                title="获胜阵营"
-                value={gameState.winner === 'werewolf' ? '狼人' : gameState.winner === 'villager' ? '村民' : '中立'}
-                prefix={<TrophyOutlined />}
-                valueStyle={{
-                  color: gameState.winner === 'werewolf' ? COLORS.werewolf :
-                         gameState.winner === 'villager' ? COLORS.villager :
-                         COLORS.neutral
-                }}
-              />
-            </Card>
-          )}
-        </Col>
-      </Row>
+    <div className="h-full flex flex-col text-white p-6 md:p-10 relative overflow-y-auto custom-scrollbar">
+      {/* 关闭按钮 */}
+      <Button
+        type="text"
+        icon={<CloseOutlined />}
+        onClick={toggleStatistics}
+        className="absolute top-6 right-6 text-gray-400 hover:text-white z-50"
+      />
 
-      {/* 图表区域 */}
-      <Row gutter={[16, 16]}>
-        {/* 阵营分布饼图 */}
-        <Col span={8}>
-          <Card title="阵营分布" size="small">
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={factionData.map(d => ({ name: d.name, value: d.value }))}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, value }) => `${name}: ${value}`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {factionData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </Card>
-        </Col>
+      <div className="mb-8">
+        <h1 className="text-3xl font-serif text-white tracking-[0.2em] uppercase mb-1">Analysis Protocol</h1>
+        <div className="text-xs text-gray-500 uppercase tracking-widest">
+          Session Data • Round {gameState?.round}
+        </div>
+      </div>
 
-        {/* 事件类型分布 */}
-        <Col span={8}>
-          <Card title="事件类型分布" size="small">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={eventTypeData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="type" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="count" fill="#0ea5e9">
-                  {eventTypeData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
+      {/* 顶部概览卡片 */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <StatCard title="Total Souls" value={players.length} />
+        <StatCard title="Survivors" value={alive} sub={`${((alive / players.length) * 100).toFixed(0)}% Alive`} />
+        <StatCard title="Events Logged" value={events.length} />
+        <StatCard title="Current Phase" value={gameState?.phaseName || 'Unknown'} />
+      </div>
+
+      <div className="grid grid-cols-1 gap-8">
+        {/* 阵营平衡 */}
+        <div className="bg-black/40 p-6 rounded-2xl border border-white/5">
+          <h3 className="text-sm font-serif text-gray-300 mb-6 uppercase tracking-widest border-b border-white/5 pb-2">
+            Faction Balance
+          </h3>
+          <div className="flex flex-col md:flex-row items-center justify-around h-64">
+            <div className="w-full h-full md:w-1/2">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={index === 0 ? COLORS.werewolf : index === 1 ? COLORS.villager : COLORS.neutral} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="space-y-4 w-full md:w-auto mt-4 md:mt-0">
+              {chartData.map((d, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: i === 0 ? COLORS.werewolf : i === 1 ? COLORS.villager : COLORS.neutral }} />
+                  <div>
+                    <div className="text-sm font-medium">{d.name}</div>
+                    <div className="text-xs text-gray-500">{d.value} remaining</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 活跃度排行 */}
+        <div className="bg-black/40 p-6 rounded-2xl border border-white/5">
+          <h3 className="text-sm font-serif text-gray-300 mb-6 uppercase tracking-widest border-b border-white/5 pb-2">
+            Most Active Subjects
+          </h3>
+          <div className="h-48 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={activityData} layout="vertical" margin={{ left: 20 }}>
+                <XAxis type="number" hide />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  width={100}
+                  tick={{ fill: '#94a3b8', fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }} content={<CustomTooltip />} />
+                <Bar dataKey="count" fill="#8b5cf6" radius={[0, 4, 4, 0]} barSize={10} />
               </BarChart>
             </ResponsiveContainer>
-          </Card>
-        </Col>
-
-        {/* 人数变化趋势 */}
-        <Col span={8}>
-          <Card title="阵营人数变化" size="small">
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={timelineData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="round" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="werewolf" stroke={COLORS.werewolf} name="狼人" />
-                <Line type="monotone" dataKey="villager" stroke={COLORS.villager} name="村民" />
-              </LineChart>
-            </ResponsiveContainer>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* 玩家活跃度分析 */}
-      <Card title="玩家活跃度分析" size="small">
-        <Table
-          columns={columns}
-          dataSource={playerActivityData}
-          pagination={false}
-          size="small"
-          rowKey="name"
-        />
-      </Card>
-
-      {/* 历史数据分析 */}
-      {gameState.phase === 'ended' && (
-        <Card title="游戏总结" size="small">
-          <Row gutter={[16, 16]}>
-            <Col span={12}>
-              <h4>死亡顺序分析</h4>
-              <div className="space-y-2">
-                {deadPlayers.map((player, index) => (
-                  <div key={player.id} className="flex items-center space-x-2">
-                    <span className="text-gray-400">第{index + 1}个:</span>
-                    <span>{player.name}</span>
-                    <Tag color={player.role.camp === 'werewolf' ? 'red' : 'blue'}>
-                      {player.role.name}
-                    </Tag>
-                  </div>
-                ))}
-              </div>
-            </Col>
-            <Col span={12}>
-              <h4>关键统计</h4>
-              <div className="space-y-2 text-sm">
-                <div>游戏持续时间: {gameState.round} 轮</div>
-                <div>狼人击杀率: {((factionData[0].totalDead / players.length) * 100).toFixed(1)}%</div>
-                <div>村民存活率: {((factionData[1].value / players.filter(p => p.role.camp === 'villager').length) * 100).toFixed(1)}%</div>
-                <div>平均每轮事件: {(events.length / (gameState.round || 1)).toFixed(1)}</div>
-              </div>
-            </Col>
-          </Row>
-        </Card>
-      )}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

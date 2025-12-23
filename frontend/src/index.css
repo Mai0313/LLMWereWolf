@@ -2,210 +2,83 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+:root {
+  --bg-dark: #050505;
+  --accent-primary: #8b5cf6;
+  --text-primary: #e2e8f0;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
 }
 
+/* 自定义滚动条 */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
-
 ::-webkit-scrollbar-track {
-  background: #1e293b;
-  border-radius: 4px;
+  background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: #475569;
-  border-radius: 4px;
+  background: rgba(139, 92, 246, 0.3);
+  border-radius: 3px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+  background: rgba(139, 92, 246, 0.6);
 }
 
-/* 游戏特定样式 */
-.game-container {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  min-height: 100vh;
+/* Ant Design 深度覆盖 - 适配黑暗神秘主题 */
+.ant-select-selector,
+.ant-input,
+.ant-input-number,
+.ant-input-number-handler-wrap {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+  backdrop-filter: blur(4px);
 }
 
-.player-circle {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.ant-select-arrow, .ant-select-clear {
+  color: rgba(255, 255, 255, 0.5) !important;
 }
 
-.player-circle:hover {
-  transform: scale(1.1);
-  filter: brightness(1.2);
+.ant-select-dropdown {
+  background-color: #0f172a !important;
+  border: 1px solid rgba(139, 92, 246, 0.2);
 }
 
-.event-message {
-  animation: slideInRight 0.3s ease-out;
+.ant-select-item {
+  color: #cbd5e1 !important;
 }
 
-@keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+.ant-select-item-option-selected {
+  background-color: rgba(139, 92, 246, 0.2) !important;
+  color: #fff !important;
 }
 
-.death-animation {
-  animation: deathEffect 0.5s ease-out forwards;
+.ant-switch {
+  background-color: rgba(255, 255, 255, 0.2);
 }
-
-@keyframes deathEffect {
-  0% {
-    transform: scale(1) rotate(0deg);
-    opacity: 1;
-    filter: brightness(1);
-  }
-  50% {
-    transform: scale(1.2) rotate(180deg);
-    opacity: 0.5;
-    filter: brightness(2) hue-rotate(60deg);
-  }
-  100% {
-    transform: scale(0.8) rotate(360deg);
-    opacity: 0.3;
-    filter: brightness(0.5) grayscale(1);
-  }
-}
-
-.voting-animation {
-  animation: votingPulse 2s ease-in-out infinite;
-}
-
-@keyframes votingPulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.05); opacity: 0.8; }
-}
-
-.phase-transition {
-  animation: phaseChange 1s ease-in-out;
-}
-
-@keyframes phaseChange {
-  0% { opacity: 0; transform: translateY(20px); }
-  50% { opacity: 0.5; transform: translateY(-10px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-/* 状态指示器 */
-.status-alive {
-  box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
-}
-
-.status-dead {
-  filter: grayscale(100%);
-  opacity: 0.6;
-}
-
-.status-protected {
-  box-shadow: 0 0 25px rgba(59, 130, 246, 0.8);
-}
-
-.status-poisoned {
-  box-shadow: 0 0 25px rgba(168, 85, 247, 0.8);
-  filter: hue-rotate(270deg);
-}
-
-/* 连接线效果 */
-.connection-line {
-  stroke-dasharray: 5, 5;
-  animation: dashFlow 2s linear infinite;
-}
-
-@keyframes dashFlow {
-  to {
-    stroke-dashoffset: -10;
-  }
-}
-
-/* 特殊效果 */
-.glow-effect {
-  box-shadow: 0 0 30px currentColor, 0 0 60px currentColor;
-}
-
-.pulse-effect {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-/* 自定义组件样式 */
-.ant-layout {
-  background: transparent !important;
-}
-
-.ant-layout-content {
-  background: transparent !important;
+.ant-switch-checked {
+  background-color: #8b5cf6 !important;
 }
 
 .ant-card {
-  background: rgba(30, 41, 59, 0.8) !important;
-  border: 1px solid rgba(148, 163, 184, 0.1) !important;
-  backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
-
 .ant-card-head {
-  background: rgba(15, 23, 42, 0.6) !important;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.1) !important;
-}
-
-.ant-timeline-item-content {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
   color: #e2e8f0 !important;
 }
 
-.ant-typography {
-  color: #e2e8f0 !important;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .game-container {
-    padding: 1rem;
-  }
-
-  .player-circle {
-    transform: scale(0.8);
-  }
-}
-
-/* 主题切换 */
-.theme-light {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  color: #1e293b;
-}
-
-.theme-light .ant-card {
-  background: rgba(255, 255, 255, 0.9) !important;
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;
-}
-
-.theme-light .ant-card-head {
-  background: rgba(248, 250, 252, 0.8) !important;
-}
-
-.theme-light .ant-timeline-item-content,
-.theme-light .ant-typography {
-  color: #1e293b !important;
+/* 全局动画工具类 */
+.mask-image-gradient {
+  mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
 }

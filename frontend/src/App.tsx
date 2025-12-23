@@ -1,142 +1,124 @@
 import React from 'react'
-import { Layout, Switch, Button, Space, Tooltip } from 'antd'
-import {
-  SettingOutlined,
-  BarChartOutlined,
-  SunOutlined,
-  MoonOutlined
-} from '@ant-design/icons'
-import { useUIState, useGameStore, useGameState } from '@store/gameStore'
+import { Button, Tooltip } from 'antd'
+import { SettingOutlined, BarChartOutlined, CloseOutlined } from '@ant-design/icons'
+import { useUIState, useGameStore } from '@store/gameStore'
 import GameLayout from '@components/GameLayout'
 import StatisticsPanel from '@components/StatisticsPanel'
 import ConfigurationPanel from '@components/ConfigurationPanel'
-
-const { Header, Content } = Layout
+import { motion, AnimatePresence } from 'framer-motion'
 
 const App: React.FC = () => {
-  const uiState = useUIState()
-  const { gameSpeed, setGameSpeed, setTheme, setView, toggleStatistics } = useGameStore()
-  const gameState = useGameState()
+  const { showingStatistics, currentView } = useUIState()
+  const { setView, toggleStatistics } = useGameStore()
 
-  const { theme, showingStatistics, currentView } = uiState
-
-  const handleSpeedChange = (speed: number) => {
-    setGameSpeed(speed)
-  }
-
-  const handleThemeToggle = (checked: boolean) => {
-    setTheme(checked ? 'light' : 'dark')
-    // 切换 document 类名
-    if (checked) {
-      document.body.classList.add('theme-light')
-      document.body.classList.remove('game-container')
-    } else {
-      document.body.classList.add('game-container')
-      document.body.classList.remove('theme-light')
-    }
-  }
-
+  // 渲染当前视图
   const renderContent = () => {
-    if (showingStatistics) {
-      return <StatisticsPanel />
-    }
+    return (
+      <AnimatePresence mode="wait">
+        {currentView === 'configuration' && (
+          <motion.div
+            key="config"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            className="absolute inset-0 z-40"
+          >
+            <ConfigurationPanel />
+          </motion.div>
+        )}
 
-    if (currentView === 'configuration') {
-      return <ConfigurationPanel />
-    }
-
-    return <GameLayout />
+        {currentView === 'game' && (
+          <motion.div
+            key="game"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 z-0"
+          >
+            <GameLayout />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    )
   }
 
   return (
-    <Layout className={`game-container ${theme === 'light' ? 'theme-light' : ''}`}>
-      {/* Header */}
-      <Header
-        className="fixed top-0 left-0 right-0 z-50 px-6 flex items-center justify-between"
-        style={{
-          background: theme === 'light' ?
-            'rgba(255, 255, 255, 0.9)' :
-            'rgba(15, 23, 42, 0.9)',
-          backdropFilter: 'blur(10px)',
-          borderBottom: theme === 'light' ?
-            '1px solid rgba(0, 0, 0, 0.1)' :
-            '1px solid rgba(148, 163, 184, 0.1)'
-        }}
-      >
-        <div className="flex items-center space-x-4">
-          <h1 className="text-xl font-bold">
-            🐺 LLM Werewolf
-          </h1>
-          {gameState && (
-            <div className="flex items-center space-x-2">
-              <span className="text-sm opacity-75">
-                回合 {gameState.round} • {gameState.phaseName}
-              </span>
-              <div className={`w-2 h-2 rounded-full ${
-                gameState.isRunning ?
-                'bg-green-500 animate-pulse' :
-                'bg-yellow-500'
-              }`} />
+    <div className="relative w-screen h-screen overflow-hidden bg-bg-dark font-sans selection:bg-mystic-accent selection:text-white">
+      {/* 动态背景层 */}
+      <div className="absolute inset-0 bg-radial-mystic pointer-events-none z-0" />
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none z-0 mix-blend-overlay" />
+
+      {/* 顶部导航栏 (悬浮) */}
+      <div className="absolute top-0 left-0 w-full z-50 p-6 flex justify-between items-start pointer-events-none">
+        {/* Logo/标题区域 */}
+        <div className="pointer-events-auto">
+          {currentView === 'game' && (
+            <div className="flex flex-col">
+              <h1 className="text-2xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-r from-mystic-accent to-blue-400 tracking-widest drop-shadow-sm">
+                MIDNIGHT PROTOCOL
+              </h1>
+              <span className="text-[10px] text-mystic-dim uppercase tracking-[0.3em]">AI Werewolf Simulation</span>
             </div>
           )}
         </div>
 
-        <Space size="middle">
-          {/* 游戏速度控制 */}
-          <div className="flex items-center space-x-2">
-            <span className="text-sm">速度:</span>
-            <div className="flex space-x-1">
-              {[0.5, 1, 2, 4].map((speed) => (
+        {/* 右上角控制按钮 */}
+        <div className="pointer-events-auto flex gap-3">
+          {currentView === 'game' && (
+            <>
+              <Tooltip title="Statistics" placement="bottom">
                 <Button
-                  key={speed}
-                  size="small"
-                  type={gameSpeed === speed ? 'primary' : 'default'}
-                  onClick={() => handleSpeedChange(speed)}
-                >
-                  {speed}x
-                </Button>
-              ))}
-            </div>
-          </div>
+                  type="text"
+                  icon={<BarChartOutlined />}
+                  className={`
+                    w-10 h-10 rounded-full border border-white/10 backdrop-blur-md transition-all duration-300
+                    ${showingStatistics ? 'bg-mystic-accent text-white shadow-glow-sm' : 'bg-black/20 text-mystic-dim hover:bg-white/10 hover:text-white'}
+                  `}
+                  onClick={toggleStatistics}
+                />
+              </Tooltip>
+              <Tooltip title="Configuration" placement="bottom">
+                <Button
+                  type="text"
+                  icon={<SettingOutlined />}
+                  className="w-10 h-10 rounded-full border border-white/10 bg-black/20 backdrop-blur-md text-mystic-dim hover:bg-white/10 hover:text-white transition-all duration-300"
+                  onClick={() => setView('configuration')}
+                />
+              </Tooltip>
+            </>
+          )}
 
-          {/* 控制按钮 */}
-          <Space>
-            <Tooltip title="统计面板">
+          {/* 在配置页面显示的关闭按钮 */}
+          {currentView === 'configuration' && (
+            <Tooltip title="Back to Game" placement="bottom">
               <Button
-                type={showingStatistics ? 'primary' : 'default'}
-                icon={<BarChartOutlined />}
-                onClick={toggleStatistics}
+                type="text"
+                icon={<CloseOutlined />}
+                className="w-10 h-10 rounded-full border border-white/10 bg-black/40 backdrop-blur-md text-white hover:bg-white/10 hover:rotate-90 transition-all duration-300"
+                onClick={() => setView('game')}
               />
             </Tooltip>
+          )}
+        </div>
+      </div>
 
-            <Tooltip title="游戏配置">
-              <Button
-                type={currentView === 'configuration' ? 'primary' : 'default'}
-                icon={<SettingOutlined />}
-                onClick={() => setView(currentView === 'configuration' ? 'game' : 'configuration')}
-              />
-            </Tooltip>
+      {/* 统计面板覆盖层 */}
+      <AnimatePresence>
+        {showingStatistics && (
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="absolute top-0 right-0 bottom-0 w-full md:w-[600px] z-40 bg-black/80 backdrop-blur-xl border-l border-white/10 shadow-2xl"
+          >
+            <StatisticsPanel />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-            <Tooltip title={theme === 'dark' ? '切换到亮色主题' : '切换到暗色主题'}>
-              <Switch
-                checked={theme === 'light'}
-                onChange={handleThemeToggle}
-                checkedChildren={<SunOutlined />}
-                unCheckedChildren={<MoonOutlined />}
-              />
-            </Tooltip>
-          </Space>
-        </Space>
-      </Header>
-
-      {/* Main Content */}
-      <Content
-        className="mt-16"
-        style={{ minHeight: 'calc(100vh - 64px)' }}
-      >
-        {renderContent()}
-      </Content>
-    </Layout>
+      {/* 主内容区域 */}
+      {renderContent()}
+    </div>
   )
 }
 

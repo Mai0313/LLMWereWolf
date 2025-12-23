@@ -1,203 +1,92 @@
-import React, { useEffect, useRef } from 'react'
-import { Card, Timeline, Badge, Empty, Switch } from 'antd'
-import { motion, AnimatePresence } from 'framer-motion'
-import {
-  UserDeleteOutlined,
-  EyeOutlined,
-  MedicineBoxOutlined,
-  MessageOutlined,
-  HeartOutlined
-} from '@ant-design/icons'
-import { useGameEvents, useAutoScroll, toggleAutoScroll } from '@store/gameStore'
-import { GameEvent } from '@/types/game'
+import React, { useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useGameEvents, useAutoScroll } from "@store/gameStore";
+import { GameEvent } from "@/types/game";
+import { DownOutlined } from "@ant-design/icons";
 
-interface EventItemProps {
-  event: GameEvent
-  isLast: boolean
-}
+const EventItem: React.FC<{ event: GameEvent }> = ({ event }) => {
+  const getStyle = () => {
+    switch (event.type) {
+      case "PLAYER_DIED":
+        return { border: "border-mystic-blood", bg: "bg-mystic-blood/5", icon: "💀" };
+      case "ROLE_ACTION":
+        return { border: "border-mystic-accent", bg: "bg-mystic-accent/5", icon: "✨" };
+      case "VOTING":
+        return { border: "border-mystic-gold", bg: "bg-mystic-gold/5", icon: "🗳️" };
+      case "DISCUSSION":
+        return { border: "border-gray-700", bg: "bg-transparent", icon: "💬" };
+      default:
+        return { border: "border-gray-800", bg: "bg-transparent", icon: "ℹ️" };
+    }
+  };
 
-const getEventIcon = (eventType: string) => {
-  switch (eventType) {
-    case 'PLAYER_DIED': return <UserDeleteOutlined className="text-red-400" />
-    case 'ROLE_ACTION': return <EyeOutlined className="text-blue-400" />
-    case 'POTION_USED': return <MedicineBoxOutlined className="text-purple-400" />
-    case 'PROTECTION': return <ShieldCheckOutlined className="text-green-400" />
-    case 'DISCUSSION': return <MessageOutlined className="text-yellow-400" />
-    case 'VOTING': return <VoteOutlined className="text-orange-400" />
-    case 'LOVE_BOUND': return <HeartOutlined className="text-pink-400" />
-    default: return <MessageOutlined className="text-gray-400" />
-  }
-}
+  const style = getStyle();
 
-const getEventColor = (eventType: string) => {
-  switch (eventType) {
-    case 'PLAYER_DIED': return 'red'
-    case 'ROLE_ACTION': return 'blue'
-    case 'POTION_USED': return 'purple'
-    case 'PROTECTION': return 'green'
-    case 'DISCUSSION': return 'gold'
-    case 'VOTING': return 'orange'
-    case 'LOVE_BOUND': return 'magenta'
-    default: return 'gray'
-  }
-}
-
-const formatTime = (date: Date) => {
-  return date.toLocaleTimeString('zh-CN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  })
-}
-
-const EventItem: React.FC<EventItemProps> = ({ event, isLast }) => {
   return (
     <motion.div
-      initial={{ opacity: 0, x: 50 }}
+      initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -50 }}
-      transition={{ duration: 0.3 }}
+      className={`
+        mb-3 p-3 rounded-r-lg border-l-2 ${style.border} 
+        ${style.bg} hover:bg-white/5 transition-colors duration-300
+      `}
     >
-      <Timeline.Item
-        dot={getEventIcon(event.type)}
-        color={getEventColor(event.type)}
-        className={`${isLast ? '' : 'mb-2'}`}
-      >
-        <div className="space-y-1">
-          {/* 时间和阶段标识 */}
-          <div className="flex items-center justify-between text-xs opacity-75">
-            <span>{formatTime(event.timestamp)}</span>
-            <Badge
-              count={`${event.round} 轮`}
-              size="small"
-              className="ml-2"
-            />
-          </div>
-
-          {/* 事件消息 */}
-          <div className="text-sm leading-relaxed">
-            {event.message}
-          </div>
-
-          {/* 额外数据展示 */}
-          {event.data && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              className="text-xs opacity-60 mt-1 p-2 bg-gray-800 rounded"
-            >
-              {Object.entries(event.data).map(([key, value]) => (
-                <div key={key}>
-                  <span className="font-medium">{key}:</span> {String(value)}
-                </div>
-              ))}
-            </motion.div>
-          )}
-        </div>
-      </Timeline.Item>
+      <div className="flex justify-between items-center mb-1 text-[10px] text-gray-500 tracking-wider font-mono">
+        <span className="flex items-center gap-1">
+          <span>{style.icon}</span>
+          <span>R{event.round}</span>
+        </span>
+        <span>{new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+      </div>
+      <div className="text-sm text-gray-300 font-light leading-relaxed font-sans">
+        {event.message}
+      </div>
     </motion.div>
-  )
-}
+  );
+};
 
 const EventFeed: React.FC = () => {
-  const events = useGameEvents()
-  const autoScroll = useAutoScroll()
-  const timelineRef = useRef<HTMLDivElement>(null)
+  const events = useGameEvents();
+  const autoScroll = useAutoScroll();
+  const bottomRef = useRef<HTMLDivElement>(null);
 
-  // 滚动到底部
   useEffect(() => {
-    if (autoScroll && timelineRef.current) {
-      const scrollToBottom = () => {
-        const element = timelineRef.current
-        if (element) {
-          element.scrollTop = element.scrollHeight
-        }
-      }
-
-      // 延迟执行，等待动画完成
-      const timer = setTimeout(scrollToBottom, 100)
-      return () => clearTimeout(timer)
-    }
-  }, [events, autoScroll])
-
-  // 过滤事件（可选，按类型或玩家）
-  const filteredEvents = events.slice(-50) // 只显示最近50个事件
-
-  if (filteredEvents.length === 0) {
-    return (
-      <Card
-        title="游戏事件"
-        size="small"
-        className="h-full"
-        extra={
-          <Switch
-            checked={autoScroll}
-            onChange={toggleAutoScroll}
-            size="small"
-            checkedChildren="自动"
-            unCheckedChildren="手动"
-          />
-        }
-      >
-        <Empty
-          description="暂无事件"
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-        />
-      </Card>
-    )
-  }
+    if (autoScroll) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [events, autoScroll]);
 
   return (
-    <Card
-      title={
-        <div className="flex items-center justify-between">
-          <span>游戏事件 ({events.length})</span>
-          <Switch
-            checked={autoScroll}
-            onChange={toggleAutoScroll}
-            size="small"
-            checkedChildren="自动"
-            unCheckedChildren="手动"
-          />
-        </div>
-      }
-      size="small"
-      className="h-full"
-      bodyStyle={{ padding: '12px' }}
-    >
-      <div
-        ref={timelineRef}
-        className="overflow-y-auto"
-        style={{ maxHeight: 'calc(100vh - 200px)' }}
-      >
-        <AnimatePresence>
-          <Timeline mode="left" className="custom-timeline">
-            {filteredEvents.map((event, index) => (
-              <EventItem
-                key={`${event.id}-${events.length - index}`}
-                event={event}
-                isLast={index === filteredEvents.length - 1}
-              />
-            ))}
-          </Timeline>
-        </AnimatePresence>
+    <div className="h-full flex flex-col relative overflow-hidden">
+      {/* Header */}
+      <div className="p-5 border-b border-white/5 bg-black/20 backdrop-blur-sm z-10">
+        <h3 className="font-serif text-mystic-text tracking-[0.2em] text-sm uppercase m-0 flex items-center gap-2">
+          <span className="w-1.5 h-1.5 bg-mystic-accent rounded-full animate-pulse"></span>
+          Chronicles
+        </h3>
       </div>
 
-      <style jsx>{`
-        .custom-timeline .ant-timeline-item-content {
-          margin-left: 40px;
-        }
+      {/* Feed */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-1 scrollbar-hide mask-image-gradient">
+        <AnimatePresence>
+          {events.length === 0 && (
+            <div className="h-full flex items-center justify-center text-gray-600 font-serif italic text-sm">
+              Waiting for the night to fall...
+            </div>
+          )}
+          {events.map((event) => (
+            <EventItem key={event.id} event={event} />
+          ))}
+        </AnimatePresence>
+        <div ref={bottomRef} />
+      </div>
 
-        .custom-timeline .ant-timeline-item-tail {
-          border-left: 2px solid rgba(148, 163, 184, 0.2);
-        }
+      {/* Auto-scroll indicator */}
+      {autoScroll && events.length > 5 && (
+        <div className="absolute bottom-4 right-4 z-20 text-mystic-accent animate-bounce opacity-50">
+          <DownOutlined />
+        </div>
+      )}
+    </div>
+  );
+};
 
-        .custom-timeline .ant-timeline-item-head {
-          border: 2px solid;
-        }
-      `}</style>
-    </Card>
-  )
-}
-
-export default EventFeed
+export default EventFeed;

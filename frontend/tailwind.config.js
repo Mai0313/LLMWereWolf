@@ -1,63 +1,47 @@
 /** @type {import('tailwindcss').Config} */
+import { theme } from 'antd'
+
 export default {
+  // 关键修正：确保包含所有组件路径
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+        serif: ['serif'], // 暂时移除 Cinzel，防止字体加载失败导致回退样式丑陋
+      },
       colors: {
-        primary: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#0ea5e9',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
-        },
-        dark: {
-          50: '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          300: '#cbd5e1',
-          400: '#94a3b8',
-          500: '#64748b',
-          600: '#475569',
-          700: '#334155',
-          800: '#1e293b',
-          900: '#0f172a',
+        'bg-dark': '#050505',
+        mystic: {
+          950: '#050505',
+          900: '#0a0a0f',
+          text: '#e2e8f0',
+          dim: '#64748b',
+          accent: '#8b5cf6', // 紫色
+          gold: '#fbbf24',
+          blood: '#ef4444',
+          soul: '#3b82f6',
         }
       },
+      boxShadow: {
+        'glow-sm': '0 0 10px rgba(139, 92, 246, 0.3)',
+      },
+      backgroundImage: {
+        'radial-mystic': 'radial-gradient(circle at center, #1e1b4b 0%, #020617 80%)',
+      },
       animation: {
-        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'bounce-slow': 'bounce 2s infinite',
-        'fade-in': 'fadeIn 0.5s ease-in-out',
-        'slide-up': 'slideUp 0.3s ease-out',
-        'slide-down': 'slideDown 0.3s ease-out',
-        'zoom-in': 'zoomIn 0.2s ease-out',
-        'rotate-slow': 'rotate 10s linear infinite',
+        'float': 'float 6s ease-in-out infinite',
+        'pulse-fast': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'spin-slow': 'spin 10s linear infinite',
       },
       keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        slideUp: {
-          '0%': { transform: 'translateY(10px)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
-        },
-        slideDown: {
-          '0%': { transform: 'translateY(-10px)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
-        },
-        zoomIn: {
-          '0%': { transform: 'scale(0.8)', opacity: '0' },
-          '100%': { transform: 'scale(1)', opacity: '1' },
-        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        }
       }
     },
   },

@@ -202,7 +202,7 @@ class TestPersonalityIntegration:
         # 验证结果
         assert result.success is True
         assert result.decision.speech is not None
-        assert in.goal(result.decision.intent, [IntentType.STRONG_ACCUSE, IntentType.TEST_SUSPECT, IntentType.LOW_PROFILE_SPEECH])
+        assert result.decision.intent in [IntentType.STRONG_ACCUSE, IntentType.TEST_SUSPECT, IntentType.LOW_PROFILE_SPEECH]
 
     def test_fallback_mechanism(self, integration):
         """测试回退机制"""

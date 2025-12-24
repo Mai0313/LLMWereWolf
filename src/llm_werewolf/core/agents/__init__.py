@@ -5,14 +5,16 @@ Enhanced Agents - 增强版Agent系统
 """
 
 from .enhanced_agent import EnhancedAgent, EnhancedLLMAgent
-from .decision_renderer import DecisionRenderer
+from .decision_renderer import BaseDecisionRenderer, RuleBasedRenderer, LLMBasedRenderer
 from .response_parser import ResponseParser
 from .personality_adapter import PersonalityAdapter
 
 __all__ = [
     "EnhancedAgent",
     "EnhancedLLMAgent",
-    "DecisionRenderer",
+    "BaseDecisionRenderer",
+    "RuleBasedRenderer",
+    "LLMBasedRenderer",
     "ResponseParser",
     "PersonalityAdapter",
 ]

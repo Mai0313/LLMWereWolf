@@ -8,8 +8,8 @@ Personality Adapter - 人格系统适配器
 from typing import Dict, List, Optional, Any
 from pathlib import Path
 
-from ..personality.models import PersonalityProfile, PersonalityFactory
-from ..personality.personality import PredefinedPersonalities
+from ..personality.models import PersonalityProfile, Personality
+from ..personality.personality import PersonalityFactory, PredefinedPersonalities
 from .enhanced_agent import EnhancedAgent, EnhancedLLMAgent, HybridAgent
 from ..agent import BaseAgent
 

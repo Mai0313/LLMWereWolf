@@ -9,7 +9,7 @@ import random
 
 from .models import Intent, IntentType, IntentWithWeight, Decision, DecisionContext
 from .intent_registry import IntentRegistry
-from ..personality.models import PersonalityProfile, CognitiveFilter
+from ..personality.models import PersonalityProfile
 from ..observation.player_view import PlayerView
 from ..types import GamePhase
 
@@ -25,6 +25,9 @@ class IntentEngine:
     """
 
     def __init__(self, personality_profile: PersonalityProfile):
+        # 延迟导入以避免循环依赖，并修正导入路径
+        from ..personality.cognitive_filter import CognitiveFilter
+        
         self.personality_profile = personality_profile
         self.intent_registry = IntentRegistry()
         self.cognitive_filter = CognitiveFilter(personality_profile)

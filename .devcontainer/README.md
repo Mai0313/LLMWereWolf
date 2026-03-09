@@ -4,11 +4,22 @@ This directory contains configuration files for developing this project in a ful
 
 ## What's Included?
 
-- **Dockerfile**: Builds an image based on Python 3.10 + Node.js 20, with zsh, oh-my-zsh, powerlevel10k, and useful plugins/fonts for a modern terminal experience.
+- **Dockerfile**: Builds an image based on Python 3.11 + Node.js 20, with zsh, oh-my-zsh, powerlevel10k, and useful plugins/fonts for a modern terminal experience.
 - **devcontainer.json**: VS Code configuration for the container, including:
-  - Recommended extensions for Python, Jupyter, Docker, TOML, YAML, Git, and more.
-  - Custom mounts for your local `.gitconfig`, `.ssh`, and `.p10k.zsh`.
-  - Automatic dependency sync with `uv` on container start.
+    - Comprehensive extension suite including:
+        - Database tools (JDBC client, Redis client)
+        - AI assistants (GitHub Copilot Chat, Hugging Face Chat)
+        - Python development (Python, Pylance, debugpy, Python environments)
+        - Jupyter notebooks (Jupyter, renderers, cell tags, slideshow)
+        - C/C++ development (cpptools, extension pack, themes)
+        - Go development (Go extension)
+        - Rust development (rust-analyzer)
+        - Container tools (Docker, Azure Containers)
+        - Git tools (GitLens)
+        - Configuration files (YAML, TOML)
+        - UI enhancements (indent-rainbow, reload)
+    - Custom mounts for your local `.gitconfig`, `.ssh`, and `.p10k.zsh`.
+    - Automatic dependency sync with `uv` on container start.
 
 ## Usage
 

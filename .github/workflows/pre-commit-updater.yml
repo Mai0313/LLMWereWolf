@@ -11,18 +11,15 @@ permissions: write-all
 
 jobs:
   auto-update:
+    name: Auto Update Pre-Commit Hooks
     runs-on: ubuntu-latest
-    # container: catthehacker/ubuntu:act-20.04  # Uncomment it if you use it on Gitea
 
     steps:
       - name: Disable SSL Verify
         run: git config --global http.sslVerify false
 
-      # - name: Setup MTK Certification
-      #   uses: https://gitea.mediatek.inc/actions/mtk-cert-action@v1.2.0
-
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -36,12 +33,12 @@ jobs:
       - name: Update Pre-Commit
         run: |
           uv tool install pre-commit
-          uv tool run pre-commit autoupdate
+          uv tool run pre-commit autoupdate -j 8
           uv tool run pre-commit run -a
 
       - name: Create Pull Request
         id: create-pr
-        uses: peter-evans/create-pull-request@v7.0.8
+        uses: peter-evans/create-pull-request@v8.1.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: chore/pre-commit-hooks  # push from this branch
@@ -52,8 +49,8 @@ jobs:
 
       - name: Auto Merge Pull Request
         continue-on-error: true
-        if: ${{ steps.create-pr.outputs.pull-request-number }}
+        if: ${{ steps.create-pr.outputs.pull-request-url }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr merge --merge chore/pre-commit-hooks
+          gh pr merge --squash --auto --delete-branch "${{ steps.create-pr.outputs.pull-request-url }}"

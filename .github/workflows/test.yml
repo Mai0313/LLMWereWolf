@@ -20,9 +20,9 @@ permissions: write-all
 
 jobs:
   run_tests:
-    if: ${{ !(startsWith(github.head_ref, 'chore/') || startsWith(github.head_ref, 'ci/') || startsWith(github.head_ref, 'docs/')) }}
+    name: Run Tests
     runs-on: ubuntu-latest
-    # container: catthehacker/ubuntu:act-20.04  # Uncomment it if you use it on Gitea
+    if: ${{ !(startsWith(github.head_ref, 'chore/') || startsWith(github.head_ref, 'ci/') || startsWith(github.head_ref, 'docs/')) }}
 
     strategy:
       fail-fast: false
@@ -41,11 +41,8 @@ jobs:
       - name: Disable SSL Verify
         run: git config --global http.sslVerify false
 
-      # - name: Setup MTK Certification
-      #   uses: https://gitea.mediatek.inc/actions/mtk-cert-action@v1.2.0
-
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -85,3 +82,6 @@ jobs:
           pytest-coverage-path: ./.coverage.txt
           junitxml-path: ./.github/reports/.coverage.pytest.xml
           pytest-xml-coverage-path: ./.github/reports/coverage.xml
+          unique-id-for-comment: ${{ matrix.python-version }}-${{ matrix.os }}
+          title: Coverage for Python ${{ matrix.python-version }} on ${{ matrix.os }}
+          hide-emoji: true

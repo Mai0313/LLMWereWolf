@@ -23,7 +23,6 @@ jobs:
   build_images:
     name: Build and Push Images
     runs-on: ubuntu-latest
-    # container: catthehacker/ubuntu:act-22.04  # Uncomment it if you use it on Gitea
 
     strategy:
       matrix:
@@ -36,11 +35,8 @@ jobs:
       - name: Disable SSL Verify
         run: git config --global http.sslVerify false
 
-      # - name: Setup MTK Certification
-      #   uses: https://gitea.mediatek.inc/actions/mtk-cert-action@v1.2.0
-
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -61,7 +57,7 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Login to the Container registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -72,31 +68,11 @@ jobs:
           docker context create builders || docker context use builders
 
       - name: Set up Docker BuildX
-        uses: docker/setup-buildx-action@v3.11.1
-        # with:
-        #   endpoint: builders
-        #   config-inline: |
-        #     debug = true
-        #     insecure-entitlements = [ "network.host", "security.insecure" ]
-        #     [registry."oa-mirror.mediatek.inc:5000"]
-        #       http = true
-        #       insecure = true
-        #     [registry."mtkomcr.mediatek.inc"]
-        #       http = false
-        #       insecure = true
-        #     [registry."mtksms10.mediatek.inc:5000"]
-        #       http = true
-        #       insecure = true
-        #     [registry."gitea.mediatek.inc"]
-        #       http = false
-        #       insecure = true
-        #     [worker.oci]
-        #       [worker.oci.environmentfile]
-        #         GIT_SSL_NO_VERIFY = "true"
+        uses: docker/setup-buildx-action@v3.12.0
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v5.8.0
+        uses: docker/metadata-action@v6.0.0
         with:
           images: ${{ matrix.target.tag }}
           tags: |
@@ -110,7 +86,7 @@ jobs:
           echo "name=$IMAGE_NAME" >> $GITHUB_OUTPUT
 
       - name: ${{ matrix.target.name }}
-        uses: docker/build-push-action@v6.18.0
+        uses: docker/build-push-action@v6.19.2
         with:
           push: true
           context: .

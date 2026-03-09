@@ -82,6 +82,8 @@ protect_breaking_commits = false
 # Assigns commits to groups.
 # Optionally sets the commit's scope and can decide to exclude commits from further processing.
 commit_parsers = [
+  # Skip dependency updates from dependabot
+  { message = "^chore\\(deps(-dev)?\\)", skip = true },
   { message = "^feat", group = "<!-- 0 -->🚀 Features" },
   { message = "^fix", group = "<!-- 1 -->🐛 Bug Fixes" },
   { message = "^refactor", group = "<!-- 2 -->🚜 Refactor" },

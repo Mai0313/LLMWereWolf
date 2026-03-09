@@ -68,14 +68,14 @@ authors = [
 ]
 dependencies = [
     "fire>=0.7.1",
-    "logfire>=4.13.2",
-    "openai>=2.5.0",
-    "pydantic>=2.12.3",
-    "pydantic-settings>=2.11.0",
-    "python-dotenv>=1.1.1",
+    "logfire>=4.27.0",
+    "openai>=2.26.0",
+    "pydantic>=2.12.5",
+    "pydantic-settings>=2.13.1",
+    "python-dotenv>=1.2.2",
     "pyyaml>=6.0.3",
-    "rich>=14.2.0",
-    "textual>=6.3.0",
+    "rich>=14.3.3",
+    "textual>=8.0.2",
 ]
 readme = "README.md"
 requires-python = ">= 3.10"
@@ -98,6 +98,7 @@ dev = [
     "notebook",
     "poethepoet",
     "pre-commit",
+    "ty",
 ]
 test = [
     "genbadge[all]",
@@ -457,6 +458,188 @@ indent-style = "space"
 line-ending = "auto"
 quote-style = "double"
 skip-magic-trailing-comma = true
+
+
+# ================== #
+#         ty         #
+# ================== #
+# https://docs.astral.sh/ty/reference/configuration/
+
+# Configures the enabled rules and their severity.
+# Keys are rule names or "all" to set a default for all rules.
+# Valid values: "ignore" | "warn" | "error"
+# Default: {}
+# Full rule list: https://docs.astral.sh/ty/reference/rules/
+[tool.ty.rules]
+# --- error (default) ---
+abstract-method-in-final-class        = "error"
+assert-type-unspellable-subtype       = "error"
+byte-string-type-annotation           = "error"
+call-abstract-method                  = "error"
+call-non-callable                     = "error"
+call-top-callable                     = "error"
+conflicting-argument-forms            = "error"
+conflicting-declarations              = "error"
+conflicting-metaclass                 = "error"
+cyclic-class-definition               = "error"
+cyclic-type-alias-definition          = "error"
+dataclass-field-order                 = "error"
+duplicate-base                        = "error"
+duplicate-kw-only                     = "error"
+empty-body                            = "error"
+escape-character-in-forward-annotation = "error"
+final-on-non-method                   = "error"
+final-without-value                   = "error"
+fstring-type-annotation               = "error"
+implicit-concatenated-string-type-annotation = "error"
+inconsistent-mro                      = "error"
+index-out-of-bounds                   = "error"
+instance-layout-conflict              = "error"
+invalid-argument-type                 = "error"
+invalid-assignment                    = "error"
+invalid-attribute-access              = "error"
+invalid-await                         = "error"
+invalid-base                          = "error"
+invalid-context-manager               = "error"
+invalid-dataclass                     = "error"
+invalid-dataclass-override            = "error"
+invalid-declaration                   = "error"
+invalid-exception-caught              = "error"
+invalid-explicit-override             = "error"
+invalid-frozen-dataclass-subclass     = "error"
+invalid-generic-class                 = "error"
+invalid-generic-enum                  = "error"
+invalid-key                           = "error"
+invalid-legacy-type-variable          = "error"
+invalid-match-pattern                 = "error"
+invalid-metaclass                     = "error"
+invalid-method-override               = "error"
+invalid-named-tuple                   = "error"
+invalid-newtype                       = "error"
+invalid-overload                      = "error"
+invalid-parameter-default             = "error"
+invalid-paramspec                     = "error"
+invalid-protocol                      = "error"
+invalid-raise                         = "error"
+invalid-return-type                   = "error"
+invalid-super-argument                = "error"
+invalid-syntax-in-forward-annotation  = "error"
+invalid-total-ordering                = "error"
+invalid-type-alias-type               = "error"
+invalid-type-arguments                = "error"
+invalid-type-checking-constant        = "error"
+invalid-type-form                     = "error"
+invalid-type-guard-call               = "error"
+invalid-type-guard-definition         = "error"
+invalid-type-variable-bound           = "error"
+invalid-type-variable-constraints     = "error"
+invalid-type-variable-default         = "error"
+invalid-typed-dict-header             = "error"
+invalid-typed-dict-statement          = "error"
+isinstance-against-protocol           = "error"
+isinstance-against-typed-dict         = "error"
+missing-argument                      = "error"
+missing-typed-dict-key                = "error"
+no-matching-overload                  = "error"
+not-iterable                          = "error"
+not-subscriptable                     = "error"
+override-of-final-method              = "error"
+override-of-final-variable            = "error"
+parameter-already-assigned            = "error"
+positional-only-parameter-as-kwarg    = "error"
+raw-string-type-annotation            = "error"
+shadowed-type-variable                = "error"
+static-assert-error                   = "error"
+subclass-of-final-class               = "error"
+super-call-in-named-tuple-method      = "error"
+too-many-positional-arguments         = "error"
+type-assertion-failure                = "error"
+unavailable-implicit-super-arguments  = "error"
+unknown-argument                      = "error"
+unresolved-attribute                  = "error"
+unresolved-import                     = "error"
+unresolved-reference                  = "error"
+unsupported-bool-conversion           = "error"
+unsupported-operator                  = "error"
+zero-stepsize-in-slice                = "error"
+
+# --- warn (default) ---
+ambiguous-protocol-member             = "warn"
+deprecated                            = "warn"
+ignore-comment-unknown-rule           = "warn"
+ineffective-final                     = "warn"
+invalid-ignore-comment                = "warn"
+invalid-legacy-positional-parameter   = "warn"
+possibly-missing-attribute            = "warn"
+possibly-missing-implicit-call        = "warn"
+redundant-cast                        = "warn"
+redundant-final-classvar              = "warn"
+undefined-reveal                      = "warn"
+unresolved-global                     = "warn"
+unsupported-base                      = "warn"
+unused-ignore-comment                 = "warn"
+unused-type-ignore-comment            = "warn"
+useless-overload-body                 = "warn"
+
+# --- ignore (default, disabled by default due to false positives) ---
+division-by-zero                      = "ignore"
+possibly-missing-import               = "ignore"
+possibly-unresolved-reference         = "ignore"
+unsupported-dynamic-base              = "ignore"
+
+# Analysis settings
+[tool.ty.analysis]
+# A list of module glob patterns for which `unresolved-import` diagnostics should be suppressed.
+allowed-unresolved-imports = []
+
+# A list of module glob patterns whose imports should be replaced with `typing.Any`.
+replace-imports-with-any = []
+
+# Whether ty should respect `type: ignore` comments.
+respect-type-ignore-comments = true
+
+# Environment settings
+[tool.ty.environment]
+# User-provided paths that should take first priority in module resolution.
+extra-paths = []
+
+# Path to your project's Python environment or interpreter.
+# python = null  # e.g. ".venv/bin/python3" or ".venv"
+
+# Specifies the target platform for analysis.
+# python-platform = "<current-platform>"  # "win32" | "darwin" | "android" | "ios" | "linux" | "all"
+
+# Specifies the version of Python used to analyze the source code.
+# python-version = "3.11"
+
+# The root paths of the project, used for finding first-party modules.
+# root = null  # e.g. ["./src", "./lib"]
+
+# Optional path to a custom typeshed directory.
+# typeshed = null  # e.g. "/path/to/custom/typeshed"
+
+# Source file settings
+[tool.ty.src]
+# A list of file/directory patterns to exclude from type checking.
+# exclude = null  # e.g. ["generated", "*.proto"]
+
+# A list of files and directories to check.
+# include = null  # e.g. ["src", "tests"]
+
+# Whether to automatically exclude files ignored by .ignore/.gitignore.
+respect-ignore-files = true
+
+# (Deprecated: use environment.root instead)
+# root = null
+
+# Terminal / output settings
+[tool.ty.terminal]
+# Use exit code 1 if there are any warning-level diagnostics.
+error-on-warning = true
+
+# The format used for printing diagnostic messages.
+# "full" | "concise" | "github" | "gitlab" | "junit"
+output-format = "concise"
 
 # ================== #
 #      Logfire       #

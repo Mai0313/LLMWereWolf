@@ -1,728 +1,721 @@
-# 狼人殺遊戲規則
+# LLM WereWolf - Game Rules (Code Implementation · Final Consolidated Edition)
 
-## 目錄
-
-1. [遊戲概述](#%E9%81%8A%E6%88%B2%E6%A6%82%E8%BF%B0)
-2. [遊戲流程](#%E9%81%8A%E6%88%B2%E6%B5%81%E7%A8%8B)
-3. [陣營與勝利條件](#%E9%99%A3%E7%87%9F%E8%88%87%E5%8B%9D%E5%88%A9%E6%A2%9D%E4%BB%B6)
-4. [角色說明](#%E8%A7%92%E8%89%B2%E8%AA%AA%E6%98%8E)
-    - [狼人陣營](#%E7%8B%BC%E4%BA%BA%E9%99%A3%E7%87%9F)
-    - [村民陣營](#%E6%9D%91%E6%B0%91%E9%99%A3%E7%87%9F)
-    - [中立角色](#%E4%B8%AD%E7%AB%8B%E8%A7%92%E8%89%B2)
-5. [夜間行動順序](#%E5%A4%9C%E9%96%93%E8%A1%8C%E5%8B%95%E9%A0%86%E5%BA%8F)
-6. [特殊機制](#%E7%89%B9%E6%AE%8A%E6%A9%9F%E5%88%B6)
-7. [目前未實作的角色與規則](#%E7%9B%AE%E5%89%8D%E6%9C%AA%E5%AF%A6%E4%BD%9C%E7%9A%84%E8%A7%92%E8%89%B2%E8%88%87%E8%A6%8F%E5%89%87)
+This document catalogs **the actual implementation of every game rule in the codebase**. Each rule has been verified against the source code.
 
 ---
 
-## 遊戲概述
+## Table of Contents
 
-狼人殺是一款多人策略推理遊戲，玩家分為不同陣營，透過白天的討論與投票、夜晚的角色行動來達成各自的勝利目標。
-
-### 基本設定
-
-- **玩家人數**：6-20人（根據玩家人數自動生成角色配置）
-- **遊戲回合**：由夜晚階段和白天階段組成
-- **遊戲目標**：根據所屬陣營達成特定勝利條件
-
----
-
-## 遊戲流程
-
-### 1. 設置階段（SETUP）
-
-- 隨機分配角色給所有玩家
-- 玩家獲知自己的角色身份
-- 遊戲進入第一個夜晚
-
-### 2. 夜晚階段（NIGHT）
-
-- 所有玩家閉眼
-- 各角色按照**優先順序**依次行動
-- 狼人選擇擊殺目標
-- 其他特殊角色執行能力
-
-### 3. 警長選舉（SHERIFF_ELECTION）- 僅第一天
-
-- **競選階段**：存活玩家可以自願競選警長
-- **拉票階段**：競選者輪流發表競選宣言，說服其他玩家投票支持
-- **投票階段**：所有存活玩家投票選出警長（可以棄票）
-- **結果公布**：得票最高者當選警長，平票則進行第二輪投票或無警長
-
-### 4. 白天討論階段（DAY_DISCUSSION）
-
-- 公布昨夜死亡名單
-- 存活玩家輪流發言
-- 討論懷疑對象、分享資訊
-- 玩家可以根據角色資訊進行推理
-
-### 5. 白天投票階段（DAY_VOTING）
-
-- 所有存活且有投票權的玩家投票
-- **警長投票算1.5票**
-- 得票最多的玩家被放逐
-- 平票時無人出局
-- 檢查是否觸發勝利條件
-
-### 6. 勝利檢查
-
-- 每個夜晚結束後檢查
-- 每次投票結束後檢查
-- 符合任一勝利條件時遊戲結束
+- [1. Game Setup](#1-game-setup)
+- [2. Camps](#2-camps)
+- [3. Game Phases and Flow](#3-game-phases-and-flow)
+- [4. Night Phase](#4-night-phase)
+- [5. Day Phase](#5-day-phase)
+- [6. Voting Phase](#6-voting-phase)
+- [7. Sheriff System](#7-sheriff-system)
+- [8. Roles - Villager Camp](#8-roles---villager-camp)
+- [9. Roles - Werewolf Camp](#9-roles---werewolf-camp)
+- [10. Roles - Neutral Camp](#10-roles---neutral-camp)
+- [11. Victory Conditions](#11-victory-conditions)
+- [12. Death Resolution](#12-death-resolution)
+- [13. Special Mechanics](#13-special-mechanics)
+- [14. Preset Role Compositions](#14-preset-role-compositions)
+- [15. Timeout Settings](#15-timeout-settings)
+- [Appendix: Role Summary Table](#appendix-role-summary-table)
 
 ---
 
-## 陣營與勝利條件
+## 1. Game Setup
 
-### 狼人陣營（Werewolf）
-
-**勝利條件**：狼人數量 ≥ 村民數量
-
-狼人需要在夜晚擊殺村民，白天偽裝身份避免被放逐，最終達到與村民數量持平或超過的局面。
-
-### 村民陣營（Villager）
-
-**勝利條件**：所有狼人被消滅
-
-村民需要透過白天的討論和投票，找出並放逐所有狼人，或利用特殊角色的能力消滅狼人。
-
-### 戀人（Lover）
-
-**勝利條件**：場上僅剩兩位戀人存活（**最高優先級**）
-
-由丘比特連結的兩位玩家成為戀人，他們形成獨立的勝利條件。一旦一方死亡，另一方也會因心碎而死。戀人的勝利優先於其他所有陣營。
+| Rule | Source |
+|------|--------|
+| Minimum 6 players, maximum 20 players | `config/presets.py`, `config/game_config.py` |
+| The number of roles must exactly match the number of players | `config/game_config.py` |
+| At least one werewolf role is required | `role_registry.py` |
+| Roles are randomly shuffled before assignment | `engine/base.py` |
+| Each player is assigned exactly one role | `engine/base.py` |
 
 ---
 
-## 角色說明
+## 2. Camps
 
-### 狼人陣營
+| Camp | Code Value | Description |
+|------|------------|-------------|
+| **Werewolf Camp** | `werewolf` | Goal: make the number of werewolves greater than or equal to the number of villagers |
+| **Villager Camp** | `villager` | Goal: eliminate all werewolves |
+| **Neutral Camp** | `neutral` | Independent win conditions (Lovers, Thief, etc.) |
 
-#### 1. 狼人（Werewolf）✅
-
-**夜晚能力**：與其他狼人共同選擇一位村民擊殺
-
-- 基礎狼人角色
-- 每晚醒來與其他狼人討論並決定擊殺目標
-- 白天需要隱藏身份，避免被發現
-
-**遊戲目標**：讓狼人數量達到或超過村民數量
+Source: `types/enums.py` - `Camp`
 
 ---
 
-#### 2. 狼王（Alpha Wolf）✅
+## 3. Game Phases and Flow
 
-**夜晚能力**：參與狼人擊殺
-**死亡能力**：被放逐或被獵人擊殺時，可以開槍帶走一名玩家
+### Phase Order
 
-- 擁有標準狼人的夜晚擊殺能力
-- 死亡時可以選擇任意一名存活玩家作為目標
-- 無論是被投票放逐還是被獵人擊殺都能觸發能力
+```
+SETUP → NIGHT → [SHERIFF_ELECTION*] → DAY_DISCUSSION → DAY_VOTING → NIGHT → ...
+```
 
-**策略提示**：狼王死亡時應優先帶走關鍵角色（預言家、女巫等）
+> *The sheriff election occurs only once, after the first night.
 
----
+### Phase Transition Rules
 
-#### 3. 白狼王（White Wolf）✅
+| From | To | Condition |
+|------|----|-----------|
+| SETUP | NIGHT | The game starts and `round_number` is set to 1 |
+| NIGHT | SHERIFF_ELECTION | Round 1, and the sheriff election has not yet been held |
+| NIGHT | DAY_DISCUSSION | Round > 1, or the sheriff election has already finished |
+| SHERIFF_ELECTION | DAY_DISCUSSION | The election ends |
+| DAY_DISCUSSION | DAY_VOTING | The discussion ends |
+| DAY_VOTING | NIGHT | Voting ends, and `round_number + 1` |
 
-**夜晚能力**：
+Source: `game_state.py` - `next_phase()`
 
-- 參與狼人擊殺
+### Per-Round State Reset
 
-- 每隔一個夜晚（奇數回合）可以額外擊殺一名狼人
+When transitioning from DAY_VOTING back to NIGHT, the following state is cleared:
 
-- 是一隻特殊的狼人，追求成為最後一隻狼
+- `night_deaths`, `day_deaths`, `death_abilities_used`, `death_causes`
+- `votes` (daytime votes)
+- `werewolf_target`, `werewolf_votes`
+- `witch_saved_target`, `witch_poison_target`
+- `guard_protected`, `guardian_wolf_protected`
+- `nightmare_blocked`, `raven_marked`
 
-- 在奇數回合夜晚可以選擇擊殺另一名狼人（可選擇跳過）
+Source: `game_state.py` - `next_phase()`, `reset_deaths()`
 
-- 擊殺狼人的行動在標準狼人擊殺之後執行
+### When Victory Is Checked
 
-**策略提示**：白狼王可能會與狼隊產生利益衝突，使用能力需謹慎
+Victory conditions are checked at the following points:
+1. After the night phase ends (after death resolution)
+2. After the sheriff election
+3. After the voting phase ends (after exile resolution)
 
----
+If a winner is detected at any of these points, the game ends immediately.
 
-#### 4. 狼美人（Wolf Beauty）✅
-
-**夜晚能力**：
-
-- 參與狼人擊殺
-- 可以魅惑一名玩家（整局遊戲僅一次）
-
-**特殊機制**：狼美人死亡時，被魅惑的玩家也會立即死亡
-
-- 僅能魅惑一次，需謹慎選擇目標
-- 魅惑後無法更改目標
-- 死亡時會觸發魅惑玩家的連鎖死亡
-
-**策略提示**：建議魅惑關鍵村民角色，但要注意自己的生存
-
----
-
-#### 5. 守衛狼（Guardian Wolf）✅
-
-**夜晚能力**：
-
-- 參與狼人擊殺
-- 每晚可以保護一名狼人免於當晚被消滅
-
-**機制說明**：
-
-- 可以保護任何一名狼人（包括自己）
-- 被保護的狼人不會被白狼王或其他方式殺害
-- 每晚都可以使用，可以選擇跳過
-
-**策略提示**：守衛狼應該保護關鍵的狼人角色（如狼王、隱狼）
+Source: `engine/base.py` - `play_game()`
 
 ---
 
-#### 6. 隱狼（Hidden Wolf）✅
+## 4. Night Phase
 
-**夜晚能力**：參與狼人擊殺
-**特殊機制**：被預言家查驗時顯示為**村民**
+### Night Action Priority Order
 
-- 對預言家免疫，是狼隊的隱藏王牌
-- 其他方面與普通狼人相同
-- 可以有效干擾預言家的資訊傳遞
+Actions are executed in **descending priority order** (higher numbers act first):
 
-**策略提示**：隱狼應適度跳預言家或關鍵角色，利用「驗金身」優勢
+| Order | Priority | Role |
+|------|----------|------|
+| 1 | 100 | **Cupid** (first night only) |
+| 2 | 98 | **Nightmare Wolf** (ability block) |
+| 3 | 95 | **Thief** (first night only; not currently implemented) |
+| 4 | 90 | **Guard** / **Guardian Wolf** |
+| 5 | 80 | **Werewolf** (all werewolf roles vote collectively) |
+| 6 | 75 | **White Wolf** (extra kill) |
+| 7 | 70 | **Witch** (antidote / poison) |
+| 8 | 60 | **Seer** |
+| 9 | 50 | **Graveyard Keeper** |
+| 10 | 40 | **Raven** |
 
----
+Source: `types/enums.py` - `ActionPriority`, `engine/action_processor.py`
 
-#### 7. 血月使徒（Blood Moon Apostle）✅
+### Werewolf Discussion and Voting
 
-**特殊機制**：
+1. If multiple werewolves are alive, they first hold an **internal discussion**, with each werewolf sharing an opinion.
+2. Each werewolf then casts an **individual vote** for one non-werewolf target.
+3. The player with the **most votes** becomes the kill target.
+4. **Tie handling**: if multiple targets are tied, **one is chosen at random**.
+5. Werewolves may only target **living non-werewolf** players.
 
-- 初期不參與狼人夜晚會議
-- 當所有其他狼人死亡後自動轉化為狼人
-- 轉化前被預言家查驗顯示為村民
-- 轉化後可以參與狼人擊殺投票
+Source: `engine/night_phase.py` - `_run_werewolf_discussion()`, `_resolve_werewolf_votes()`
 
-**陣營**：狼人陣營（但初期不會與狼人一起行動）
+### Nightmare Wolf Blocking Mechanic
 
-**策略提示**：血月使徒是狼人陣營的後備力量，可以在狼隊覆滅後復仇
+- The Nightmare Wolf may block one player's ability each night.
+- For a blocked player, `has_night_action()` returns `False`, and their action is skipped in `process_actions()`.
+- The Nightmare Wolf's own blocking action **cannot itself be blocked**.
+- The block target may be any living player except the Nightmare Wolf.
 
----
+Source: `roles/base.py` - `has_night_action()`, `engine/action_processor.py` - `_is_actor_blocked()`
 
-#### 8. 夢魘狼（Nightmare Wolf）✅
+### Night Death Resolution Order
 
-**夜晚能力**：
+After all night actions have been processed:
 
-- 參與狼人擊殺
-- 每晚可以封鎖一名玩家的能力，使其當晚無法行動
+1. **Werewolf kill resolution** (checked in order: Witch antidote -> Guard protection -> Elder extra life -> otherwise death)
+2. **Witch poison resolution**
+3. **Wolf Beauty charm chain** (if Wolf Beauty dies that night, the charmed target dies as well)
+4. **Death-triggered abilities** (Sheriff badge transfer -> Hunter / Alpha Wolf shooting)
 
-**機制說明**：
+> Note: lovers' suicide is triggered immediately whenever each individual death event occurs, including inside steps 1 and 2. It is not a separate step.
 
-- 可以選擇任何一名存活玩家（除了自己）進行封鎖
-- 被封鎖的玩家當晚無法使用角色能力
-- 可以選擇跳過不封鎖
-- 每晚都可以使用
-
-**策略提示**：夢魘狼應該封鎖關鍵村民角色（如預言家、女巫、守衛）來干擾村民陣營的運作
-
----
-
-### 村民陣營
-
-#### 1. 平民（Villager）✅
-
-**能力**：無特殊能力，只能在白天投票
-
-- 基礎村民角色
-- 需要透過邏輯推理和發言找出狼人
-- 投票是唯一的武器
-
-**策略提示**：平民應積極參與討論，提供資訊，避免成為狼人刀口
+Source: `engine/death_handler.py` - `resolve_deaths()`
 
 ---
 
-#### 2. 預言家（Seer）✅
+## 5. Day Phase
 
-**夜晚能力**：每晚可以查驗一名玩家的身份（狼人或村民）
+### Discussion Phase Rules
 
-- 村民陣營的核心角色
-- 查驗結果會告知目標是狼人陣營還是村民陣營
-- 需要注意**隱狼**會顯示為村民
+1. **All living players** speak in sequence, one at a time.
+2. Each player receives the following information:
+   - their own role
+   - the list of players who died last night, or a peaceful night message if no one died
+   - the list of living players
+   - their own action history
+   - the full public discussion history from previous rounds
+3. Each player gives a **1-3 sentence** statement.
+4. All statements are added to the **public discussion history** and are visible to everyone.
 
-**查驗優先順序**：在夜間行動順序中排第 6 位（優先級 60）
-
-**策略提示**：
-
-- 查驗到狼人後不要立即跳出，容易被狼人刀掉
-- 可以先暗示身份，觀察場上反應
-
----
-
-#### 3. 女巫（Witch）✅
-
-**夜晚能力**：擁有兩瓶藥水，每瓶僅能使用一次
-
-1. **解藥**：可以救活當晚被狼人擊殺的玩家
-2. **毒藥**：可以毒殺任意一名玩家
-
-**使用規則**：
-
-- 女巫會得知當晚狼人的擊殺目標
-- 解藥和毒藥不能在同一晚使用
-- 每瓶藥水整局遊戲只能使用一次
-- 女巫不能自救（部分版本規則）
-
-**行動優先順序**：在狼人擊殺之後（優先級 70）
-
-**策略提示**：
-
-- 首夜是否用藥需謹慎考慮
-- 後期毒藥可以用來狙擊關鍵狼人
+Source: `engine/day_phase.py` - `run_day_phase()`, `_build_discussion_context()`
 
 ---
 
-#### 4. 獵人（Hunter）✅
+## 6. Voting Phase
 
-**死亡能力**：被狼人殺死或被投票放逐時，可以開槍帶走一名玩家
+### Voting Rules
 
-**觸發條件**：
+| Rule | Details |
+|------|---------|
+| Who can vote | All living players with voting rights (`can_vote() == True`) |
+| Valid targets | Any living player (**cannot vote for yourself**) |
+| Vote weight | Normal player = **1.0**, Sheriff = **1.5** |
+| Raven mark | A marked player receives an extra **+1 vote** |
+| Exile rule | The player with the **most votes** is exiled |
+| Tie handling | **No one is exiled** |
+| Idiot exception | The Idiot reveals their identity, **does not die**, but permanently loses voting rights |
+| Elder exception | If the Elder is exiled by vote -> **all Villager Camp special abilities are permanently disabled** |
 
-- 被狼人擊殺
-- 被投票放逐
-- 被女巫毒殺（根據規則版本可能不同）
+Source: `engine/voting_phase.py`, `game_state.py` - `get_vote_counts()`, `player.py` - `get_vote_weight()`
 
-**策略提示**：
+### Post-Exile Chain Reactions (Daytime)
 
-- 獵人可以適時暴露身份保護自己
-- 臨死前的槍應該射向確定的狼人
+After a player is exiled by vote, the following are processed in order:
+1. Check the **Elder penalty** (all villager abilities become disabled)
+2. Check **lovers' suicide** (the partner dies of heartbreak)
+3. Check the **Wolf Beauty charm chain** (the charmed target dies as well)
+4. Process **death-triggered abilities** (Sheriff badge transfer -> Hunter / Alpha Wolf shooting)
 
----
-
-#### 5. 守衛（Guard）✅
-
-**夜晚能力**：每晚可以保護一名玩家，使其免於狼人擊殺
-
-**使用規則**：
-
-- 不能連續兩晚保護同一名玩家
-- 守衛可以自保（首夜）
-- 保護成功時，被保護者不會死亡
-
-**行動優先順序**：最早執行（優先級 90），早於狼人擊殺
-
-**策略提示**：
-
-- 預判狼人刀口位置
-- 保護預言家等關鍵角色
+Source: `engine/voting_phase.py` - `_eliminate_voted_player()`, `run_voting_phase()`
 
 ---
 
-#### 6. 白痴（Idiot）✅
+## 7. Sheriff System
 
-**特殊能力**：被投票放逐時不會死亡，但失去投票權
+### Election Flow (Round 1 Only)
 
-**機制說明**：
+1. **Candidacy**: all living players are asked whether they want to run for Sheriff.
+2. **Automatic election**: if there is only 1 candidate, that player wins automatically.
+3. **Speech**: each candidate gives a 2-3 sentence campaign speech.
+4. **Voting**: all living players vote for one candidate. Abstaining is allowed, and players cannot vote for themselves.
+5. **Result**:
+   - A single top vote-getter -> becomes Sheriff
+   - A tie -> **no one is elected**
 
-- 第一次被投票放逐時翻開身份牌，存活但失去投票權
-- 仍然可以發言討論
-- 夜晚仍可能被狼人擊殺
+Source: `engine/sheriff_election.py`
 
-**策略提示**：白痴可以適度引導投票，即使被放逐也能存活
+### Sheriff Privileges
 
----
+| Privilege | Details |
+|-----------|---------|
+| Weighted vote | **1.5x** vote weight (normal players have 1.0) |
+| Badge transfer | Upon death, the Sheriff may transfer the badge to a living player |
+| Destroy badge | Upon death, the Sheriff may destroy the badge, leaving no Sheriff afterward |
 
-#### 7. 長老（Elder）✅
+Source: `player.py` - `get_vote_weight()`, `engine/death_handler.py` - `_handle_sheriff_badge_transfer()`
 
-**特殊能力**：擁有兩條命，能夠抵擋一次狼人擊殺
+### Sheriff Death Handling
 
-**特殊懲罰**：如果被村民投票放逐，所有村民特殊角色將**失去能力**
+When the Sheriff dies:
+1. The Sheriff's agent is asked to **choose one living player** to receive the badge.
+2. Or it may choose to **skip** (destroy the badge, with `allow_skip=True`).
+3. If there are no living players or no agent, the badge is destroyed automatically.
 
-**機制說明**：
-
-- 第一次被狼人擊殺時存活，失去一條命
-- 第二次被狼人擊殺時才會死亡
-- 被投票放逐時會觸發懲罰機制（所有村民角色失能）
-
-**策略提示**：長老應避免被投票放逐，否則會導致村民陣營崩盤
-
----
-
-#### 8. 騎士（Knight）✅
-
-**白天能力**：整局遊戲可以使用一次決鬥能力
-
-**決鬥機制**：
-
-- 在投票前選擇一名玩家決鬥
-- 如果對方是狼人，對方立即死亡
-- 如果對方不是狼人，騎士自己死亡
-
-**使用限制**：整局遊戲僅能使用一次
-
-**策略提示**：確定度極高時再使用，錯誤決鬥會損失村民數量
+Source: `engine/death_handler.py` - `_handle_sheriff_badge_transfer()`
 
 ---
 
-#### 9. 魔術師（Magician）⚠️ 未完整實作
+## 8. Roles - Villager Camp
 
-**夜晚能力**：整局遊戲可以交換兩名玩家的角色一次
+### Villager
 
-**實作狀態**：角色定義存在，但交換邏輯未實作
+| Attribute | Value |
+|-----------|-------|
+| Camp | Villager |
+| Night Action | None |
+| Day Action | None |
+| Special | No special abilities; can only participate in daytime voting |
+
+### Seer
+
+| Attribute | Value |
+|-----------|-------|
+| Camp | Villager |
+| Night Action | Check the camp identity of one living player |
+| Priority | 60 |
+| Target | Any living player (cannot check self) |
+| Special | Hidden Wolf appears as **Villager**; an untransformed Blood Moon Apostle appears as **Villager**; a transformed Blood Moon Apostle appears as **Werewolf** |
+
+Check results are stored by round in `game_state.seer_checked`.
+
+Source: `roles/villager.py` - `Seer`, `actions/villager.py` - `SeerCheckAction`
+
+### Witch
+
+| Attribute | Value |
+|-----------|-------|
+| Camp | Villager |
+| Night Action | Antidote and/or poison |
+| Priority | 70 |
+| Antidote | Save the target selected for the werewolf kill; **usable once per game** |
+| Poison | Poison any living player (cannot poison self); **usable once per game** |
+| Restriction | **Cannot use both potions on the same night** |
+
+The Witch is informed of the werewolves' kill target before deciding whether to use the antidote.
+
+Source: `roles/villager.py` - `Witch`, `actions/villager.py` - `WitchSaveAction`, `WitchPoisonAction`
+
+### Hunter
+
+| Attribute | Value |
+|-----------|-------|
+| Camp | Villager |
+| Night Action | None |
+| Day Action | Death-triggered ability (shoot) |
+| Trigger | When killed by werewolves **or** exiled by vote |
+| Uses | **Once** |
+| Restriction | If the cause of death is **Witch poison**, the shooting ability **cannot** be used |
+
+Source: `roles/villager.py` - `Hunter`, `engine/death_handler.py` - `_handle_death_abilities()`
+
+### Guard
+
+| Attribute | Value |
+|-----------|-------|
+| Camp | Villager |
+| Night Action | Protect one living player from the werewolf kill |
+| Priority | 90 |
+| Restriction | **Cannot protect the same player on two consecutive nights** |
+| Self-Protection | Allowed (self is included in the target list) |
+
+Source: `roles/villager.py` - `Guard`, `actions/villager.py` - `GuardProtectAction`
+
+### Idiot
+
+| Attribute | Value |
+|-----------|-------|
+| Camp | Villager |
+| Night Action | None |
+| Day Action | None |
+| Special | If **exiled by vote**: reveals identity, **does not die**, but **permanently loses voting rights** |
+| Note | After revealing, the Idiot can still be killed by werewolves at night |
+
+Source: `roles/villager.py` - `Idiot`, `engine/voting_phase.py` - `_eliminate_voted_player()`
+
+### Elder
+
+| Attribute | Value |
+|-----------|-------|
+| Camp | Villager |
+| Night Action | None |
+| Lives | **2** (can survive one werewolf attack) |
+| Penalty | If exiled by vote -> **all Villager Camp special abilities are permanently disabled** (`role.disabled = True`) |
+
+Source: `roles/villager.py` - `Elder`, `engine/death_handler.py` - `_handle_elder_penalty()`, `_handle_werewolf_kill()`
+
+### Knight
+
+| Attribute | Value |
+|-----------|-------|
+| Camp | Villager |
+| Night Action | None |
+| Day Action | Challenge one player to a duel |
+| Uses | **Once per game** |
+| Duel Result | If the target is a werewolf -> **the target dies**; if the target is not a werewolf -> **the Knight dies** |
+
+Source: `roles/villager.py` - `Knight`, `actions/villager.py` - `KnightDuelAction`
+
+### Magician (Not Implemented)
+
+| Attribute | Value |
+|-----------|-------|
+| Camp | Villager |
+| Night Action | Swap the roles of two players (placeholder) |
+| Priority | 90 (same as Guard) |
+| Uses | **Once per game** |
+| Status | **Not implemented** - currently returns an empty action list |
+
+Source: `roles/villager.py` - `Magician`
+
+### Cupid
+
+| Attribute | Value |
+|-----------|-------|
+| Camp | Villager |
+| Night Action | Link two players as lovers (**first night only**) |
+| Priority | 100 (highest) |
+| Uses | **Once** |
+| Effect | The linked players become lovers; when one dies, the other immediately dies of heartbreak |
+
+Source: `roles/villager.py` - `Cupid`, `actions/villager.py` - `CupidLinkAction`
+
+### Raven
+
+| Attribute | Value |
+|-----------|-------|
+| Camp | Villager |
+| Night Action | Mark (curse) one living player |
+| Priority | 40 |
+| Effect | The marked player receives an extra **+1 vote** in the next day's vote |
+| Reset | The mark is **cleared every round** |
+
+Source: `roles/villager.py` - `Raven`, `actions/villager.py` - `RavenMarkAction`, `game_state.py` - `get_vote_counts()`
+
+### Graveyard Keeper
+
+| Attribute | Value |
+|-----------|-------|
+| Camp | Villager |
+| Night Action | Check the role and camp of one **dead** player |
+| Priority | 50 |
+| Target | Dead players only |
+| Can Skip | Yes |
+
+Source: `roles/villager.py` - `GraveyardKeeper`, `actions/villager.py` - `GraveyardKeeperCheckAction`
 
 ---
 
-#### 10. 丘比特（Cupid）✅
+## 9. Roles - Werewolf Camp
 
-**夜晚能力**：第一晚指定兩名玩家成為戀人
+> All werewolf roles, except an untransformed Blood Moon Apostle, participate in the **collective werewolf vote** every night. Werewolves may only target **living non-werewolf** players.
 
-**戀人機制**：
+### Werewolf
 
-- 兩位戀人會得知彼此的身份
-- 一旦一方死亡，另一方立即因心碎而死
-- 戀人的勝利條件優先於原陣營
+| Attribute | Value |
+|-----------|-------|
+| Camp | Werewolf |
+| Night Action | Participate in the werewolf vote to kill villagers |
+| Priority | 80 |
+| Special | None - standard werewolf |
 
-**特殊情況**：
+### Alpha Wolf
 
-- 如果兩位戀人分屬狼人和村民陣營，他們形成**獨立的第三方陣營**
-- 戀人必須讓場上只剩他們兩人才能獲勝
+| Attribute | Value |
+|-----------|-------|
+| Camp | Werewolf |
+| Night Action | Participate in the werewolf vote |
+| Priority | 80 |
+| Death Ability | Upon death, may **shoot and take down** one living player |
+| Restriction | If the cause of death is **Witch poison**, the shooting ability **cannot** be used |
 
-**行動優先順序**：最早執行（優先級 100），僅第一晚行動
+Source: `roles/werewolf.py` - `AlphaWolf`, `engine/death_handler.py` - `_handle_death_abilities()`
 
----
+### White Wolf
 
-#### 11. 烏鴉（Raven）✅
+| Attribute | Value |
+|-----------|-------|
+| Camp | Werewolf |
+| Night Action | Participate in the werewolf vote + extra kill |
+| Priority | 75 (extra kill) |
+| Extra Kill | On **odd-numbered rounds** (Night 1, 3, 5, ...) may choose to kill **another werewolf** (can skip) |
+| Can Be Defended | Guardian Wolf protection can block the White Wolf's extra kill |
 
-**夜晚能力**：每晚可以標記一名玩家，使其在隔天投票時多算一票
+Source: `roles/werewolf.py` - `WhiteWolf`, `actions/werewolf.py` - `WhiteWolfKillAction`
 
-**機制說明**：
+### Wolf Beauty
 
-- 被標記的玩家在投票階段會額外獲得一票
-- 該票數在計算時自動添加
-- 每晚都可以使用
+| Attribute | Value |
+|-----------|-------|
+| Camp | Werewolf |
+| Night Action | Participate in the werewolf vote + charm |
+| Priority | 80 |
+| Charm | **Usable once per game**, charm one living player |
+| Charm Effect | When Wolf Beauty **dies**, the charmed target **dies immediately as well** |
 
-**行動優先順序**：較晚執行（優先級 40）
+Source: `roles/werewolf.py` - `WolfBeauty`, `actions/werewolf.py` - `WolfBeautyCharmAction`, `engine/death_handler.py`
 
-**策略提示**：可以用來推進對狼人的投票，或製造混亂
+### Guardian Wolf
 
----
+| Attribute | Value |
+|-----------|-------|
+| Camp | Werewolf |
+| Night Action | Participate in the werewolf vote + protect one werewolf |
+| Priority | 90 (same as Guard) |
+| Protection | May protect one **werewolf** from death each night |
+| Effect | Can defend against the **White Wolf's extra kill** |
+| Can Skip | Yes |
 
-#### 12. 守墓人（Graveyard Keeper）✅
+Source: `roles/werewolf.py` - `GuardianWolf`, `actions/werewolf.py` - `GuardianWolfProtectAction`
 
-**夜晚能力**：每晚可以查驗一名已死亡玩家的真實身份和角色
+### Hidden Wolf
 
-**機制說明**：
+| Attribute | Value |
+|-----------|-------|
+| Camp | Werewolf |
+| Night Action | Participate in the werewolf vote |
+| Priority | 80 |
+| Special | Appears as **Villager** when checked by the Seer |
 
-- 只能查驗已經死亡的玩家
-- 查驗結果會顯示該玩家的真實角色和陣營
-- 每晚可以查驗一名死者，也可以選擇跳過
-- 有助於根據死者身份推理存活者的陣營
+Source: `roles/werewolf.py` - `HiddenWolf`, `actions/villager.py` - `SeerCheckAction`
 
-**行動優先順序**：較晚執行（優先級 50）
+### Blood Moon Apostle
 
-**策略提示**：
+| Attribute | Value |
+|-----------|-------|
+| Camp | Werewolf |
+| Night Action | Conditional (see below) |
+| Priority | 80 (after transformation) |
+| Initial State | Does **not** wake up with the werewolves and does **not** participate in the werewolf vote |
+| Transformation Trigger | When all other standard werewolves, excluding other Blood Moon Apostles, are dead |
+| After Transformation | Behaves like a standard werewolf and joins the werewolf vote |
+| Seer Result | Appears as **Villager** before transformation and **Werewolf** after transformation |
 
-- 優先查驗關鍵位置的死者
-- 通過死者身份推理狼人數量和位置
+**Special victory-condition rules:**
+- **For werewolf victory checks**: an untransformed Blood Moon Apostle **does not count** toward the werewolf total when evaluating "werewolves >= villagers".
+- **For villager victory checks**: a Blood Moon Apostle counts as a **werewolf** whether transformed or not, and must be eliminated for the villagers to win.
+- **Winner list**: even if untransformed, it still wins **together with the Werewolf Camp**.
 
----
+Source: `roles/werewolf.py` - `BloodMoonApostle`, `victory.py`
 
-### 中立角色
+### Nightmare Wolf
 
-#### 1. 盜賊（Thief）⚠️ 未完整實作
+| Attribute | Value |
+|-----------|-------|
+| Camp | Werewolf |
+| Night Action | Participate in the werewolf vote + block one player's ability |
+| Priority | 98 (second only to Cupid) |
+| Block | Blocks one player's ability each night, preventing that player from using their role ability that night |
+| Target | Any living player (cannot choose self) |
+| Built-in Immunity | The Nightmare Wolf's own blocking action **cannot be blocked** |
+| Can Skip | Yes |
 
-**特殊能力**：第一晚從兩張未分配的角色牌中選擇一張作為自己的角色
-
-**實作狀態**：角色定義存在，但選擇邏輯未實作
-
----
-
-#### 2. 戀人（Lover）✅
-
-**形成方式**：由丘比特在第一晚指定
-
-**特殊機制**：
-
-- 知曉彼此身份
-- 共同生死（一方死亡，另一方立即死亡）
-- 擁有獨立的勝利條件
-
-**勝利條件**：場上僅剩兩位戀人存活（優先於所有其他勝利條件）
-
----
-
-#### 3. 白戀狼（White Lover Wolf）✅
-
-**形成條件**：當狼人和村民成為戀人時的特殊狀態
-
-**勝利條件**：場上僅剩這對戀人存活
-
-**機制說明**：
-
-- 這是最困難的勝利條件之一
-- 狼人戀人需要背叛狼隊
-- 村民戀人需要背叛村民
-
----
-
-## 夜間行動順序
-
-所有夜間行動按照以下優先順序執行（數字越大越早執行）：
-
-| 優先級 | 角色   | 行動內容             | 執行時機               |
-| ------ | ------ | -------------------- | ---------------------- |
-| 100    | 丘比特 | 連結兩位玩家成為戀人 | 僅第一晚               |
-| 98     | 夢魘狼 | 封鎖玩家能力         | 每晚                   |
-| 95     | 盜賊   | 選擇角色             | 僅第一晚 ⚠️未實作      |
-| 90     | 守衛   | 保護一名玩家         | 每晚                   |
-| 80     | 狼人   | 擊殺一名村民         | 每晚                   |
-| 75     | 白狼王 | 擊殺一名狼人         | 奇數夜晚               |
-| 70     | 女巫   | 使用解藥或毒藥       | 每晚（藥水用完後失效） |
-| 60     | 預言家 | 查驗一名玩家         | 每晚                   |
-| 50     | 守墓人 | 查驗死者身份         | 每晚                   |
-| 40     | 烏鴉   | 標記玩家             | 每晚                   |
-
-**重要說明**：
-
-- 夢魘狼封鎖在所有其他角色行動前執行，被封鎖的玩家當晚無法行動
-- 守衛保護在狼人擊殺之前執行
-- 女巫在狼人擊殺之後執行，能得知擊殺目標
-- 預言家查驗不影響當晚結果，僅獲取資訊
+Source: `roles/werewolf.py` - `NightmareWolf`, `actions/werewolf.py` - `NightmareWolfBlockAction`
 
 ---
 
-## 特殊機制
+## 10. Roles - Neutral Camp
 
-### 1. 死亡結算
+### Thief (Not Implemented)
 
-#### 狼人擊殺
+| Attribute | Value |
+|-----------|-------|
+| Camp | Neutral (changes based on the chosen role) |
+| Night Action | Choose one of two extra role cards (first night only) |
+| Priority | 95 |
+| Uses | **Once** |
+| Status | **Not implemented** - currently returns an empty action list |
 
-1. 守衛保護：如果目標被守衛保護，則免於死亡
-2. 女巫解藥：如果女巫使用解藥，則目標復活
-3. 長老機制：如果目標是長老且有剩餘生命，則消耗一條命但不死亡
-4. 戀人連鎖：如果死者是戀人，其伴侶立即死亡
+Source: `roles/neutral.py` - `Thief`
 
-#### 投票放逐
+### Lover (Dynamic State)
 
-1. 白痴機制：白痴被放逐時不死，但失去投票權並揭示身份
-2. 長老懲罰：長老被放逐時，所有村民角色失去能力
-3. 獵人/狼王：被放逐時可以開槍帶走一名玩家
-4. 狼美人：死亡時被魅惑的玩家也會死亡
-5. 戀人連鎖：如果死者是戀人，其伴侶立即死亡
+| Attribute | Value |
+|-----------|-------|
+| Camp | Neutral |
+| Source | Created by Cupid |
+| Night Action | None |
+| Special | Not a starting role, but a **state** applied by Cupid |
+| Effect | If one dies, the other immediately dies of heartbreak as well |
+| Victory Condition | Lovers can win together regardless of their original camps |
 
-#### 女巫毒藥
+Source: `roles/neutral.py` - `Lover`
 
-- 被毒殺的玩家直接死亡
-- 如果是戀人，其伴侶也會連鎖死亡
+### White Lover Wolf (Dynamic State)
 
-### 2. 戀人機制
+| Attribute | Value |
+|-----------|-------|
+| Camp | Neutral |
+| Night Action | None |
+| Trigger Condition | Triggered when a werewolf and a villager become lovers |
+| Victory Condition | Must eliminate all other players; wins when only the two lovers remain alive |
 
-**形成**：丘比特在第一晚指定兩名玩家
-
-**效果**：
-
-- 戀人得知彼此身份
-- 一方死亡時，另一方立即因心碎而死（Heartbreak）
-- 戀人勝利條件優先級最高
-
-**勝利條件判定順序**：
-
-1. 戀人勝利（場上僅剩兩位戀人）
-2. 狼人勝利（狼人數 ≥ 村民數）
-3. 村民勝利（所有狼人被消滅）
-
-### 3. 守衛保護規則
-
-- **不能連續保護**：不能連續兩晚保護同一名玩家
-- **自保規則**：可以保護自己（根據實作，`last_protected` 機制控制）
-- **保護優先級**：在狼人擊殺前執行，能有效阻止死亡
-
-### 4. 女巫用藥規則
-
-- **同晚限制**：不能在同一晚同時使用解藥和毒藥
-- **藥水次數**：每瓶藥水整局僅能使用一次
-- **解藥資訊**：女巫會得知當晚狼人擊殺目標
-- **自救規則**：根據不同規則版本，女巫可能無法自救（目前實作中可以自救）
-
-### 5. 警長機制 ✅
-
-**警長選舉流程**：
-
-1. **競選階段**：
-
-    - 在第一天白天開始時進行(第一夜結束後)
-    - 所有存活玩家可以自願競選警長
-    - 如果沒有人競選或只有一人競選,則跳過選舉
-
-2. **拉票階段**：
-
-    - 競選者輪流發表競選宣言
-    - 說服其他玩家投票支持
-    - 可以暗示或明示自己的身份
-
-3. **投票階段**：
-
-    - 所有存活玩家(包括候選人)投票選出警長
-    - 候選人可以投票給其他候選人,但不能投自己
-    - 可以選擇棄票(不投任何人)
-    - 得票最高者當選警長
-
-4. **平票處理**：
-
-    - 如果出現平票,進入PK環節
-    - 平票的競選者再次發表拉票演說
-    - 重新投票,得票最高者當選
-    - 若再次平票,則本局無警長
-
-**警長特權**：
-
-- **1.5倍投票權**：警長在白天投票時,票數計為1.5票
-- **警徽移交**：警長死亡時可以選擇:
-    - 移交警徽給任意一名存活玩家
-    - 撕毀警徽(不移交給任何人)
-
-**警長死亡處理**：
-
-- 警長死亡時會被詢問是否移交警徽
-- 可以選擇移交給任意存活玩家
-- 也可以選擇撕毀警徽,本局不再有警長
-- 如果警長是戀人且因戀人連鎖死亡,可能無法移交警徽(根據實作)
-
-**策略提示**：
-
-- 神職(預言家、女巫等)可以透過競選警長來獲得更多話語權和投票權重
-- 狼人也可能競選警長來混淆視聽或利用1.5票權重
-- 警長的發言位置通常在最後,擁有總結發言的優勢
-
-### 6. 投票機制
-
-- **投票權**：所有存活玩家預設擁有投票權
-- **失去投票權**：白痴被放逐後失去投票權但存活
-- **警長權重**：警長投票時計為1.5票
-- **烏鴉詛咒**：被烏鴉標記的玩家額外獲得一票
-- **平票處理**：得票最多且不平票時，該玩家被放逐；平票時無人出局
-
-### 7. 長老懲罰機制
-
-當長老被**投票放逐**時（不包括被狼人擊殺）：
-
-- 所有村民陣營的特殊角色**立即失去能力**
-- 失能角色包括：預言家、女巫、獵人、守衛等所有村民特殊角色
-- 這是對村民陣營的嚴厲懲罰，可能直接導致村民陣營崩盤
+Source: `roles/neutral.py` - `WhiteLoverWolf`
 
 ---
 
-## 目前未實作的角色與規則
+## 11. Victory Conditions
 
-### ⚠️ 未完整實作的角色
+Victory conditions are checked in the following **strict priority order**. The game ends as soon as the first satisfied condition is found.
 
-以下角色已定義但核心邏輯未完全實作：
+### Priority 1: Lovers Victory
 
-1. **魔術師（Magician）**
+- **Condition**: exactly 2 players remain alive, and both are lovers.
+- **Winners**: those two lovers.
 
-    - 定義：src/llm_werewolf/core/roles/villager.py:388
-    - 缺失：交換兩名玩家角色的完整邏輯
-    - 說明：需要實現 MagicianSwapAction 和角色狀態轉移邏輯
+### Priority 2: Werewolf Victory
 
-2. **盜賊（Thief）**
+- **Condition**: the number of living werewolves is greater than or equal to the number of living villagers, and the number of werewolves is greater than 0.
+- **Exception**: an untransformed Blood Moon Apostle **does not count** toward the werewolf total.
+- **Winners**: all surviving Werewolf Camp players, including untransformed Blood Moon Apostles.
 
-    - 定義：src/llm_werewolf/core/roles/neutral.py:12
-    - 缺失：從額外角色牌中選擇角色的邏輯
-    - 說明：需要遊戲設置階段提供額外的角色牌支援
+### Priority 3: Villager Victory
 
-### 📋 標準狼人殺中存在但本專案未實作的角色
+- **Condition**: all werewolves have been eliminated (`living_werewolves = 0`).
+- **Exception**: a Blood Moon Apostle counts as a **werewolf** whether transformed or not, and must also be eliminated.
+- **Winners**: all surviving Villager Camp players.
 
-#### 村民陣營
-
-1. **混血兒（Hybrid）** - 被狼人擊殺時變成狼人
-2. **村長（Mayor）** - 投票時擁有 1.5 票權重
-3. **石匠（Stone Mason）** - 可以犧牲自己揭示身份證明清白
-4. **靈媒（Medium）** - 可以與死去的玩家溝通
-
-#### 狼人陣營
-
-1. **狼祖母（Wolf Grandma）** - 偽裝成預言家
-2. **惡魔狼（Devil Wolf）** - 特殊的狼人變體
-
-#### 其他變體角色
-
-1. **狐狸（Fox）** - 獨立第三方陣營
-2. **吸血鬼（Vampire）** - 獨立陣營，轉化其他玩家
-
-### 🔧 可能的規則差異
-
-不同版本的狼人殺遊戲可能有以下規則差異：
-
-1. **女巫自救規則**
-
-    - 標準版本：女巫首夜可以自救，之後不能
-    - 本專案實作：女巫可以自救（無限制）
-
-2. **獵人死亡規則**
-
-    - 標準版本：被女巫毒死時不能開槍
-    - 本專案實作：✅ 遵循標準版本，被女巫毒死時不能開槍
-
-3. **守衛自保規則**
-
-    - 標準版本：守衛首夜可以自保，之後不能
-    - 本專案實作：受「不能連續保護同一人」規則約束
-
-4. **預言家查驗規則**
-
-    - 標準版本：部分版本中被女巫救起的玩家可能被查驗到特殊資訊
-    - 本專案實作：僅查驗陣營（狼人/村民），隱狼顯示為村民
-
-### 🎯 建議補充的功能
-
-1. **角色完整實作**：完成上述未實作角色的邏輯
-2. **遺言系統**：玩家死亡前可以留下遺言
-3. **規則配置**：允許配置不同版本的規則（女巫自救、獵人觸發條件等）
-4. **更豐富的角色配置**：增加更多角色和更靈活的自動生成規則
-5. **警長彈劾機制**：允許村民在後續回合彈劾警長
+Source: `victory.py` - `VictoryChecker`
 
 ---
 
-## 附錄：角色速查表
+## 12. Death Resolution
 
-### 狼人陣營速查
+### Werewolf Kill Resolution
 
-| 角色     | 夜晚能力        | 特殊機制     | 實作狀態 |
-| -------- | --------------- | ------------ | -------- |
-| 狼人     | 擊殺村民        | -            | ✅       |
-| 狼王     | 擊殺村民        | 死亡時開槍   | ✅       |
-| 白狼王   | 擊殺村民+狼人   | 奇數夜可殺狼 | ✅       |
-| 狼美人   | 擊殺村民+魅惑   | 死亡連鎖     | ✅       |
-| 守衛狼   | 擊殺村民+保護狼 | -            | ✅       |
-| 隱狼     | 擊殺村民        | 驗為村民     | ✅       |
-| 血月使徒 | 無              | 狼死後轉化   | ✅       |
-| 夢魘狼   | 擊殺村民+封鎖   | 封鎖能力     | ✅       |
+After the werewolves choose a target, the following checks occur in order:
 
-### 村民陣營速查
+1. **Witch antidote**: if `witch_saved_target == target` -> the target **survives**
+2. **Guard protection**: if `guard_protected == target` -> the target **survives**
+3. **Elder extra life**: if the target is the Elder and `lives > 1` -> the target **loses one life but survives**
+4. **Otherwise**: the target **dies**
 
-| 角色   | 夜晚能力  | 特殊機制     | 實作狀態  |
-| ------ | --------- | ------------ | --------- |
-| 平民   | 無        | -            | ✅        |
-| 預言家 | 查驗身份  | -            | ✅        |
-| 女巫   | 解藥/毒藥 | 一次性使用   | ✅        |
-| 獵人   | 無        | 死亡開槍     | ✅        |
-| 守衛   | 保護玩家  | 不能連續保護 | ✅        |
-| 白痴   | 無        | 放逐不死     | ✅        |
-| 長老   | 無        | 兩條命+懲罰  | ✅        |
-| 騎士   | 無        | 白天決鬥     | ✅        |
-| 魔術師 | 交換角色  | 一次性使用   | ⚠️ 未實作 |
-| 丘比特 | 連結戀人  | 僅首夜       | ✅        |
-| 烏鴉   | 標記詛咒  | 額外票數     | ✅        |
-| 守墓人 | 查驗死者  | -            | ✅        |
+> Note: Guard protection and the Witch antidote are checked independently in an `if/elif` structure. There is **no** rule where "double protection causes death." If both apply to the same target, the Witch antidote is checked first and the target still survives.
 
-### 中立角色速查
+Source: `engine/death_handler.py` - `_handle_werewolf_kill()`
 
-| 角色   | 能力     | 勝利條件   | 實作狀態  |
-| ------ | -------- | ---------- | --------- |
-| 盜賊   | 選擇角色 | 依選擇角色 | ⚠️ 未實作 |
-| 戀人   | 無       | 僅剩戀人   | ✅        |
-| 白戀狼 | 無       | 僅剩戀人   | ✅        |
+### Witch Poison Resolution
+
+- The poisoned target dies immediately (**ignores all protection**).
+- The cause of death is recorded as `"witch_poison"`.
+- This can trigger the lovers' suicide chain if applicable.
+
+Source: `engine/death_handler.py` - `_resolve_witch_poison_death()`
+
+### Death-Triggered Abilities
+
+When a player with a death-triggered ability (Hunter or Alpha Wolf) dies:
+
+1. Check the cause of death. If it is `"witch_poison"`, the ability is **disabled** and the player cannot shoot.
+2. Otherwise, the player may **choose one living player to shoot**.
+3. The shot target dies immediately.
+4. If the shot target is a lover, that lover's partner also dies of heartbreak.
+
+Source: `engine/death_handler.py` - `_handle_death_abilities()`, `_process_hunter_or_alpha_death()`
+
+### Wolf Beauty Charm Chain
+
+- When Wolf Beauty dies, the charmed target also dies if still alive.
+- This triggers whether Wolf Beauty dies at night or during the day.
+
+Source: `engine/death_handler.py` - `_handle_wolf_beauty_charm_death()`, `_resolve_wolf_beauty_charm_deaths()`
+
+### Lovers' Suicide Chain
+
+- When one lover dies, the other immediately dies of heartbreak.
+- This can trigger during both night and day death resolution.
+
+Source: `engine/death_handler.py` - `_handle_lover_death()`
 
 ---
 
-## 版本資訊
+## 13. Special Mechanics
 
-**文件版本**：1.1
-**對應代碼版本**：基於 src/llm_werewolf/core (2025-10-23)
-**最後更新**：2025-10-23
-**維護者**：LLM Werewolf 專案組
+### Guard + Witch Antidote Interaction
 
-如有疑問或發現規則錯誤，請提交 Issue 到專案 GitHub 儲存庫。
+- They are resolved independently, and either one can stop a werewolf kill.
+- In the current implementation, there is **no** mutually exclusive rule where double protection causes death.
+
+### Ability Disable Mechanic
+
+- `role.disabled = True` prevents a role from acting at night.
+- It is triggered by the **Elder penalty** (Elder exiled by vote -> all Villager Camp abilities are disabled).
+- It is checked in `Role.can_act_tonight()`.
+
+Source: `roles/base.py` - `can_act_tonight()`
+
+### Ability Usage Limits
+
+- Roles with `max_uses` can only use their abilities a limited number of times.
+- Usage is tracked by the `role.ability_uses` counter.
+- This is checked in `Role.can_act_tonight()`.
+
+### Discussion History
+
+- **Public discussion history**: accumulates across rounds and is visible to all players during the day and voting phases.
+- **Internal werewolf discussion history**: accumulates across rounds and is visible only to werewolves during night discussion.
+
+Source: `engine/base.py`, `engine/day_phase.py`, `engine/night_phase.py`
+
+### Action History
+
+- Each player's agent maintains a personal **action history** of that player's own actions and statements.
+- This history is provided as context for later decisions.
+- It includes only the player's own actions and excludes other players' sensitive information.
+
+Source: `engine/day_phase.py`, `engine/voting_phase.py`, `engine/night_phase.py`
+
+---
+
+## 14. Preset Role Compositions
+
+When using automatic setup by player count:
+
+### Werewolf Roles
+
+| Player Count | Werewolf Roles |
+|--------------|----------------|
+| 6–8 | Werewolf x2 |
+| 9–11 | Werewolf x2, Alpha Wolf |
+| 12–14 | Werewolf x2, Alpha Wolf, White Wolf |
+| 15–20 | Werewolf x2, Alpha Wolf, White Wolf, Wolf Beauty |
+
+### Special Villager Roles
+
+| Player Count | Added Roles |
+|--------------|-------------|
+| 6+ (always included) | Seer, Witch |
+| 7+ | Guard |
+| 9+ | Hunter |
+| 11+ | Cupid |
+| 13+ | Idiot |
+| 15+ | Elder |
+| 17+ | Knight |
+| 19+ | Raven |
+
+All remaining slots are filled with **Villagers** (no special abilities).
+
+Source: `config/presets.py`
+
+---
+
+## 15. Timeout Settings
+
+| Player Count | Night Timeout | Day Timeout | Vote Timeout |
+|--------------|---------------|-------------|--------------|
+| 6–8 | 45s | 180s | 45s |
+| 9–12 | 60s | 300s | 60s |
+| 13–20 | 90s | 400s | 90s |
+
+Source: `config/presets.py` - `_get_timeouts()`
+
+---
+
+## Appendix: Role Summary Table
+
+| Role Name | Camp | Implementation Status |
+|-----------|------|-----------------------|
+| Werewolf | Werewolf | ✅ Implemented |
+| AlphaWolf | Werewolf | ✅ Implemented |
+| WhiteWolf | Werewolf | ✅ Implemented |
+| WolfBeauty | Werewolf | ✅ Implemented |
+| GuardianWolf | Werewolf | ✅ Implemented |
+| HiddenWolf | Werewolf | ✅ Implemented |
+| BloodMoonApostle | Werewolf | ✅ Implemented |
+| NightmareWolf | Werewolf | ✅ Implemented |
+| Villager | Villager | ✅ Implemented |
+| Seer | Villager | ✅ Implemented |
+| Witch | Villager | ✅ Implemented |
+| Hunter | Villager | ✅ Implemented |
+| Guard | Villager | ✅ Implemented |
+| Idiot | Villager | ✅ Implemented |
+| Elder | Villager | ✅ Implemented |
+| Knight | Villager | ✅ Implemented |
+| Magician | Villager | ⚠️ Placeholder (not implemented) |
+| Cupid | Villager | ✅ Implemented |
+| Raven | Villager | ✅ Implemented |
+| GraveyardKeeper | Villager | ✅ Implemented |
+| Thief | Neutral | ⚠️ Placeholder (not implemented) |
+| Lover | Neutral | ✅ Implemented (dynamic state) |
+| WhiteLoverWolf | Neutral | ✅ Implemented (dynamic state) |
+
+Source: `role_registry.py` - `get_role_map()`

@@ -15,7 +15,7 @@ uv-install:  ## Install uv on your system
 	@echo 'export PATH="$$HOME/.local/bin:$$PATH"' >> ~/.bashrc
 	@echo 'Installed uv, please re-open your bash terminal or zsh terminal.'
 
-fmt: ## Run pre-commit hooks
+format: ## Run pre-commit hooks
 	pre-commit run -a
 
 test: ## Run all tests

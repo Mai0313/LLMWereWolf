@@ -223,9 +223,9 @@ players:
 
 - `name`: Player's display name.
 - `model`: Model type.
-  - `human`: Human player (input via terminal).
-  - `demo`: Simple agent for testing (random responses).
-  - LLM model name: e.g., `gpt-4o`, `gpt-4o-mini`, `claude-sonnet-4-20250514`, `claude-haiku-4-20250514`, `deepseek-reasoner`, `llama3`, or any OpenAI-compatible model.
+    - `human`: Human player (input via terminal).
+    - `demo`: Simple agent for testing (random responses).
+    - LLM model name: e.g., `gpt-4o`, `gpt-4o-mini`, `claude-sonnet-4-20250514`, `claude-haiku-4-20250514`, `deepseek-reasoner`, `llama3`, or any OpenAI-compatible model.
 - `base_url`: API endpoint (required for LLM models).
 - `api_key_env`: Environment variable name (required for authenticated endpoints).
 - `reasoning_effort`: Optional, reasoning effort level for models that support it (e.g., "low", "medium", "high").
@@ -330,22 +330,22 @@ Displays information for all players:
 - **Name**: Player's display name.
 - **Model**: The AI model used, or `human`/`demo`.
 - **Status Indicators**:
-  - ✓: Alive
-  - ✗: Dead
-  - 🛡️: Protected by the Guard
-  - ❤️: In a lover relationship
-  - ☠️: Poisoned by the Witch
-  - 🔴: Marked by the Raven
+    - ✓: Alive
+    - ✗: Dead
+    - 🛡️: Protected by the Guard
+    - ❤️: In a lover relationship
+    - ☠️: Poisoned by the Witch
+    - 🔴: Marked by the Raven
 
 #### Game Panel (Top Center)
 
 Displays the current game status:
 
 - **Round and Phase**:
-  - 🌙 Night Phase
-  - ☀️ Day Discussion Phase
-  - 🗳️ Voting Phase
-  - 🏁 Game Over
+    - 🌙 Night Phase
+    - ☀️ Day Discussion Phase
+    - 🗳️ Voting Phase
+    - 🏁 Game Over
 - **Player Statistics**: Number of surviving players by faction.
 - **Vote Count** (during voting phase): Shows the number of votes each player has received.
 
@@ -435,16 +435,16 @@ These indicators help you understand the game is waiting for LLM API responses, 
 
 1. **Preparation Phase**: Players are randomly assigned roles.
 2. **Night Phase**:
-   - 🌙 **Narrator**: "Night falls, everyone close your eyes..."
-   - 🐺 **Werewolf Discussion**: Multiple werewolves discuss who to eliminate (skipped if only one werewolf)
-   - 🐺 **Werewolf Vote**: Werewolves vote for their target
-   - 🎬 **Other Roles Act**: Other roles with night abilities act in priority order (Seer, Witch, Guard, etc.)
-   - 🌙 **Narrator**: "Werewolves, close your eyes..."
+    - 🌙 **Narrator**: "Night falls, everyone close your eyes..."
+    - 🐺 **Werewolf Discussion**: Multiple werewolves discuss who to eliminate (skipped if only one werewolf)
+    - 🐺 **Werewolf Vote**: Werewolves vote for their target
+    - 🎬 **Other Roles Act**: Other roles with night abilities act in priority order (Seer, Witch, Guard, etc.)
+    - 🌙 **Narrator**: "Werewolves, close your eyes..."
 3. **Day Discussion**:
-   - ☀️ **Narrator**: "The sun rises, everyone open your eyes..."
-   - 💬 Players speak in turn, discussing and sharing information
+    - ☀️ **Narrator**: "The sun rises, everyone open your eyes..."
+    - 💬 Players speak in turn, discussing and sharing information
 4. **Day Voting**:
-   - 🗳️ Players vote to eliminate a suspect
+    - 🗳️ Players vote to eliminate a suspect
 5. **Victory Check**: The game checks if any faction has won.
 6. Repeat steps 2-5 until victory conditions are met.
 
@@ -518,13 +518,13 @@ src/llm_werewolf/
 - **ai/**: LLM agent implementation and configuration models (PlayerConfig, PlayersConfig).
 - **core/agent.py**: Base agent protocol and built-in agents (HumanAgent, DemoAgent).
 - **core/engine/**: Game engine implementation split into mixins for clean separation of concerns:
-  - **game_engine.py**: Main GameEngine class that combines all mixins
-  - **base.py**: Core initialization, event handling, and main game loop
-  - **night_phase.py**: Night phase execution logic (werewolf discussion, role actions)
-  - **day_phase.py**: Day discussion phase logic
-  - **voting_phase.py**: Voting phase logic
-  - **death_handler.py**: Death-related logic (werewolf kills, lover deaths, etc.)
-  - **action_processor.py**: Processing and applying game actions
+    - **game_engine.py**: Main GameEngine class that combines all mixins
+    - **base.py**: Core initialization, event handling, and main game loop
+    - **night_phase.py**: Night phase execution logic (werewolf discussion, role actions)
+    - **day_phase.py**: Day discussion phase logic
+    - **voting_phase.py**: Voting phase logic
+    - **death_handler.py**: Death-related logic (werewolf kills, lover deaths, etc.)
+    - **action_processor.py**: Processing and applying game actions
 - **core/actions/**: Action system with base classes and faction-specific actions.
 - **core/config/**: Configuration system, containing game parameters and automatic role generation.
 - **core/types/**: Type definitions including enums, data models, and protocol definitions.

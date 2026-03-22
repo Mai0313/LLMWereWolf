@@ -15,7 +15,7 @@ default_stages:
 
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.5
+    rev: v0.15.7
     hooks:
       - id: ruff-check
         types_or: [ python, pyi, jupyter ]
@@ -142,7 +142,7 @@ repos:
       - id: gitleaks
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.10.9
+    rev: 0.10.12
     hooks:
       - id: uv-sync
         args: ["--all-groups"]

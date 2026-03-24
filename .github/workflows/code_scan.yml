@@ -69,7 +69,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Trivy
-        uses: aquasecurity/setup-trivy@v0.2.5
+        uses: aquasecurity/setup-trivy@v0.2.6
 
       - name: Trivy Scanning
         uses: aquasecurity/trivy-action@0.35.0

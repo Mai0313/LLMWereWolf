@@ -198,7 +198,6 @@ compile-bytecode = true
 # concurrent-downloads = 4
 # concurrent-installs = 4
 index-strategy = "unsafe-best-match"
-link-mode = "copy"
 system-certs = true
 no-binary = false
 offline = false

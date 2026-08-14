@@ -201,7 +201,7 @@ index-strategy = "unsafe-best-match"
 system-certs = true
 no-binary = false
 offline = false
-prerelease = "if-necessary-or-explicit"
+prerelease = "if-necessary"
 preview = true
 
 # https://docs.astral.sh/uv/reference/settings/#index

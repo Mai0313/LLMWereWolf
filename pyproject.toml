@@ -10,7 +10,6 @@ addopts = [
     "--cov-report=term-missing:skip-covered",
     "--cov-report=xml:./.github/reports/coverage.xml",
     "--junitxml=./.github/reports/.coverage.pytest.xml",
-    "--cache-clear",
     "-n=auto",
     "--no-header",
     "--cov-fail-under=80",
@@ -31,7 +30,9 @@ markers = [
 minversion = "8.2"
 testpaths = "tests/"
 python_files = "test_*.py"
-cache_dir = "~/.cache/pytest"
+# Namespaced per project: pytest keys its cache by nodeid relative to rootdir, so a
+# shared directory lets one project's lastfailed select tests in another.
+cache_dir = "~/.cache/pytest/llm_werewolf"
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 

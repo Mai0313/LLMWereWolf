@@ -112,6 +112,14 @@ class SeerCheckAction(Action):
         if self.target.role.name == "HiddenWolf":
             result = "villager"
 
+        # BloodMoonApostle (untransformed) appears as villager to Seer
+        if (
+            self.target.role.name == "Blood Moon Apostle"
+            and hasattr(self.target.role, "transformed")
+            and not self.target.role.transformed
+        ):
+            result = "villager"
+
         self.game_state.seer_checked[self.game_state.round_number] = self.target.player_id
         return [f"Seer checks {self.target.name}: {result}"]
 
@@ -259,7 +267,7 @@ class GraveyardKeeperCheckAction(Action):
 
     def get_action_type(self) -> ActionType:
         """Get the action type."""
-        return ActionType.SEER_CHECK
+        return ActionType.GRAVEYARD_KEEPER_CHECK
 
     def validate(self) -> bool:
         """Validate the graveyard keeper check."""

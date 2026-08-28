@@ -197,7 +197,6 @@ class SheriffElectionMixin:
             return {}
 
         # Get all alive players (including candidates)
-        candidate_ids = {c.player_id for c in candidates}
         alive_players = self.game_state.get_alive_players()
         voters = alive_players
 

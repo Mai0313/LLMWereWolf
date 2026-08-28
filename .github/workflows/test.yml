@@ -1,5 +1,8 @@
 name: Tests
 
+# The diff decides whether the suite runs, never the branch name: a conventional-commits type says
+# what a change is for and nothing about what it touched, so a `chore/`, `ci/` or `docs/` branch
+# carrying code has to be tested like any other. The `paths-ignore` below is what skips pure prose.
 on:
   push:
     branches:
@@ -22,7 +25,6 @@ jobs:
   run_tests:
     name: Run Tests
     runs-on: ubuntu-latest
-    if: ${{ !(startsWith(github.head_ref, 'chore/') || startsWith(github.head_ref, 'ci/') || startsWith(github.head_ref, 'docs/')) }}
 
     strategy:
       fail-fast: false

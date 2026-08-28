@@ -1,16 +1,10 @@
 """Day phase logic for the game engine."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from collections.abc import Callable
 
 from llm_werewolf.core.types import EventType, GamePhase, PlayerProtocol
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from llm_werewolf.core.locale import Locale
-    from llm_werewolf.core.game_state import GameState
+from llm_werewolf.core.locale import Locale
+from llm_werewolf.core.game_state import GameState
 
 
 class DayPhaseMixin:
@@ -114,17 +108,6 @@ class DayPhaseMixin:
 
         for player in alive_players:
             if player.agent:
-                # Log that player is preparing to speak
-                self._log_event(
-                    EventType.MESSAGE,
-                    f"💬 {player.name}（{player.agent.model}）正在思考發言...",
-                    data={
-                        "player_id": player.player_id,
-                        "player_name": player.name,
-                        "action": "preparing_speech",
-                    },
-                )
-
                 game_context = self._build_discussion_context(player)
 
                 try:
@@ -132,7 +115,7 @@ class DayPhaseMixin:
 
                     self._log_event(
                         EventType.PLAYER_SPEECH,
-                        f"{player.name}: {speech}",
+                        self.locale.get("player_speech", player=player.name, speech=speech),
                         data={
                             "player_id": player.player_id,
                             "player_name": player.name,
@@ -140,7 +123,9 @@ class DayPhaseMixin:
                         },
                     )
 
-                    messages.append(f"{player.name}: {speech}")
+                    messages.append(
+                        self.locale.get("player_speech", player=player.name, speech=speech)
+                    )
 
                     # Add to global public discussion history
                     self.public_discussion_history.append(f"{player.name}: {speech}")
@@ -152,9 +137,11 @@ class DayPhaseMixin:
                 except Exception as e:
                     self._log_event(
                         EventType.ERROR,
-                        f"{player.name}: [發言失敗 - {e}]",
+                        self.locale.get("speech_failed", player=player.name, error=str(e)),
                         data={"player_id": player.player_id, "error": str(e)},
                     )
-                    messages.append(f"{player.name}: [Unable to speak - {e}]")
+                    messages.append(
+                        self.locale.get("speech_failed", player=player.name, error=str(e))
+                    )
 
         return messages

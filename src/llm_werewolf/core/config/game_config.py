@@ -1,5 +1,7 @@
 from pydantic import Field, BaseModel, field_validator
 
+from llm_werewolf.core.role_registry import validate_role_names
+
 
 class GameConfig(BaseModel):
     """Game configuration including player count, roles, and timing settings."""
@@ -76,7 +78,5 @@ class GameConfig(BaseModel):
         Raises:
             ValueError: If roles are invalid or no werewolves present.
         """
-        from llm_werewolf.core.role_registry import validate_role_names
-
         validate_role_names(v)
         return v

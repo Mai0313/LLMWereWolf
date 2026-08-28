@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from llm_werewolf.core.types import ActionType, PlayerProtocol, GameStateProtocol
 from llm_werewolf.core.actions.base import Action
 

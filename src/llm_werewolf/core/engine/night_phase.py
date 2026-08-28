@@ -1,17 +1,14 @@
 """Night phase logic for the game engine."""
 
-from __future__ import annotations
-
 import random
 from typing import TYPE_CHECKING
+from collections.abc import Callable
 
 from llm_werewolf.core.types import Camp, EventType, GamePhase
+from llm_werewolf.core.locale import Locale
+from llm_werewolf.core.game_state import GameState
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from llm_werewolf.core.locale import Locale
-    from llm_werewolf.core.game_state import GameState
     from llm_werewolf.core.actions.base import Action
 
 
@@ -65,17 +62,6 @@ class NightPhaseMixin:
         # Each werewolf discusses
         for werewolf in werewolves:
             if werewolf.agent:
-                # Log preparing
-                self._log_event(
-                    EventType.MESSAGE,
-                    f"💬 {werewolf.name}（狼人）正在思考...",
-                    data={
-                        "player_id": werewolf.player_id,
-                        "player_name": werewolf.name,
-                        "action": "preparing_speech",
-                    },
-                )
-
                 # Build discussion context with werewolf history
                 context_parts = [
                     f"You are {werewolf.name}, a Werewolf.",
@@ -126,7 +112,7 @@ class NightPhaseMixin:
                 except Exception as e:
                     self._log_event(
                         EventType.ERROR,
-                        f"{werewolf.name}: [討論失敗 - {e}]",
+                        self.locale.get("discussion_failed", player=werewolf.name, error=str(e)),
                         data={"player_id": werewolf.player_id, "error": str(e)},
                     )
 

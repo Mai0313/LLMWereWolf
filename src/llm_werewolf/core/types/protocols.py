@@ -2,6 +2,11 @@
 
 This module defines structural type protocols to avoid circular imports.
 Protocols define the interface of objects without requiring actual imports.
+
+Note: This file uses `from __future__ import annotations` because Protocol classes
+have mutual references (RoleProtocol references PlayerProtocol and vice versa).
+This is a valid use case for deferred evaluation of type annotations, as these are
+pure type definitions without implementation logic.
 """
 
 from __future__ import annotations

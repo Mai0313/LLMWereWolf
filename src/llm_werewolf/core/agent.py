@@ -1,10 +1,18 @@
+import os
+import re
 import random
 from functools import cached_property
 
+import dotenv
 from openai import OpenAI
 from pydantic import Field, BaseModel, ConfigDict, computed_field
 from rich.console import Console
 from openai.types.shared import ReasoningEffort
+
+from llm_werewolf.core.config import PlayerConfig
+
+dotenv.load_dotenv()
+
 
 console = Console()
 
@@ -81,14 +89,48 @@ class DemoAgent(BaseAgent):
     model: str = Field(default="demo")
 
     def get_response(self, message: str) -> str:
-        """Return a canned response.
+        """Return a canned response based on message type.
 
         Args:
-            message: The prompt message (ignored).
+            message: The prompt message.
 
         Returns:
-            str: A random canned response.
+            str: An appropriate response based on the message type.
         """
+        # Check if it's a yes/no question
+        if "ONLY 'YES' or 'NO'" in message or "respond with ONLY 'YES' or 'NO'" in message:
+            # For sheriff campaign, use 30% chance to say YES (creates 2-3 candidates in 12 players)
+            if "campaign for sheriff" in message.lower():
+                return "YES" if random.random() < 0.3 else "NO"  # noqa: S311
+            # For other yes/no questions, 50/50
+            return random.choice(["YES", "NO"])  # noqa: S311
+
+        # Check if it's a target selection question (contains numbered list)
+        if "responding with ONLY the number" in message or "select a target" in message.lower():
+            # Extract available numbers from the message
+            # Find all lines that look like "1. PlayerName"
+            lines = message.split("\n")
+            max_number = 0
+            for line in lines:
+                match = re.match(r"^\s*(\d+)\.\s+", line)
+                if match:
+                    max_number = max(max_number, int(match.group(1)))
+
+            if max_number > 0:
+                # Randomly select a number
+                return str(random.randint(1, max_number))  # noqa: S311
+
+        # For campaign speeches and free-form responses
+        if "campaign speech" in message.lower():
+            speeches = [
+                "I believe I can be a good sheriff. Trust me, I'm on the villagers' side!",
+                "Vote for me and I'll use my power wisely to protect the village.",
+                "I promise to lead us to victory. Let me be your sheriff!",
+                "I have good instincts about who the werewolves are. Give me your vote!",
+            ]
+            return random.choice(speeches)  # noqa: S311
+
+        # Default canned responses
         responses = [
             "I agree.",
             "I'm not sure about that.",
@@ -187,3 +229,43 @@ class LLMAgent(BaseAgent):
         if not self.decision_history:
             return ""
         return "\n\nYour previous actions:\n" + "\n".join(f"- {d}" for d in self.decision_history)
+
+
+def create_agent(
+    config: PlayerConfig, language: str = "en-US"
+) -> DemoAgent | HumanAgent | LLMAgent:
+    """Create an agent instance from player configuration.
+
+    Args:
+        config: Player configuration.
+        language: Language code for the agent (e.g., "en-US", "zh-TW").
+
+    Returns:
+        DemoAgent | HumanAgent | LLMAgent: Created agent instance.
+
+    Raises:
+        ValueError: If configuration is invalid or API key is missing.
+    """
+    model = config.model.lower()
+
+    if model == "human":
+        return HumanAgent(name=config.name, model="human")
+
+    if model == "demo":
+        return DemoAgent(name=config.name, model="demo")
+
+    api_key = None
+    if config.api_key_env:
+        api_key = os.getenv(config.api_key_env)
+    if not api_key:
+        raise ValueError(
+            f"API key not found in environment variable '{config.api_key_env}' for player '{config.name}'"
+        )
+
+    return LLMAgent(
+        name=config.name,
+        model=config.model,
+        api_key=api_key,
+        base_url=config.base_url,
+        language=language,
+    )

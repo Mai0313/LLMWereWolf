@@ -7,42 +7,33 @@ on:
       - main
       - master
 
-  # pull_request event is required only for autolabeler
-  pull_request:
-    # Only following types are handled by the action, but one can default to all as well
-    types: [opened, reopened, synchronize, edited]
-
 permissions: write-all
 
 jobs:
   update_release_draft:
     name: Update Release Draft
     runs-on: ubuntu-latest
-    # container: catthehacker/ubuntu:act-20.04  # Uncomment it if you use it on Gitea
 
     steps:
       - name: Disable SSL Verify
         run: git config --global http.sslVerify false
 
-      # - name: Setup MTK Certification
-      #   uses: https://gitea.mediatek.inc/actions/mtk-cert-action@v1.2.0
-
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate a tag
-        uses: orhun/git-cliff-action@v4
         id: git-cliff-tag
+        uses: orhun/git-cliff-action@v4
         with:
           config: ./.github/cliff.toml
           args: --bumped-version
 
       - name: Generate a changelog
-        uses: orhun/git-cliff-action@v4
         id: git-cliff-changelog
+        uses: orhun/git-cliff-action@v4
         with:
           config: ./.github/cliff.toml
           args: --bump --unreleased

@@ -198,8 +198,8 @@ class WhiteWolf(Role):
             if target:
                 actions.append(WerewolfVoteAction(self.player, target, game_state))
 
-        # 2. Special ability: Kill another werewolf on even rounds (2, 4, 6...)
-        if game_state.round_number % 2 == 0:
+        # 2. Special ability: Kill another werewolf on odd rounds (1, 3, 5...)
+        if game_state.round_number % 2 == 1:
             werewolf_targets = [
                 p
                 for p in game_state.get_players_by_camp("werewolf")

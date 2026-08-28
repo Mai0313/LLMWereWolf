@@ -1,17 +1,13 @@
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from llm_werewolf.core.types import (
-        Camp,
-        RoleConfig,
-        ActionPriority,
-        ActionProtocol,
-        PlayerProtocol,
-        GameStateProtocol,
-    )
+from llm_werewolf.core.types import (
+    Camp,
+    RoleConfig,
+    ActionPriority,
+    ActionProtocol,
+    PlayerProtocol,
+    GameStateProtocol,
+)
 
 
 class Role(ABC):

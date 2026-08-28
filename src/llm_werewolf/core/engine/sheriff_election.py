@@ -1,17 +1,11 @@
 """Sheriff election phase logic for the game engine."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from collections.abc import Callable
 
 from llm_werewolf.core.types import EventType, PlayerProtocol
+from llm_werewolf.core.locale import Locale
+from llm_werewolf.core.game_state import GameState
 from llm_werewolf.core.action_selector import ActionSelector
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from llm_werewolf.core.locale import Locale
-    from llm_werewolf.core.game_state import GameState
 
 
 class SheriffElectionMixin:
@@ -34,18 +28,14 @@ class SheriffElectionMixin:
             return
 
         self._log_event(
-            EventType.SHERIFF_CAMPAIGN_STARTED,
-            "🎖️ Sheriff election begins. Players may volunteer to campaign for sheriff.",
+            EventType.SHERIFF_CAMPAIGN_STARTED, self.locale.get("sheriff_campaign_started")
         )
 
         # Phase 1: Collect candidates
         candidates = self._collect_sheriff_candidates()
 
         if not candidates:
-            self._log_event(
-                EventType.MESSAGE,
-                "No one volunteered to campaign for sheriff. There will be no sheriff this game.",
-            )
+            self._log_event(EventType.MESSAGE, self.locale.get("no_candidates"))
             self.game_state.sheriff_election_done = True
             return
 
@@ -90,7 +80,7 @@ class SheriffElectionMixin:
             if decision:
                 candidates.append(player)
                 self._log_event(
-                    EventType.MESSAGE, f"🎖️ {player.name} volunteers to campaign for sheriff."
+                    EventType.MESSAGE, self.locale.get("player_volunteers", player=player.name)
                 )
 
         return candidates
@@ -137,8 +127,7 @@ class SheriffElectionMixin:
             return
 
         self._log_event(
-            EventType.MESSAGE,
-            f"🎖️ {len(candidates)} candidates will now give their campaign speeches.",
+            EventType.MESSAGE, self.locale.get("campaign_speeches_start", count=len(candidates))
         )
 
         for candidate in candidates:
@@ -154,7 +143,7 @@ class SheriffElectionMixin:
 
             self._log_event(
                 EventType.SHERIFF_CANDIDATE_SPEECH,
-                f"🎖️ {candidate.name}'s speech: {speech}",
+                self.locale.get("candidate_speech", candidate=candidate.name, speech=speech),
                 data={"player_id": candidate.player_id, "speech": speech},
             )
 
@@ -207,33 +196,53 @@ class SheriffElectionMixin:
         if not self.game_state:
             return {}
 
-        self._log_event(EventType.MESSAGE, "🎖️ All players will now vote for sheriff.")
+        # Get all alive players (including candidates)
+        alive_players = self.game_state.get_alive_players()
+        voters = alive_players
+
+        if not voters:
+            self._log_event(EventType.MESSAGE, self.locale.get("no_voters"))
+            return {c.player_id: 0 for c in candidates}
+
+        self._log_event(
+            EventType.MESSAGE, self.locale.get("sheriff_voting_start", count=len(voters))
+        )
 
         vote_counts: dict[str, int] = {c.player_id: 0 for c in candidates}
-        alive_players = self.game_state.get_alive_players()
 
-        for voter in alive_players:
+        for voter in voters:
             if not voter.agent:
                 continue
 
-            context = self._build_voting_context(voter, candidates)
+            # Candidates can vote for other candidates (but not themselves)
+            available_candidates = [c for c in candidates if c.player_id != voter.player_id]
+
+            if not available_candidates:
+                # Only one candidate and they can't vote for themselves
+                continue
+
+            context = self._build_sheriff_voting_context(voter, available_candidates)
             vote_target = ActionSelector.select_target(
-                voter.agent, context, candidates, "Vote for sheriff", allow_skip=True
+                voter.agent, context, available_candidates, "Vote for sheriff", allow_skip=True
             )
 
             if vote_target:
                 vote_counts[vote_target.player_id] += 1
                 self._log_event(
                     EventType.SHERIFF_VOTE_CAST,
-                    f"🎖️ {voter.name} voted for {vote_target.name}.",
+                    self.locale.get(
+                        "sheriff_vote_cast", voter=voter.name, candidate=vote_target.name
+                    ),
                     data={"voter_id": voter.player_id, "target_id": vote_target.player_id},
                 )
             else:
-                self._log_event(EventType.MESSAGE, f"🎖️ {voter.name} abstained from voting.")
+                self._log_event(
+                    EventType.MESSAGE, self.locale.get("sheriff_vote_abstained", voter=voter.name)
+                )
 
         return vote_counts
 
-    def _build_voting_context(
+    def _build_sheriff_voting_context(
         self, player: PlayerProtocol, candidates: list[PlayerProtocol]
     ) -> str:
         """Build context for sheriff voting.
@@ -287,7 +296,10 @@ class SheriffElectionMixin:
         # Announce vote results
         for candidate in candidates:
             votes = vote_counts.get(candidate.player_id, 0)
-            self._log_event(EventType.MESSAGE, f"🎖️ {candidate.name} received {votes} vote(s).")
+            self._log_event(
+                EventType.MESSAGE,
+                self.locale.get("sheriff_vote_result", candidate=candidate.name, votes=votes),
+            )
 
         if len(winners) > 1:
             # Tie - handle based on rules (for now, no sheriff)
@@ -298,7 +310,7 @@ class SheriffElectionMixin:
             ]
             self._log_event(
                 EventType.SHERIFF_TIE,
-                f"🎖️ Tie between {', '.join(winner_names)}. No sheriff this game.",
+                self.locale.get("sheriff_tie", candidates=", ".join(winner_names)),
             )
             # Could implement runoff voting here in the future
         else:
@@ -320,6 +332,6 @@ class SheriffElectionMixin:
         self.game_state.set_sheriff(player.player_id)
         self._log_event(
             EventType.SHERIFF_ELECTED,
-            f"🎖️ {player.name} has been elected sheriff!",
+            self.locale.get("sheriff_elected", player=player.name),
             data={"player_id": player.player_id},
         )

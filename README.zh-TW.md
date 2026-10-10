@@ -23,7 +23,6 @@
 
 - 🎮 **完整遊戲邏輯**：包含 20+ 種角色的完整狼人殺規則實作
 - 🤖 **LLM 整合**：統一的代理介面，輕鬆整合任何 LLM（OpenAI、Anthropic、DeepSeek、本地模型等）
-- ⚡ **串流響應**：LLM 代理預設使用串流 API，透過更快的首字元回應時間降低等待感
 - 🖥️ **精美 TUI**：使用 Textual 框架的即時遊戲視覺化，支援互動式終端介面
 - 👤 **真人玩家**：支援真人玩家與 AI 混合遊戲
 - ⚙️ **可配置**：透過 YAML 配置檔案靈活設定玩家和遊戲參數
@@ -73,30 +72,12 @@ uv run llm-werewolf configs/demo.yaml
 uv run werewolf configs/demo.yaml
 ```
 
-YAML 設定檔選項：
-
-- `language: <language-code>` 設定遊戲語言（如 `en-US`、`zh-TW`、`zh-CN`）。預設：`en-US`
-- `players: [...]` 定義玩家列表。玩家人數（6-20 人）會自動決定角色配置
-
 ### 環境配置
 
-建立 `.env` 檔案配置 LLM API 金鑰：
+將 [`.env.example`](.env.example) 複製為 `.env`，並填入玩家所使用提供商的 API 金鑰：
 
 ```bash
-# OpenAI
-OPENAI_API_KEY=sk-...
-
-# Anthropic
-ANTHROPIC_API_KEY=sk-ant-...
-
-# DeepSeek
-DEEPSEEK_API_KEY=sk-...
-
-# xAI (Grok)
-XAI_API_KEY=xai-...
-
-# 本地模型（Ollama 等）不需要 API 金鑰
-# 只需在 YAML 中設定 base_url 即可
+cp .env.example .env
 ```
 
 ## 支援的角色
@@ -139,14 +120,7 @@ XAI_API_KEY=xai-...
 
 遊戲會根據玩家人數（6-20 人）自動產生平衡的角色配置，無需手動設定預設組合！
 
-**運作方式：**
-
-- **6-8 人**：2 狼人 + 預言家、女巫 + 平民
-- **9-11 人**：3 狼人（含狼王）+ 預言家、女巫、獵人、守衛 + 平民
-- **12-14 人**：4 狼人（含狼王、白狼王）+ 預言家、女巫、獵人、守衛、丘比特、白痴 + 平民
-- **15+ 人**：5 狼人 + 更多神職（長老、騎士、烏鴉等）+ 平民
-
-系統會自動調整狼人數量與神職角色，維持遊戲平衡。
+各玩家人數對應的角色與時間限制定義於 [`presets.py`](src/llm_werewolf/core/config/presets.py)。
 
 ### 自訂配置
 
@@ -160,7 +134,6 @@ cp configs/demo.yaml my-game.yaml
 cp configs/gpt-5-chaos.yaml my-game.yaml
 
 # 編輯設定檔
-# configs/gpt-5-chaos.yaml 含有欄位說明與範例
 ```
 
 範例 `my-game.yaml`：
@@ -170,7 +143,6 @@ language: zh-TW          # 語言代碼（en-US, zh-TW, zh-CN）
 
 players:
   # 遊戲會根據玩家人數自動分配角色
-  # 以下 6 人範例會得到：2 狼人 + 預言家 + 女巫 + 2 平民
 
   - name: GPT-4o 偵探
     model: gpt-4o
@@ -214,21 +186,7 @@ players:
     model: demo           # 測試用的簡單代理
 ```
 
-**配置說明：**
-
-- `language`：選填，預設為 `en-US`，設定遊戲語言（如 `en-US`、`zh-TW`、`zh-CN`）
-- `players`：必填，玩家列表（支援 6-20 人）。遊戲會根據玩家數量自動生成平衡的角色配置
-
-**玩家配置欄位：**
-
-- `name`：玩家顯示名稱
-- `model`：模型類型
-    - `human`：真人玩家（透過終端輸入）
-    - `demo`：測試用簡單代理（隨機回應）
-    - LLM 模型名稱：如 `gpt-4o`、`gpt-4o-mini`、`claude-sonnet-4-20250514`、`claude-haiku-4-20250514`、`deepseek-reasoner`、`llama3` 或任何 OpenAI 相容模型
-- `base_url`：API 端點（LLM 模型必填）
-- `api_key_env`：環境變數名稱（有驗證的端點必填）
-- `reasoning_effort`：選填，支援推理的模型的推理努力等級（如 "low"、"medium"、"high"）
+所有欄位及其預設值、是否必填，皆定義於 [`player_config.py`](src/llm_werewolf/core/config/player_config.py)。
 
 **支援的模型類型：**
 
@@ -246,80 +204,9 @@ players:
     base_url: http://localhost:11434/v1
 ```
 
-## 代理系統
-
-### 代理類型
-
-本專案提供三種內建代理類型：
-
-1. **LLMAgent**：支援任何 OpenAI 相容 API 的 LLM 模型（GPT-4、Claude、DeepSeek、Grok、本地模型等）
-2. **HumanAgent**：真人玩家透過終端輸入
-3. **DemoAgent**：測試用的簡單代理（隨機回應）
-
-所有代理都透過 YAML 配置檔案設定（參見[配置](#%E9%85%8D%E7%BD%AE)章節）。遊戲支援在同一局中混合使用不同類型的代理。
-
 ## TUI 介面
 
 TUI (Terminal User Interface) 提供現代化終端介面的即時遊戲視覺化，使用 [Textual](https://textual.textualize.io/) 框架構建。
-
-### 擷取螢幕截圖
-
-要為文件擷取 TUI 截圖：
-
-```bash
-# 方法 1：使用終端截圖工具
-# 以 TUI 模式執行遊戲，並使用終端的截圖功能
-uv run llm-werewolf-tui configs/demo.yaml
-
-# 方法 2：使用 textual 的截圖功能（如有提供）
-# Textual 框架可能提供內建截圖功能
-
-# 方法 3：使用 asciinema 進行終端錄製
-asciinema rec werewolf-demo.cast
-uv run llm-werewolf-tui configs/demo.yaml
-# 按 Ctrl+D 停止錄製
-```
-
-### 介面預覽（文字表示）
-
-```
-┌────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ 🐺 Werewolf Game                                                       AI-Powered Werewolf     │
-│ q 退出  d 切換除錯                                                              [00:02:34]     │
-├──────────────────────┬─────────────────────────────────────────┬───────────────────────────────┤
-│                      │ ╭───── 遊戲狀態 ─────╮                 │                               │
-│    玩家              │ │ 🌙 第 2 回合 - 夜晚 │                 │    除錯資訊                   │
-│ ──────────────────   │ │                     │                 │ ───────────────────────────   │
-│ 名字      模型       │ │ 玩家總數： 8/9      │                 │ 會話 ID:                      │
-│           狀態       │ │ 狼人：     2        │                 │   ww_20251019_163022          │
-│ ──────────────────   │ │ 村民：     6        │                 │                               │
-│ Alice     gpt-4o     │ ╰─────────────────────╯                 │ 配置：players.yaml            │
-│           ✓ 🛡️      │                                          │                               │
-│ Bob       claude     │                                          │ 玩家：9                       │
-│           ✓          │                                          │ AI: 7  真人: 1  Demo: 1       │
-│ Charlie   llama3     │                                          │                               │
-│           ✓          │                                          │ 角色：                        │
-│ David     deepseek   │ ╭──── 事件 / 對話 ────╮                │  - Werewolf x2                │
-│           ✓ ❤️       │ │ [00:02:28] 🎮 遊戲開始│                │  - Seer x1                    │
-│ Eve       grok       │ │ [00:02:29] ⏰ 階段：夜│                │  - Witch x1                   │
-│           ✓ ❤️       │ │ [00:02:30] 🐺 狼人討論│                │  - Hunter x1                  │
-│ Frank     human      │ │            目標       │                │  - Guard x1                   │
-│           ✓          │ │ [00:02:31] ⏰ 階段：白│                │  - Villager x3                │
-│ Grace     claude     │ │ [00:02:32] 💀 Iris 死亡│               │                               │
-│           ✓          │ │ [00:02:33] 💬 Alice：  │               │ 夜晚逾時：60s                 │
-│ Henry     demo       │ │            "我覺得Bob │               │ 白天逾時：300s                │
-│           ✓          │ │            行為可疑"  │               │ 投票逾時：60s                 │
-│ Iris      demo       │ │ [00:02:34] 💬 Bob：    │               │                               │
-│           ✗          │ │            "我是村民！│               │ 錯誤：0                       │
-│                      │ │            Alice 在轉 │               │                               │
-│                      │ │            移焦點"    │               │ 來源：YAML 配置               │
-│                      │ │ [00:02:35] 💬 Charlie: │               │                               │
-│                      │ │            "昨晚的死亡│               │                               │
-│                      │ │            模式很奇怪"│               │                               │
-│                      │ ╰───────────────────────╯               │                               │
-│                      │                                          │                               │
-└──────────────────────┴──────────────────────────────────────────┴───────────────────────────────┘
-```
 
 ### 面板說明
 
@@ -456,83 +343,6 @@ Console 模式會顯示即時狀態提示，讓你了解遊戲進度：
 - **狼人陣營獲勝**：狼人數量 ≥ 村民數量
 - **戀人獲勝**：只剩下兩個戀人存活（戀人勝利優先於陣營勝利）
 
-## 專案架構
-
-專案採用模組化架構，各模組職責清晰：
-
-```
-src/llm_werewolf/
-├── cli.py                 # 命令列入口（主控台模式）
-├── tui.py                 # TUI 入口（互動模式）
-├── ai/                    # 代理系統
-│   └── agents.py         # LLM 代理實作和配置模型
-├── core/                 # 核心遊戲邏輯
-│   ├── agent.py          # 基礎代理、HumanAgent 和 DemoAgent
-│   ├── game_state.py     # 遊戲狀態管理
-│   ├── player.py         # 玩家類
-│   ├── action_selector.py # 動作選擇邏輯
-│   ├── events.py         # 事件系統
-│   ├── event_formatter.py # 事件格式化顯示
-│   ├── locale.py         # 本地化與語言支援
-│   ├── victory.py        # 勝利條件檢查
-│   ├── serialization.py  # 序列化工具
-│   ├── role_registry.py  # 角色註冊與驗證
-│   ├── engine/           # 遊戲引擎（拆分為多個 mixin）
-│   │   ├── game_engine.py     # 主要遊戲引擎（組合所有 mixin）
-│   │   ├── base.py            # 核心初始化與遊戲迴圈
-│   │   ├── night_phase.py     # 夜晚階段執行邏輯
-│   │   ├── day_phase.py       # 白天討論階段邏輯
-│   │   ├── voting_phase.py    # 投票階段邏輯
-│   │   ├── death_handler.py   # 死亡相關邏輯
-│   │   └── action_processor.py # 處理遊戲動作
-│   ├── actions/          # 動作系統
-│   │   ├── base.py       # 基礎動作類別
-│   │   ├── common.py     # 通用動作
-│   │   ├── villager.py   # 村民陣營動作
-│   │   └── werewolf.py   # 狼人陣營動作
-│   ├── config/           # 配置系統
-│   │   ├── game_config.py    # 遊戲配置模型
-│   │   └── presets.py        # 根據人數自動生成角色配置
-│   ├── types/            # 類型定義
-│   │   ├── enums.py      # 列舉（陣營、階段、狀態等）
-│   │   ├── models.py     # 資料模型
-│   │   └── protocols.py  # 協議定義
-│   └── roles/            # 角色實作
-│       ├── base.py       # 角色基類
-│       ├── werewolf.py   # 狼人陣營角色
-│       ├── villager.py   # 村民陣營角色
-│       └── neutral.py    # 中立角色
-└── ui/                   # 使用者介面
-    ├── tui_app.py        # TUI 應用程式
-    ├── styles.py         # TUI 樣式
-    └── components/       # TUI 元件
-        ├── player_panel.py
-        ├── game_panel.py
-        └── chat_panel.py
-```
-
-### 模組說明
-
-- **cli.py**：主控台模式的命令列介面，負責載入配置並自動啟動遊戲
-- **tui.py**：互動模式的 TUI 入口，提供終端使用者介面
-- **ai/**：LLM 代理實作和配置模型（PlayerConfig、PlayersConfig）
-- **core/agent.py**：基礎代理協定和內建代理（HumanAgent、DemoAgent）
-- **core/engine/**：遊戲引擎實作，拆分為多個 mixin 以清楚分離職責：
-    - **game_engine.py**：主要 GameEngine 類別，組合所有 mixin
-    - **base.py**：核心初始化、事件處理與主要遊戲迴圈
-    - **night_phase.py**：夜晚階段執行邏輯（狼人討論、角色行動）
-    - **day_phase.py**：白天討論階段邏輯
-    - **voting_phase.py**：投票階段邏輯
-    - **death_handler.py**：死亡相關邏輯（狼人殺人、戀人殉情等）
-    - **action_processor.py**：處理並套用遊戲動作
-- **core/actions/**：動作系統，包含基礎類別和陣營特定動作
-- **core/config/**：配置系統，包含遊戲參數和自動角色生成
-- **core/types/**：類型定義，包含列舉、資料模型和協議定義
-- **core/event_formatter.py**：集中式事件格式化，確保主控台和 TUI 模式的顯示一致性
-- **core/locale.py**：多語言本地化支援（en-US、zh-TW、zh-CN）
-- **core/**：遊戲核心邏輯，包含角色、玩家、遊戲狀態、動作選擇、事件和勝利檢查
-- **ui/**：基於 Textual 框架的終端使用者介面
-
 ## 系統需求
 
 - **Python**：3.10 或更高版本
@@ -541,14 +351,7 @@ src/llm_werewolf/
 
 ### 主要依賴
 
-- **pydantic** (≥2.12.3)：資料驗證和設定管理
-- **textual** (≥6.3.0)：TUI 框架
-- **rich** (≥14.2.0)：終端格式化
-- **openai** (≥2.5.0)：OpenAI API 客戶端（用於 LLM 整合）
-- **python-dotenv** (≥1.1.1)：環境變數管理
-- **pyyaml** (≥6.0.3)：YAML 配置檔案解析
-- **fire** (≥0.7.1)：命令列介面
-- **logfire** (≥4.13.2)：結構化日誌記錄
+請參閱 [`pyproject.toml`](pyproject.toml) 中的 `dependencies`。
 
 ## 常見問題
 
@@ -584,28 +387,9 @@ src/llm_werewolf/
 
 本專案採用 [MIT License](LICENSE) 授權。
 
-## 貢獻
+## 開發
 
-歡迎貢獻！您可以透過以下方式參與：
-
-1. **回報問題**：在 [Issues](https://github.com/Mai0313/LLMWereWolf/issues) 頁面回報 bug 或提出功能建議
-2. **提交 Pull Request**：修復 bug 或新增功能
-3. **改進文件**：幫助改善 README 和程式碼註解
-4. **分享反饋**：告訴我們您的使用體驗
-
-### 貢獻流程
-
-1. Fork 本專案
-2. 建立功能分支 (`git checkout -b feature/amazing-feature`)
-3. 提交變更 (`git commit -m 'Add some amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 開啟 Pull Request
-
-請確保您的程式碼：
-
-- 遵循專案的程式碼風格（使用 Ruff）
-- 包含適當的測試
-- 更新相關文件
+開發環境設定、測試、貢獻流程、架構概覽與 TUI 截圖方式請見 [CONTRIBUTING.md](./.github/CONTRIBUTING.md)。
 
 ## 致謝
 

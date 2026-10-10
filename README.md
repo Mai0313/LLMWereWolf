@@ -210,7 +210,7 @@ The TUI (Terminal User Interface) provides real-time game visualization with a m
 
 ### Panel Descriptions
 
-#### Player Panel (Left)
+#### Player Panel (Top Left)
 
 Displays information for all players:
 
@@ -224,7 +224,7 @@ Displays information for all players:
     - ☠️: Poisoned by the Witch
     - 🔴: Marked by the Raven
 
-#### Game Panel (Top Center)
+#### Game Panel (Top Right)
 
 Displays the current game status:
 
@@ -236,7 +236,7 @@ Displays the current game status:
 - **Player Statistics**: Number of surviving players by faction.
 - **Vote Count** (during voting phase): Shows the number of votes each player has received.
 
-#### Chat Panel (Bottom Center)
+#### Chat Panel (Bottom)
 
 A scrollable event log showing all events and dialogue in the game:
 
@@ -327,13 +327,16 @@ These indicators help you understand the game is waiting for LLM API responses, 
     - 🐺 **Werewolf Vote**: Werewolves vote for their target
     - 🎬 **Other Roles Act**: Other roles with night abilities act in priority order (Seer, Witch, Guard, etc.)
     - 🌙 **Narrator**: "Werewolves, close your eyes..."
-3. **Day Discussion**:
+3. **Sheriff Election** (first round only):
+    - 🎖️ Players decide whether to run, and candidates give campaign speeches
+    - 🗳️ Everyone votes for a sheriff, whose vote counts as 1.5 from then on
+4. **Day Discussion**:
     - ☀️ **Narrator**: "The sun rises, everyone open your eyes..."
     - 💬 Players speak in turn, discussing and sharing information
-4. **Day Voting**:
+5. **Day Voting**:
     - 🗳️ Players vote to eliminate a suspect
-5. **Victory Check**: The game checks if any faction has won.
-6. Repeat steps 2-5 until victory conditions are met.
+6. **Victory Check**: The game checks if any faction has won.
+7. Repeat steps 2-6 until victory conditions are met.
 
 ## Victory Conditions
 

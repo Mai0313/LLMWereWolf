@@ -244,7 +244,7 @@ def create_agent(
         DemoAgent | HumanAgent | LLMAgent: Created agent instance.
 
     Raises:
-        ValueError: If configuration is invalid or API key is missing.
+        ValueError: If configuration is invalid or `api_key_env` names an unset or empty variable.
     """
     model = config.model.lower()
 
@@ -254,13 +254,14 @@ def create_agent(
     if model == "demo":
         return DemoAgent(name=config.name, model="demo")
 
-    api_key = None
+    # No api_key_env means a keyless endpoint, such as a local model.
+    api_key = ""
     if config.api_key_env:
-        api_key = os.getenv(config.api_key_env)
-    if not api_key:
-        raise ValueError(
-            f"API key not found in environment variable '{config.api_key_env}' for player '{config.name}'"
-        )
+        api_key = os.getenv(config.api_key_env, "")
+        if not api_key:
+            raise ValueError(
+                f"API key not found in environment variable '{config.api_key_env}' for player '{config.name}'"
+            )
 
     return LLMAgent(
         name=config.name,

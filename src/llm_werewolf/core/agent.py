@@ -268,5 +268,6 @@ def create_agent(
         model=config.model,
         api_key=api_key,
         base_url=config.base_url,
+        reasoning_effort=config.reasoning_effort,
         language=language,
     )

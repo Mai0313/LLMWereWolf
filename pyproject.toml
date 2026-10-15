@@ -11,7 +11,7 @@ addopts = [
     "--cov-report=xml:./.github/reports/coverage.xml",
     "--junitxml=./.github/reports/.coverage.pytest.xml",
     "--cache-clear",
-    "-n=auto",
+    "--numprocesses=auto",
     "--no-header",
     "--cov-fail-under=80",
 ]

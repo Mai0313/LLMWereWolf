@@ -16,38 +16,58 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Dependency Review
-        uses: actions/dependency-review-action@v4.9.0
+        uses: actions/dependency-review-action@v5.0.0
 
   dependabot-auto-merge:
     name: Dependabot Auto Merge
     needs: dependency-review
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     if: github.event.pull_request.user.login == 'dependabot[bot]'
 
     steps:
       - name: Dependabot metadata
         id: metadata
-        uses: dependabot/fetch-metadata@v2
+        uses: dependabot/fetch-metadata@v3
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Approve PR
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr review --approve "${{ github.event.pull_request.html_url }}"
 
-      - name: Enable auto-merge for minor and patch updates
+      # No check is required, so `gh pr merge --auto` would merge before CI finishes; wait for this PR's own checks instead.
+      - name: Wait for the other checks
         if: |
           steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
           steps.metadata.outputs.update-type == 'version-update:semver-minor'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr merge --squash --auto --delete-branch "${{ github.event.pull_request.html_url }}"
+          while :; do
+            sleep 30
+            buckets=$(gh pr checks "${{ github.event.pull_request.html_url }}" --json bucket,workflow \
+              --jq '[.[] | select(.workflow != "${{ github.workflow }}") | .bucket] | join(" ")' || true)
+            case " $buckets " in
+              *" fail "* | *" cancel "*) echo "::error::A check failed, so the PR is left open." && exit 1 ;;
+              "  " | *" pending "*) ;;
+              *) break ;;
+            esac
+          done
+
+      - name: Merge minor and patch updates
+        if: |
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge --squash --delete-branch --match-head-commit "${{ github.event.pull_request.head.sha }}" "${{ github.event.pull_request.html_url }}"

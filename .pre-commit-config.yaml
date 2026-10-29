@@ -68,6 +68,7 @@ repos:
         args:
           - --number
           - --no-validate
+          - --wrap=no
         additional_dependencies:
           # https://mdformat.readthedocs.io/en/stable/users/plugins.html
           # Code formatter plugins
@@ -101,6 +102,16 @@ repos:
     rev: 0.9.1
     hooks:
       - id: nbstripout
+
+  # mdformat leaves front matter alone, so a wrapped description needs its own check
+  - repo: local
+    hooks:
+      - id: description-one-line
+        name: description on one line
+        language: pygrep
+        entry: '^description:[ \t]*(?:[>|][-+]?[ \t]*\n[ \t]+\S[^\n]*|[^>|\s][^\n]*)\n[ \t]+\S'
+        args: [--multiline]
+        files: (^|/)SKILL\.md$
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.2

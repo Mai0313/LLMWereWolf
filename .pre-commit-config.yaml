@@ -99,7 +99,7 @@ repos:
 
   # jupyter notebook cell output clearing
   - repo: https://github.com/kynan/nbstripout
-    rev: 0.9.1
+    rev: 0.9.2
     hooks:
       - id: nbstripout
 
@@ -153,7 +153,7 @@ repos:
       - id: gitleaks
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.13.8
+    rev: 0.13.9
     hooks:
       - id: uv-sync
         args: ["--all-groups"]

@@ -15,7 +15,7 @@ default_stages:
 
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.17.5
+    rev: v0.17.6
     hooks:
       - id: ruff-check
         types_or: [ python, pyi, jupyter ]
